@@ -1,0 +1,867 @@
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0" data-en="Datasource List" data-zh="数据源列表">Datasource List</h5>
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-success" id="addDatasourceBtn" data-en="Add Datasource" data-zh="新增数据源">
+                <i class="fas fa-plus"></i> Add Datasource
+            </button>
+            <select class="form-control form-control-sm" id="refreshInterval">
+                <option value="0" data-en="Manual Refresh" data-zh="手动刷新">Manual Refresh</option>
+                <option value="5000" data-en="5 Seconds" data-zh="5秒">5 Seconds</option>
+                <option value="10000" data-en="10 Seconds" data-zh="10秒">10 Seconds</option>
+                <option value="30000" data-en="30 Seconds" data-zh="30秒">30 Seconds</option>
+                <option value="60000" data-en="1 Minute" data-zh="1分钟">1 Minute</option>
+                <option value="300000" data-en="5 Minutes" data-zh="5分钟">5 Minutes</option>
+            </select>
+            <button class="btn btn-sm btn-primary" id="refreshBtn">
+                <i class="fas fa-sync-alt refresh-icon"></i>
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th data-en="Name" data-zh="名称">Name</th>
+                    <th data-en="Type" data-zh="节点类型">Type</th>
+                    <th data-en="DB Type" data-zh="数据库类型">DB Type</th>
+                    <th data-en="URL" data-zh="连接地址">URL</th>
+                    <th data-en="Weight" data-zh="权重">Weight</th>
+                    <th data-en="Status" data-zh="状态">Status</th>
+                    <th data-en="Actions" data-zh="操作">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="datasourceList">
+                <!-- 数据将通过 AJAX 加载 -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 添加新增数据源的模态框 -->
+<div class="modal fade" id="addDatasourceModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" data-en="Add Datasource" data-zh="新增数据源">Add Datasource</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addDatasourceForm">
+                    <!-- 必填项 -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label" data-en="Name" data-zh="名称">Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" data-en="Type" data-zh="节点类型">Type <span class="text-danger">*</span></label>
+                            <select class="form-control" name="type" required>
+                                <option value="">-- Select Type --</option>
+                                <option value="READ" data-en="READ (Read Only)" data-zh="READ (只读)">READ (Read Only)</option>
+                                <option value="WRITE" data-en="WRITE (Write Only)" data-zh="WRITE (只写)">WRITE (Write Only)</option>
+                                <option value="READ_WRITE" data-en="READ_WRITE (Read & Write)" data-zh="READ_WRITE (可读可写)">READ_WRITE (Read & Write)</option>
+                                <option value="INDEPENDENT" data-en="INDEPENDENT (Independent R/W)" data-zh="INDEPENDENT (独立可读写)">INDEPENDENT (Independent R/W)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label" data-en="Weight" data-zh="权重">Weight <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="weight" required min="0" max="100">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" data-en="Datasource Class" data-zh="数据源类">Datasource Class <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="dataSourceClass" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label" data-en="Destroy Method" data-zh="数据源回收方法">Destroy Method <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="destroyMethod" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" data-en="Heartbeat Interval (ms)" data-zh="检测周期(毫秒)">
+                                Heartbeat Interval (ms)
+                            </label>
+                            <input type="number" class="form-control" name="heartbeatInterval" 
+                                placeholder="60000" min="1000">
+                        </div>
+                    </div>
+                    
+                    <!-- 动态数据项 -->
+                    <div class="mb-3">
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h6 class="mb-0" data-en="Additional Properties" data-zh="附加属性">Additional Properties</h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="dynamicProperties">
+                                    <!-- 固定属性 -->
+                                    <div class="row mb-3 property-item">
+                                        <div class="col-md-5">
+                                            <input type="text" class="form-control" name="propertyKey" value="driverClassName" readonly>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <input type="text" class="form-control" name="propertyValue" placeholder="Driver Class Name" required>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3 property-item">
+                                        <div class="col-md-5">
+                                            <input type="text" class="form-control" name="propertyKey" value="jdbcUrl" readonly>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <input type="text" class="form-control" name="propertyValue" placeholder="JDBC URL" required>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3 property-item">
+                                        <div class="col-md-5">
+                                            <input type="text" class="form-control" name="propertyKey" value="username" readonly>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <input type="text" class="form-control" name="propertyValue" placeholder="Username" required>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3 property-item">
+                                        <div class="col-md-5">
+                                            <input type="text" class="form-control" name="propertyKey" value="password" readonly>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <input type="password" class="form-control" name="propertyValue" placeholder="Password" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm mt-3" id="addPropertyBtn">
+                                    <i class="fas fa-plus"></i> 
+                                    <span data-en="Add Property" data-zh="添加属性">Add Property</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Cancel" data-zh="取消">Cancel</button>
+                <button type="button" class="btn btn-primary" id="testConnectionBtn" data-en="Test Connection" data-zh="测试连接">Test Connection</button>
+                <button type="button" class="btn btn-primary" id="saveDatasourceBtn" data-en="Save" data-zh="保存">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 数据源详情模态框 -->
+<div class="modal fade" id="datasourceDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" data-en="Datasource Details" data-zh="数据源详情">Datasource Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                    <pre id="jsonDetail" class="json-viewer">
+                        <!-- JSON 数据将在这里展示 -->
+                    </pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Close" data-zh="关闭">Close</button>
+                <button type="button" class="btn btn-primary" id="copyJsonBtn" data-en="Copy" data-zh="复制">Copy</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加编辑数据源的模态框 -->
+<div class="modal fade" id="editDatasourceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" data-en="Edit Datasource" data-zh="编辑数据源">Edit Datasource</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editDatasourceForm">
+                    <input type="hidden" id="editDatasourceId">
+                    <div class="mb-3">
+                        <label class="form-label" data-en="Weight" data-zh="权重">Weight</label>
+                        <input type="number" class="form-control" id="editWeight" required min="0" max="100">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" data-en="Status" data-zh="状态">Status</label>
+                        <select class="form-control" id="editStatus" required>
+                            <option value="UP" data-en="UP" data-zh="正常">UP</option>
+                            <option value="DOWN" data-en="DOWN" data-zh="宕机">DOWN</option>
+                            <option value="OUT_OF_SERVICE" data-en="OUT_OF_SERVICE" data-zh="停止服务">OUT_OF_SERVICE</option>
+                            <option value="UNKNOWN" data-en="UNKNOWN" data-zh="未知">UNKNOWN</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Cancel" data-zh="取消">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveEditBtn" data-en="Save" data-zh="保存">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 确保在全局范围内声明
+if (typeof datasourceDetails === 'undefined') {
+    var datasourceDetails = {};
+}
+
+// 从 localStorage 获取语言设置，如果没有则默认为英文
+window.currentLanguage = localStorage.getItem('language') || 'en';
+
+$(document).ready(function() {
+    let refreshTimer;
+
+    // 加载数据源数据
+    loadDatasourceData();
+
+    // 刷新按钮点击事件
+    $('#refreshBtn').click(function() {
+        loadDatasourceData();
+    });
+
+    // 自动刷新时间选择
+    $('#refreshInterval').change(function() {
+        clearInterval(refreshTimer);
+        const interval = parseInt($(this).val());
+        const $refreshIcon = $('#refreshBtn .refresh-icon');
+
+        if (interval > 0) {
+            $refreshIcon.addClass('spin');
+            refreshTimer = setInterval(loadDatasourceData, interval);
+        } else {
+            $refreshIcon.removeClass('spin');
+        }
+    });
+
+    // 新增数据源按钮点击事件
+    $('#addDatasourceBtn').click(function() {
+        $('#addDatasourceModal').modal('show');
+    });
+
+    // 复制 JSON 按钮点击事件
+    $('#copyJsonBtn').click(function() {
+        copyJsonContent('#jsonDetail');
+    });
+});
+
+// 加载数据源数据
+async function loadDatasourceData() {
+    try {
+        $('#datasourceList').html('<tr><td colspan="7" class="text-center"><div class="spinner-border text-primary" role="status"></div></td></tr>');
+
+        // 使用 fetch API 替代 $.ajax
+        const response = await fetch('/sqlx/v1/datasource', {
+            method: 'GET'
+        });
+
+        // 处理重定向
+        if (response.redirected) {
+            console.log('Redirected to:', response.url);
+            window.location.href = response.url;
+            return;
+        }
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.succeed) {
+                data.payload.forEach(item => {
+                    datasourceDetails[item.name] = item;
+                });
+                updateDatasourceTable(data.payload);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                    text: data.msg,
+                    confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                    confirmButtonColor: '#87CEEB'
+                });
+            }
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                text: window.currentLanguage === 'en' ? 'Failed to load datasource data' : '加载数据源数据失败',
+                confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                confirmButtonColor: '#87CEEB'
+            });
+        }
+    } catch (error) {
+        console.error('Error loading datasource data:', error);
+        Swal.fire({
+            icon: 'error',
+            title: window.currentLanguage === 'en' ? 'Error' : '错误',
+            text: window.currentLanguage === 'en' ? 'Failed to load datasource data' : '加载数据源数据失败',
+            confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+            confirmButtonColor: '#87CEEB'
+        });
+    }
+}
+
+// 显示数据源详情
+function showDatasourceDetail(name) {
+    const detail = datasourceDetails[name];
+    if (detail) {
+        const jsonDetail = JSON.stringify(detail, null, 2);
+        $('#jsonDetail').html(syntaxHighlight(jsonDetail));
+        $('#datasourceDetailModal').modal('show');
+    } else {
+        Swal.fire({
+            icon: 'error',
+            title: window.currentLanguage === 'en' ? 'Error' : '错误',
+            text: window.currentLanguage === 'en' ? 'Datasource details not found' : '未找到数据源详情',
+            confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+            confirmButtonColor: '#87CEEB'
+        });
+    }
+}
+
+// 更新数据源表格
+function updateDatasourceTable(data) {
+    const tbody = $('#datasourceList');
+    tbody.empty();
+    
+    if (!data || data.length === 0) {
+        tbody.html(`
+            <tr>
+                <td colspan="7" class="text-center">
+                    ${window.currentLanguage === 'en' ? 'No data available' : '暂无数据'}
+                </td>
+            </tr>
+        `);
+        return;
+    }
+    
+    data.forEach(item => {
+        const statusClass = item.nodeAttribute.nodeState === 'UP' ? 'success' : 
+                            item.nodeAttribute.nodeState === 'DOWN' ? 'danger' : 
+                            item.nodeAttribute.nodeState === 'OUT_OF_SERVICE' ? 'warning' : 
+                          'secondary';  // UNKNOWN 状态使用灰色
+        
+        const shortUrl = item.props.jdbcUrl.length > 30 ? item.props.jdbcUrl.substring(0, 30) + '...' : item.props.jdbcUrl;
+        
+        tbody.append(`
+            <tr>
+                <td>
+                    <a href="javascript:void(0)" class="datasource-name" onclick="showDatasourceDetail('${item.name}')">${item.name}</a>
+                </td>
+                <td>${getTypeTranslation(item.type)}</td>
+                <td>${item.nodeAttribute.databaseType}</td>
+                <td class="short-url" data-full-url="${item.props.jdbcUrl}">${shortUrl}</td>
+                <td>${item.weight}</td>
+                <td>
+                    <span class="badge bg-${statusClass}">
+                        ${window.currentLanguage === 'en' ? item.nodeAttribute.nodeState : getStatusTranslation(item.nodeAttribute.nodeState)}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-primary me-1" onclick="editDatasource('${item.name}')" 
+                        data-en="Edit" data-zh="编辑">
+                        <i class="fas fa-edit"></i> ${window.currentLanguage === 'en' ? 'Edit' : '编辑'}
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="removeDatasource('${item.name}')" 
+                        data-en="Delete" data-zh="删除">
+                        <i class="fas fa-trash-alt"></i> ${window.currentLanguage === 'en' ? 'Delete' : '删除'}
+                    </button>
+                </td>
+            </tr>
+        `);
+    });
+    
+    window.updateLanguage();
+}
+
+// 删除数据源
+async function removeDatasource(name) {
+    try {
+        const result = await Swal.fire({
+            title: window.currentLanguage === 'en' ? 'Confirm Deletion' : '确认删除',
+            text: window.currentLanguage === 'en' ? 
+                `Are you sure you want to delete datasource "${name}"?` : 
+                `确定要删除数据源 "${name}" 吗？`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: window.currentLanguage === 'en' ? 'Yes, delete it!' : '是的，删除它！',
+            cancelButtonText: window.currentLanguage === 'en' ? 'Cancel' : '取消'
+        });
+
+        if (result.isConfirmed) {
+            // 使用 fetch API 替代 $.ajax
+            const response = await fetch(`/sqlx/v1/datasource/remove?name=${encodeURIComponent(name)}`, {
+                method: 'DELETE'
+            });
+
+            // 处理重定向
+            if (response.redirected) {
+                console.log('Redirected to:', response.url);
+                window.location.href = response.url;
+                return;
+            }
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.succeed) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: window.currentLanguage === 'en' ? 'Deleted!' : '已删除！',
+                        text: window.currentLanguage === 'en' ? 
+                            'The datasource has been deleted.' : 
+                            '数据源已被删除。',
+                        confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                        confirmButtonColor: '#87CEEB',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    loadDatasourceData(); // 重新加载数据
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                        text: data.msg,
+                        confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                        confirmButtonColor: '#87CEEB'
+                    });
+                }
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                    text: window.currentLanguage === 'en' ? 
+                        'Failed to delete datasource' : 
+                        '删除数据源失败',
+                    confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                    confirmButtonColor: '#87CEEB'
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Error removing datasource:', error);
+        Swal.fire({
+            icon: 'error',
+            title: window.currentLanguage === 'en' ? 'Error' : '错误',
+            text: window.currentLanguage === 'en' ? 'An error occurred' : '发生了一个错误',
+            confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+            confirmButtonColor: '#87CEEB'
+        });
+    }
+}
+
+function getStatusTranslation(status) {
+    const statusMap = {
+        'UP': '正常',
+        'DOWN': '宕机',
+        'OUT_OF_SERVICE': '停止服务',
+        'UNKNOWN': '未知'
+    };
+    return statusMap[status] || status;
+}
+
+function getTypeTranslation(type) {
+    const typeMap = {
+        'READ': window.currentLanguage === 'en' ? 'READ (Read Only)' : 'READ (只读)',
+        'WRITE': window.currentLanguage === 'en' ? 'WRITE (Write Only)' : 'WRITE (只写)',
+        'READ_WRITE': window.currentLanguage === 'en' ? 'READ_WRITE (Read & Write)' : 'READ_WRITE (可读可写)',
+        'INDEPENDENT': window.currentLanguage === 'en' ? 'INDEPENDENT (Independent R/W)' : 'INDEPENDENT (独立可读写)'
+    };
+    return typeMap[type] || type;
+}
+
+// 修改编辑函数
+async function editDatasource(name) {
+    try {
+        const detail = datasourceDetails[name];
+        if (detail) {
+            $('#editDatasourceId').val(name);
+            $('#editWeight').val(detail.weight);
+            $('#editStatus').val(detail.nodeAttribute.nodeState);
+            $('#editDatasourceModal').modal('show');
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                text: window.currentLanguage === 'en' ? 'Datasource details not found' : '未找到数据源详情',
+                confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                confirmButtonColor: '#87CEEB'
+            });
+        }
+    } catch (error) {
+        console.error('Error editing datasource:', error);
+        Swal.fire({
+            icon: 'error',
+            title: window.currentLanguage === 'en' ? 'Error' : '错误',
+            text: window.currentLanguage === 'en' ? 'An error occurred' : '发生了一个错误',
+            confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+            confirmButtonColor: '#87CEEB'
+        });
+    }
+}
+
+// 保存编辑的数据源
+$('#saveEditBtn').click(async function() {
+    try {
+        const name = $('#editDatasourceId').val();
+        const weight = parseInt($('#editWeight').val());
+        const state = $('#editStatus').val();
+
+        const data = {
+            name: name,
+            weight: weight,
+            state: state
+        };
+
+        // 使用 fetch API 替代 $.ajax
+        const response = await fetch('/sqlx/v1/datasource', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        // 处理重定向
+        if (response.redirected) {
+            console.log('Redirected to:', response.url);
+            window.location.href = response.url;
+            return;
+        }
+
+        if (response.ok) {
+            const responseData = await response.json();
+            if (responseData.succeed) {
+                $('#editDatasourceModal').modal('hide');
+                Swal.fire({
+                    icon: 'success',
+                    title: window.currentLanguage === 'en' ? 'Success' : '成功',
+                    text: window.currentLanguage === 'en' ? 'Datasource updated successfully' : '数据源更新成功',
+                    confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                    confirmButtonColor: '#87CEEB',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                loadDatasourceData();  // 重新加载数据
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                    text: responseData.msg,
+                    confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                    confirmButtonColor: '#87CEEB'
+                });
+            }
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                text: window.currentLanguage === 'en' ? 'Failed to update datasource' : '更新数据源失败',
+                confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                confirmButtonColor: '#87CEEB'
+            });
+        }
+    } catch (error) {
+        console.error('Error saving datasource:', error);
+        Swal.fire({
+            icon: 'error',
+            title: window.currentLanguage === 'en' ? 'Error' : '错误',
+            text: window.currentLanguage === 'en' ? 'An error occurred' : '发生了一个错误',
+            confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+            confirmButtonColor: '#87CEEB'
+        });
+    }
+});
+
+// 添加复制功能
+$(document).ready(function() {
+    $('#copyJsonBtn').click(function() {
+        const jsonText = $('#jsonDetail').text();
+        navigator.clipboard.writeText(jsonText).then(() => {
+            const $btn = $(this);
+            const originalText = $btn.find('span').text();
+            $btn.find('span').text(window.currentLanguage === 'en' ? 'Copied!' : '已复制！');
+            setTimeout(() => {
+                $btn.find('span').text(originalText);
+            }, 2000);
+        });
+    });
+});
+
+$(document).ready(function() {
+    // 新增数据源按钮点击事件
+    $('#saveDatasourceBtn').click(async function() {
+        try {
+            if (!validateForm()) return;
+
+            const data = collectFormData();
+
+            // 使用 fetch API 替代 $.ajax
+            const response = await fetch('/sqlx/v1/datasource', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            // 处理重定向
+            if (response.redirected) {
+                console.log('Redirected to:', response.url);
+                window.location.href = response.url;
+                return;
+            }
+
+            if (response.ok) {
+                const responseData = await response.json();
+                if (responseData.succeed) {
+                    $('#addDatasourceModal').modal('hide');
+                    $('#addDatasourceForm')[0].reset();
+                    $('#dynamicProperties').empty();
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: window.currentLanguage === 'en' ? 'Success' : '成功',
+                        text: window.currentLanguage === 'en' ? 'Datasource added successfully' : '数据源添加成功',
+                        confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                        confirmButtonColor: '#87CEEB',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    loadDatasourceData();  // 重新加载数据
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                        text: responseData.msg,
+                        confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                        confirmButtonColor: '#87CEEB'
+                    });
+                }
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                    text: window.currentLanguage === 'en' ? 'Failed to add datasource' : '添加数据源失败',
+                    confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                    confirmButtonColor: '#87CEEB'
+                });
+            }
+        } catch (error) {
+            console.error('Error adding datasource:', error);
+            Swal.fire({
+                icon: 'error',
+                title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                text: window.currentLanguage === 'en' ? 'An error occurred' : '发生了一个错误',
+                confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                confirmButtonColor: '#87CEEB'
+            });
+        }
+    });
+
+    // 测试连接按钮点击事件
+    $('#testConnectionBtn').click(async function() {
+        try {
+            if (!validateForm()) return;
+
+            const data = collectFormData();
+
+            // 使用 fetch API 替代 $.ajax
+            const response = await fetch('/sqlx/v1/datasource/test-connection', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            // 处理重定向
+            if (response.redirected) {
+                console.log('Redirected to:', response.url);
+                window.location.href = response.url;
+                return;
+            }
+
+            if (response.ok) {
+                const responseData = await response.json();
+                if (responseData.succeed) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: window.currentLanguage === 'en' ? 'Connection Successful' : '连接成功',
+                        text: window.currentLanguage === 'en' ? 'The connection was successful.' : '连接成功。',
+                        confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                        confirmButtonColor: '#87CEEB'
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: window.currentLanguage === 'en' ? 'Connection Failed' : '连接失败',
+                        text: responseData.msg,
+                        confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                        confirmButtonColor: '#87CEEB'
+                    });
+                }
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                    text: window.currentLanguage === 'en' ? 'Failed to test connection' : '测试连接失败',
+                    confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                    confirmButtonColor: '#87CEEB'
+                });
+            }
+        } catch (error) {
+            console.error('Error testing connection:', error);
+            Swal.fire({
+                icon: 'error',
+                title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                text: window.currentLanguage === 'en' ? 'An error occurred' : '发生了一个错误',
+                confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                confirmButtonColor: '#87CEEB'
+            });
+        }
+    });
+
+    // 动态添加属性输入框
+    $('#addPropertyBtn').click(function() {
+        const propertyHtml = `
+            <div class="row mb-3 property-item">
+                <div class="col-md-5">
+                    <input type="text" class="form-control" name="propertyKey" placeholder="Key" required>
+                </div>
+                <div class="col-md-5">
+                    <input type="text" class="form-control" name="propertyValue" placeholder="Value" required>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-danger remove-property">Remove</button>
+                </div>
+            </div>
+        `;
+        $('#dynamicProperties').append(propertyHtml);
+    });
+
+    // 移除动态添加的属性输入框
+    $('#dynamicProperties').on('click', '.remove-property', function() {
+        $(this).closest('.property-item').remove();
+    });
+});
+
+// 校验表单
+function validateForm() {
+    let isValid = true;
+    $('#addDatasourceForm [required]').each(function() {
+        if (!$(this).val()) {
+            isValid = false;
+            $(this).addClass('is-invalid');
+        } else {
+            $(this).removeClass('is-invalid');
+        }
+    });
+
+    if (!isValid) {
+        Swal.fire({
+            icon: 'error',
+            title: window.currentLanguage === 'en' ? 'Validation Error' : '验证错误',
+            text: window.currentLanguage === 'en' ? 'Please fill in all required fields.' : '请填写所有必填项。',
+            confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+            confirmButtonColor: '#87CEEB'
+        });
+    }
+    return isValid;
+}
+
+// 收集表单数据
+function collectFormData() {
+    const formData = $('#addDatasourceForm').serializeArray();
+    const data = {};
+    formData.forEach(item => {
+        data[item.name] = item.value;
+    });
+
+    // 构建 props 对象
+    const props = {};
+    $('#dynamicProperties .property-item').each(function() {
+        const key = $(this).find('input[name="propertyKey"]').val();
+        const value = $(this).find('input[name="propertyValue"]').val();
+        if (key) {
+            props[key] = value;
+        }
+    });
+
+    // 将 props 对象添加到数据中
+    data.props = props;
+    return data;
+}
+</script> 
+
+<style>
+.property-item {
+    padding: 10px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.property-item:hover {
+    background-color: #f8f9fa;
+}
+
+.remove-property {
+    opacity: 0.7;
+}
+
+.remove-property:hover {
+    opacity: 1;
+}
+
+.invalid-feedback {
+    font-size: 80%;
+}
+
+.datasource-name {
+    color: var(--primary-color);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.datasource-name:hover {
+    text-decoration: underline;
+    color: #75bcd6;
+}
+
+.json-copy-btn:hover {
+    color: #0550ae;
+    border-color: #0550ae;
+    background-color: rgba(5,80,174,0.1);
+}
+
+    /* 短 URL 样式 */
+    .short-url {
+        color: #007bff;
+        cursor: pointer;
+        text-decoration: none;
+        position: relative;
+    }
+
+    /* 鼠标悬停时的高亮效果 */
+    .short-url:hover::after {
+        content: attr(data-full-url);
+        position: absolute;
+        left: 0;
+        top: 100%;
+        background-color: #ffffff;
+        color: #333;
+        border: 1px solid #007bff;
+        padding: 5px;
+        border-radius: 4px;
+        white-space: nowrap;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+    }
+
+    .is-invalid {
+        border-color: #dc3545;
+}
+</style> 

@@ -1,0 +1,745 @@
+/*
+ *    Copyright 2023 the original author or authors.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
+package com.github.sqlx.jdbc;
+
+
+import com.github.sqlx.jdbc.datasource.SqlXDataSource;
+import com.github.sqlx.jdbc.datasource.RoutedDataSource;
+import com.github.sqlx.listener.RouteInfo;
+import com.github.sqlx.listener.EventListener;
+import com.github.sqlx.util.RoutingUtils;
+import com.github.sqlx.util.StringUtils;
+import lombok.extern.slf4j.Slf4j;
+
+import javax.sql.DataSource;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+
+/**
+ * @author He Xing Mo
+ * @since 1.0
+ */
+
+@Slf4j
+public class ProxyConnection extends AbstractConnectionAdapter {
+
+    private Connection physicalConnection;
+
+    private volatile boolean autoCommit = true;
+
+    private volatile boolean closed = false;
+
+    private volatile boolean readOnly = false;
+
+    private volatile int isolation = TRANSACTION_READ_COMMITTED;
+
+    private volatile String schema;
+
+    private volatile int holdability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
+
+    private String catalog;
+
+    private final Map<String , String> clientInfoMap = new HashMap<>();
+
+    private final List<RouteInfo> routeInfoList = new ArrayList<>();
+
+    private final ConnectionInfo connectionInfo = new ConnectionInfo();
+
+    private Properties clientInfo;
+
+    private DatabaseMetaDataWrapper databaseMetaData;
+
+    private final SqlXDataSource sqlXDataSource;
+
+    private EventListener eventListener;
+
+    public ProxyConnection(SqlXDataSource sqlXDataSource, EventListener eventListener) {
+        this(sqlXDataSource);
+        this.eventListener = eventListener;
+    }
+
+    public ProxyConnection(SqlXDataSource sqlXDataSource) {
+        this.sqlXDataSource = sqlXDataSource;
+        this.connectionInfo.setRouteInfoList(routeInfoList);
+        this.connectionInfo.setConnection(this);
+        this.databaseMetaData = new DatabaseMetaDataWrapper(null , this);
+    }
+
+    @Override
+    public Statement createStatement() throws SQLException {
+        return new ProxyStatement(sqlXDataSource, ResultSet.TYPE_SCROLL_INSENSITIVE , ResultSet.CONCUR_READ_ONLY , ResultSet.CLOSE_CURSORS_AT_COMMIT , eventListener);
+    }
+
+    @Override
+    public Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException {
+        return new ProxyStatement(sqlXDataSource, ResultSet.TYPE_SCROLL_INSENSITIVE , resultSetConcurrency , ResultSet.CLOSE_CURSORS_AT_COMMIT , eventListener);
+    }
+
+    @Override
+    public Statement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+        return new ProxyStatement(sqlXDataSource, resultSetType , resultSetConcurrency , resultSetHoldability , eventListener);
+    }
+
+    @Override
+    public PreparedStatement prepareStatement(String sql) throws SQLException {
+
+        PreparedStatementInfo preparedStatementInfo = new PreparedStatementInfo();
+        connectionInfo.addStatementInfo(preparedStatementInfo);
+        preparedStatementInfo.setConnectionInfo(connectionInfo);
+        Exception e = null;
+        try {
+            // Pay attention to the order of obtaining the connection first and then processing the PrepareStatement
+            RoutedConnection routedConnection = getConnection(sql);
+            preparedStatementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
+            preparedStatementInfo.setSql(sql);
+            preparedStatementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
+            preparedStatementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
+            eventListener.onBeforePrepareStatement(preparedStatementInfo);
+            Connection connection = routedConnection.getConnection();
+            String nativeSql = routedConnection.getNativeSql();
+            PreparedStatement ps = connection.prepareStatement(nativeSql);
+            preparedStatementInfo.setNativeSql(nativeSql);
+            preparedStatementInfo.setStatement(ps);
+            return new ProxyPreparedStatement(this.sqlXDataSource, preparedStatementInfo , this.eventListener);
+        } catch (Exception ex) {
+            e = ex;
+            throw ex;
+        } finally {
+            preparedStatementInfo.addException(e);
+            preparedStatementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
+            preparedStatementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
+            eventListener.onAfterPrepareStatement(preparedStatementInfo , e);
+        }
+    }
+
+    @Override
+    public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
+        PreparedStatementInfo preparedStatementInfo = new PreparedStatementInfo();
+        connectionInfo.addStatementInfo(preparedStatementInfo);
+        preparedStatementInfo.setConnectionInfo(connectionInfo);
+        SQLException e = null;
+        try {
+            RoutedConnection routedConnection = getConnection(sql);
+            preparedStatementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
+            preparedStatementInfo.setSql(sql);
+            preparedStatementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
+            preparedStatementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
+            eventListener.onBeforePrepareStatement(preparedStatementInfo);
+            Connection connection = routedConnection.getConnection();
+            String nativeSql = routedConnection.getNativeSql();
+            PreparedStatement ps = connection.prepareStatement(nativeSql, resultSetType, resultSetConcurrency);
+            preparedStatementInfo.setNativeSql(nativeSql);
+            preparedStatementInfo.setStatement(ps);
+            return new ProxyPreparedStatement(this.sqlXDataSource,preparedStatementInfo , this.eventListener);
+        } catch (SQLException ex) {
+            e = ex;
+            throw ex;
+        } finally {
+            preparedStatementInfo.addException(e);
+            preparedStatementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
+            preparedStatementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
+            eventListener.onAfterPrepareStatement(preparedStatementInfo , e);
+        }
+    }
+
+
+    @Override
+    public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+
+        PreparedStatementInfo preparedStatementInfo = new PreparedStatementInfo();
+        connectionInfo.addStatementInfo(preparedStatementInfo);
+        preparedStatementInfo.setConnectionInfo(connectionInfo);
+        SQLException e = null;
+        try {
+            RoutedConnection routedConnection = getConnection(sql);
+            preparedStatementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
+            preparedStatementInfo.setSql(sql);
+            preparedStatementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
+            preparedStatementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
+            eventListener.onBeforePrepareStatement(preparedStatementInfo);
+            Connection connection = routedConnection.getConnection();
+            String nativeSql = routedConnection.getNativeSql();
+            PreparedStatement ps = connection.prepareStatement(nativeSql, resultSetType, resultSetConcurrency, resultSetHoldability);
+            preparedStatementInfo.setNativeSql(nativeSql);
+            preparedStatementInfo.setStatement(ps);
+            return new ProxyPreparedStatement(this.sqlXDataSource,preparedStatementInfo , this.eventListener);
+        } catch (SQLException ex) {
+            e = ex;
+            throw ex;
+        } finally {
+            preparedStatementInfo.addException(e);
+            preparedStatementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
+            preparedStatementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
+            eventListener.onAfterPrepareStatement(preparedStatementInfo , e);
+        }
+    }
+
+    @Override
+    public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException {
+
+        PreparedStatementInfo preparedStatementInfo = new PreparedStatementInfo();
+        connectionInfo.addStatementInfo(preparedStatementInfo);
+        preparedStatementInfo.setConnectionInfo(connectionInfo);
+        SQLException e = null;
+        try {
+            RoutedConnection routedConnection = getConnection(sql);
+            preparedStatementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
+            preparedStatementInfo.setSql(sql);
+            preparedStatementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
+            preparedStatementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
+            eventListener.onBeforePrepareStatement(preparedStatementInfo);
+            Connection connection = routedConnection.getConnection();
+            String nativeSql = routedConnection.getNativeSql();
+            PreparedStatement ps = connection.prepareStatement(nativeSql, autoGeneratedKeys);
+            preparedStatementInfo.setNativeSql(nativeSql);
+            preparedStatementInfo.setStatement(ps);
+            return new ProxyPreparedStatement(this.sqlXDataSource,preparedStatementInfo , this.eventListener);
+        } catch (SQLException ex) {
+            e = ex;
+            throw ex;
+        } finally {
+            preparedStatementInfo.addException(e);
+            preparedStatementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
+            preparedStatementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
+            eventListener.onAfterPrepareStatement(preparedStatementInfo , e);
+        }
+    }
+
+    @Override
+    public PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException {
+        PreparedStatementInfo preparedStatementInfo = new PreparedStatementInfo();
+        connectionInfo.addStatementInfo(preparedStatementInfo);
+        preparedStatementInfo.setConnectionInfo(connectionInfo);
+        SQLException e = null;
+        try {
+            RoutedConnection routedConnection = getConnection(sql);
+            preparedStatementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
+            preparedStatementInfo.setSql(sql);
+            preparedStatementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
+            preparedStatementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
+            eventListener.onBeforePrepareStatement(preparedStatementInfo);
+            Connection connection = routedConnection.getConnection();
+            String nativeSql = routedConnection.getNativeSql();
+            PreparedStatement ps = connection.prepareStatement(nativeSql, columnIndexes);
+            preparedStatementInfo.setNativeSql(nativeSql);
+            preparedStatementInfo.setStatement(ps);
+            return new ProxyPreparedStatement(this.sqlXDataSource,preparedStatementInfo , this.eventListener);
+        } catch (SQLException ex) {
+            e = ex;
+            throw ex;
+        } finally {
+            preparedStatementInfo.addException(e);
+            preparedStatementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
+            preparedStatementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
+            eventListener.onAfterPrepareStatement(preparedStatementInfo , e);
+        }
+    }
+
+    @Override
+    public PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException {
+
+        PreparedStatementInfo preparedStatementInfo = new PreparedStatementInfo();
+        connectionInfo.addStatementInfo(preparedStatementInfo);
+        preparedStatementInfo.setConnectionInfo(connectionInfo);
+        SQLException e = null;
+        try {
+            RoutedConnection routedConnection = getConnection(sql);
+            preparedStatementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
+            preparedStatementInfo.setSql(sql);
+            preparedStatementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
+            preparedStatementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
+            eventListener.onBeforePrepareStatement(preparedStatementInfo);
+            Connection connection = routedConnection.getConnection();
+            String nativeSql = routedConnection.getNativeSql();
+            PreparedStatement ps = connection.prepareStatement(nativeSql, columnNames);
+            preparedStatementInfo.setNativeSql(nativeSql);
+            preparedStatementInfo.setStatement(ps);
+            return new ProxyPreparedStatement(this.sqlXDataSource,preparedStatementInfo , this.eventListener);
+        } catch (SQLException ex) {
+            e = ex;
+            throw ex;
+        } finally {
+            preparedStatementInfo.addException(e);
+            preparedStatementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
+            preparedStatementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
+            eventListener.onAfterPrepareStatement(preparedStatementInfo , e);
+        }
+    }
+
+    @Override
+    public CallableStatement prepareCall(String sql) throws SQLException {
+        CallableStatementInfo statementInfo = new CallableStatementInfo();
+        connectionInfo.addStatementInfo(statementInfo);
+        statementInfo.setConnectionInfo(connectionInfo);
+        SQLException e = null;
+        try {
+            RoutedConnection routedConnection = getConnection(sql);
+            statementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
+            statementInfo.setSql(sql);
+            statementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
+            statementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
+            eventListener.onBeforeCallableStatement(statementInfo);
+            Connection connection = routedConnection.getConnection();
+            String nativeSql = routedConnection.getNativeSql();
+            CallableStatement callableStatement = connection.prepareCall(nativeSql);
+            statementInfo.setNativeSql(nativeSql);
+            statementInfo.setStatement(callableStatement);
+            statementInfo.setCallableStatement(callableStatement);
+            return new ProxyCallableStatement(this.sqlXDataSource,statementInfo , callableStatement , this.eventListener);
+        } catch (SQLException ex) {
+            e = ex;
+            throw ex;
+        } finally {
+            statementInfo.addException(e);
+            statementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
+            statementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
+            eventListener.onAfterCallStatement(statementInfo , e);
+        }
+    }
+
+    @Override
+    public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
+        CallableStatementInfo statementInfo = new CallableStatementInfo();
+        connectionInfo.addStatementInfo(statementInfo);
+        statementInfo.setConnectionInfo(connectionInfo);
+        SQLException e = null;
+        try {
+            RoutedConnection routedConnection = getConnection(sql);
+            statementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
+            statementInfo.setSql(sql);
+            statementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
+            statementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
+            eventListener.onBeforeCallableStatement(statementInfo);
+            Connection connection = routedConnection.getConnection();
+            String nativeSql = routedConnection.getNativeSql();
+            CallableStatement callableStatement = connection.prepareCall(nativeSql, resultSetType, resultSetConcurrency);
+            statementInfo.setNativeSql(nativeSql);
+            statementInfo.setStatement(callableStatement);
+            statementInfo.setCallableStatement(callableStatement);
+            return new ProxyCallableStatement(this.sqlXDataSource,statementInfo , callableStatement , this.eventListener);
+        } catch (SQLException ex) {
+            e = ex;
+            throw ex;
+        } finally {
+            statementInfo.addException(e);
+            statementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
+            statementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
+            eventListener.onAfterCallStatement(statementInfo , e);
+        }
+    }
+
+    @Override
+    public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+
+        CallableStatementInfo statementInfo = new CallableStatementInfo();
+        connectionInfo.addStatementInfo(statementInfo);
+        statementInfo.setConnectionInfo(connectionInfo);
+        SQLException e = null;
+        try {
+            RoutedConnection routedConnection = getConnection(sql);
+            statementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
+            statementInfo.setSql(sql);
+            statementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
+            statementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
+            eventListener.onBeforeCallableStatement(statementInfo);
+            Connection connection = routedConnection.getConnection();
+            String nativeSql = routedConnection.getNativeSql();
+            CallableStatement callableStatement = connection.prepareCall(nativeSql, resultSetType, resultSetConcurrency, resultSetHoldability);
+            statementInfo.setNativeSql(nativeSql);
+            statementInfo.setStatement(callableStatement);
+            statementInfo.setCallableStatement(callableStatement);
+            return new ProxyCallableStatement(this.sqlXDataSource,statementInfo , callableStatement , this.eventListener);
+        } catch (SQLException ex) {
+            e = ex;
+            throw ex;
+        } finally {
+            statementInfo.addException(e);
+            statementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
+            statementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
+            eventListener.onAfterCallStatement(statementInfo , e);
+        }
+    }
+
+    @Override
+    public synchronized void setAutoCommit(boolean autoCommit) throws SQLException {
+
+        SQLException e = null;
+        boolean oldAutoCommit = this.autoCommit;
+        try {
+            eventListener.onBeforeSetAutoCommit(connectionInfo, autoCommit, oldAutoCommit);
+            this.autoCommit = autoCommit;
+            if (Objects.nonNull(physicalConnection)) {
+                physicalConnection.setAutoCommit(autoCommit);
+            }
+        } catch (SQLException sqle){
+            e = sqle;
+            throw e;
+        } finally {
+            eventListener.onAfterSetAutoCommit(connectionInfo, autoCommit, oldAutoCommit, e);
+        }
+    }
+
+    @Override
+    public synchronized boolean getAutoCommit() throws SQLException {
+        return Objects.nonNull(physicalConnection) ? physicalConnection.getAutoCommit() : this.autoCommit;
+    }
+
+    @Override
+    public void commit() throws SQLException {
+        if (Objects.isNull(physicalConnection)) {
+            return;
+        }
+        SQLException e = null;
+        try {
+            connectionInfo.setBeforeTimeToCommitNs(System.nanoTime());
+            connectionInfo.setBeforeTimeToCommitMillis(System.currentTimeMillis());
+            eventListener.onBeforeCommit(connectionInfo);
+            physicalConnection.commit();
+        } catch (SQLException sqle) {
+            e = sqle;
+            throw e;
+        } finally {
+            connectionInfo.setAfterTimeToCommitNs(System.nanoTime());
+            connectionInfo.setAfterTimeToCommitMillis(System.currentTimeMillis());
+            eventListener.onAfterCommit(connectionInfo, e);
+        }
+    }
+
+    @Override
+    public void rollback() throws SQLException {
+        if (Objects.isNull(physicalConnection)) {
+            return;
+        }
+        SQLException e = null;
+        try {
+            connectionInfo.setBeforeTimeToRollbackNs(System.nanoTime());
+            connectionInfo.setBeforeTimeToRollbackMillis(System.currentTimeMillis());
+            eventListener.onBeforeRollback(connectionInfo);
+            physicalConnection.rollback();
+        } catch (SQLException sqle) {
+            e = sqle;
+            throw e;
+        } finally {
+            connectionInfo.setAfterTimeToRollbackNs(System.nanoTime());
+            connectionInfo.setAfterTimeToRollbackMillis(System.currentTimeMillis());
+            eventListener.onAfterRollback(connectionInfo, e);
+        }
+    }
+
+    @Override
+    public synchronized void close() throws SQLException {
+        if (closed || physicalConnection == null) {
+            return;
+        }
+        this.closed = true;
+        SQLException e = null;
+        try {
+            connectionInfo.setBeforeTimeToCloseConnectionNs(System.nanoTime());
+            connectionInfo.setBeforeTimeToCloseConnectionMillis(System.currentTimeMillis());
+            eventListener.onBeforeConnectionClose(connectionInfo);
+            physicalConnection.close();
+        } catch (SQLException ex) {
+            e = ex;
+        } finally {
+            connectionInfo.setAfterTimeToCloseConnectionNs(System.nanoTime());
+            connectionInfo.setAfterTimeToCloseConnectionMillis(System.currentTimeMillis());
+            eventListener.onAfterConnectionClose(connectionInfo , e);
+        }
+    }
+
+    @Override
+    public boolean isClosed() throws SQLException {
+        return Objects.nonNull(physicalConnection) ? physicalConnection.isClosed() : this.closed;
+    }
+
+    @Override
+    public synchronized DatabaseMetaData getMetaData() throws SQLException {
+        if (this.physicalConnection != null) {
+            if (this.databaseMetaData.getDelegate() == null) {
+                this.databaseMetaData.setDelegate(physicalConnection.getMetaData());
+            }
+        } else {
+            RoutedDataSource routedDataSource = sqlXDataSource.getDataSourceForDatabaseMetaData();
+            RouteInfo routeInfo = routedDataSource.getRouteInfo();
+            this.connectionInfo.setCurrentRouteInfo(routeInfo);
+            this.routeInfoList.add(routeInfo);
+            DataSource dataSource = routedDataSource.getDelegate();
+            this.physicalConnection = acquireConnection(dataSource);
+            DatabaseMetaData metaData = physicalConnection.getMetaData();
+            this.databaseMetaData.setDelegate(metaData);
+        }
+        return databaseMetaData;
+    }
+
+    @Override
+    public synchronized void setReadOnly(boolean readOnly) throws SQLException {
+        this.readOnly = readOnly;
+        if (Objects.nonNull(physicalConnection)) {
+            physicalConnection.setReadOnly(readOnly);
+        }
+    }
+
+    @Override
+    public synchronized boolean isReadOnly() throws SQLException {
+        return Objects.nonNull(physicalConnection) ? physicalConnection.isReadOnly() : this.readOnly;
+    }
+
+    @Override
+    public synchronized void setTransactionIsolation(int level) throws SQLException {
+        this.isolation = level;
+        if (Objects.nonNull(physicalConnection)) {
+            physicalConnection.setTransactionIsolation(level);
+        }
+    }
+
+    @Override
+    public synchronized int getTransactionIsolation() throws SQLException {
+        return Objects.nonNull(physicalConnection) ? physicalConnection.getTransactionIsolation() : this.isolation;
+    }
+
+
+    public ConnectionInfo getConnectionInfo() {
+        return this.connectionInfo;
+    }
+
+    @Override
+    public Savepoint setSavepoint() throws SQLException {
+        return Objects.nonNull(physicalConnection) ? physicalConnection.setSavepoint() : null;
+    }
+
+    @Override
+    public Savepoint setSavepoint(String name) throws SQLException {
+        return Objects.nonNull(physicalConnection) ? physicalConnection.setSavepoint(name) : null;
+    }
+
+    @Override
+    public void rollback(Savepoint savepoint) throws SQLException {
+        if (Objects.isNull(physicalConnection)) {
+            return;
+        }
+        SQLException e = null;
+        try {
+            connectionInfo.setBeforeTimeToRollbackNs(System.nanoTime());
+            connectionInfo.setBeforeTimeToRollbackMillis(System.currentTimeMillis());
+            eventListener.onBeforeSavepointRollback(connectionInfo , savepoint);
+            physicalConnection.rollback(savepoint);
+        } catch (SQLException sqle) {
+            e = sqle;
+            throw e;
+        } finally {
+            connectionInfo.setAfterTimeToRollbackNs(System.nanoTime());
+            connectionInfo.setAfterTimeToRollbackMillis(System.currentTimeMillis());
+            eventListener.onAfterSavepointRollback(connectionInfo, savepoint , e);
+        }
+    }
+
+    @Override
+    public void releaseSavepoint(Savepoint savepoint) throws SQLException {
+        if (Objects.nonNull(physicalConnection)) {
+            physicalConnection.releaseSavepoint(savepoint);
+        }
+    }
+
+    @Override
+    public Clob createClob() throws SQLException {
+        return Objects.nonNull(physicalConnection) ? physicalConnection.createClob() : null;
+    }
+
+    @Override
+    public Blob createBlob() throws SQLException {
+        return Objects.nonNull(physicalConnection) ? physicalConnection.createBlob() : null;
+    }
+
+    @Override
+    public synchronized NClob createNClob() throws SQLException {
+        return Objects.nonNull(physicalConnection) ? physicalConnection.createNClob() : null;
+    }
+
+    @Override
+    public SQLXML createSQLXML() throws SQLException {
+        return Objects.nonNull(physicalConnection) ? physicalConnection.createSQLXML() : null;
+    }
+
+
+    @Override
+    public Array createArrayOf(String typeName, Object[] elements) throws SQLException {
+        return Objects.nonNull(physicalConnection) ? physicalConnection.createArrayOf(typeName , elements) : null;
+    }
+
+    @Override
+    public Struct createStruct(String typeName, Object[] attributes) throws SQLException {
+        return Objects.nonNull(physicalConnection) ? physicalConnection.createStruct(typeName , attributes) : null;
+    }
+
+    @Override
+    public boolean isValid(int timeout) throws SQLException {
+        return Objects.nonNull(physicalConnection) ? physicalConnection.isValid(timeout) : true;
+    }
+
+    @Override
+    public synchronized void setClientInfo(String name, String value) throws SQLClientInfoException {
+        clientInfoMap.put(name , value);
+        if (Objects.nonNull(physicalConnection)) {
+            physicalConnection.setClientInfo(name , value);
+        }
+    }
+
+    @Override
+    public synchronized void setClientInfo(Properties properties) throws SQLClientInfoException {
+        this.clientInfo = properties;
+        if (Objects.nonNull(physicalConnection)) {
+            physicalConnection.setClientInfo(properties);
+        }
+    }
+
+    @Override
+    public String getClientInfo(String name) throws SQLException {
+        return Objects.nonNull(physicalConnection) ? physicalConnection.getClientInfo(name) : null;
+    }
+
+    @Override
+    public synchronized Properties getClientInfo() throws SQLException {
+        return Objects.nonNull(physicalConnection) ? physicalConnection.getClientInfo() : null;
+    }
+
+
+    @Override
+    public synchronized void setSchema(String schema) throws SQLException {
+        this.schema = schema;
+        if (Objects.nonNull(physicalConnection)) {
+            physicalConnection.setSchema(schema);
+        }
+    }
+
+    @Override
+    public synchronized String getSchema() throws SQLException {
+        return Objects.nonNull(physicalConnection) ? physicalConnection.getSchema() : this.schema;
+    }
+
+    @Override
+    public synchronized void setHoldability(int holdability) throws SQLException {
+        this.holdability = holdability;
+        if (Objects.nonNull(physicalConnection)) {
+            physicalConnection.setHoldability(holdability);
+        }
+    }
+
+    @Override
+    public synchronized int getHoldability() throws SQLException {
+        return this.holdability;
+    }
+
+    @Override
+    public SQLWarning getWarnings() throws SQLException {
+        return physicalConnection != null ? physicalConnection.getWarnings() : null;
+    }
+
+    @Override
+    public void clearWarnings() throws SQLException {
+        if (physicalConnection != null) {
+            physicalConnection.clearWarnings();
+        }
+    }
+
+    @Override
+    public String getCatalog() throws SQLException {
+        return catalog;
+    }
+
+    @Override
+    public void setCatalog(String catalog) throws SQLException {
+        this.catalog = catalog;
+        if (Objects.nonNull(physicalConnection)) {
+            physicalConnection.setCatalog(catalog);
+        }
+    }
+
+    public List<RouteInfo> getRoutingInfoList() {
+        return routeInfoList;
+    }
+
+    public synchronized RoutedConnection getConnection(String sql) throws SQLException {
+        RoutedDataSource routedDataSource = sqlXDataSource.getDataSource(sql);
+        if (Objects.nonNull(physicalConnection)) {
+            RouteInfo routeInfo = routedDataSource.getRouteInfo();
+            RoutingUtils.setDefaultDatabase(physicalConnection.getCatalog() , routeInfo);
+            this.connectionInfo.setCurrentRouteInfo(routeInfo);
+            this.connectionInfo.setTransactionId(routeInfo.getTransactionId());
+            this.connectionInfo.setTransactionName(routeInfo.getTransactionName());
+            this.routeInfoList.add(routeInfo);
+            return new RoutedConnection(routedDataSource , this.physicalConnection);
+        }
+
+        RouteInfo routeInfo = routedDataSource.getRouteInfo();
+        this.connectionInfo.setCurrentRouteInfo(routeInfo);
+        this.connectionInfo.setTransactionId(routeInfo.getTransactionId());
+        this.connectionInfo.setTransactionName(routeInfo.getTransactionName());
+        this.routeInfoList.add(routeInfo);
+        Connection connection = acquireConnection(routedDataSource);
+        RoutingUtils.setDefaultDatabase(connection.getCatalog() , routeInfo);
+        return new RoutedConnection(routedDataSource , connection);
+    }
+
+    public Connection getPhysicalConnection() {
+        return this.physicalConnection;
+    }
+
+    private synchronized Connection acquireConnection(DataSource dataSource) throws SQLException {
+
+        SQLException e = null;
+        try {
+            connectionInfo.setBeforeTimeToGetConnectionNs(System.nanoTime());
+            connectionInfo.setBeforeTimeToGetConnectionMillis(System.currentTimeMillis());
+            eventListener.onBeforeGetConnection(connectionInfo);
+            this.physicalConnection = dataSource.getConnection();
+            this.databaseMetaData.setDelegate(this.physicalConnection.getMetaData());
+            connectionPropertiesSet();
+            return this.physicalConnection;
+        } catch (SQLException ex) {
+            e = ex;
+            throw ex;
+        } finally {
+            connectionInfo.setAfterTimeToGetConnectionNs(System.nanoTime());
+            connectionInfo.setAfterTimeToGetConnectionMillis(System.currentTimeMillis());
+            eventListener.onAfterGetConnection(connectionInfo , e);
+        }
+    }
+
+    private void connectionPropertiesSet() throws SQLException {
+        this.physicalConnection.setAutoCommit(this.autoCommit);
+        this.physicalConnection.setReadOnly(this.readOnly);
+        this.physicalConnection.setTransactionIsolation(this.isolation);
+        if (this.schema != null) {
+            this.physicalConnection.setSchema(this.schema);
+        }
+        this.physicalConnection.setHoldability(holdability);
+        if (this.clientInfo != null) {
+            this.physicalConnection.setClientInfo(clientInfo);
+        }
+        for (Map.Entry<String, String> entry : this.clientInfoMap.entrySet()) {
+            this.physicalConnection.setClientInfo(entry.getKey() , entry.getValue());
+        }
+        if (StringUtils.isNotBlank(catalog)) {
+            this.physicalConnection.setCatalog(catalog);
+        }
+    }
+}

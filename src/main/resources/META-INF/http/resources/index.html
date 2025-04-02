@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQLX</title>
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
+<!--    <link href="./css/all.min.css" rel="stylesheet">-->
+    <link href="./css/sweetalert2.min.css" rel="stylesheet">
+    <!-- <link href="./css/font-awesome.all.min.css" rel="stylesheet"> -->
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="./css/highlight.min.css">
+    <link href="./css/common.css" rel="stylesheet">
+
+
+    <style>
+        :root {
+            --primary-color: #87CEEB;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background-color: var(--primary-color);
+            padding: 1rem 2rem;
+        }
+
+        .navbar-brand {
+            color: white;
+            font-weight: bold;
+        }
+
+        .nav-link {
+            color: white !important;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+            padding: 0.5rem 1rem !important;
+        }
+
+        .nav-link:hover {
+            opacity: 1;
+        }
+
+        .nav-link.active {
+            opacity: 1;
+            font-weight: bold;
+        }
+
+        .language-switch {
+            color: white;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border: 1px solid white;
+            border-radius: 4px;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        .language-switch:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <!--
+    如果你对 sqlx 感兴趣，并希望参与其开发，欢迎加入我们的团队！请将您的想法和简历发送至邮箱：dawn.hexingmo@gmail.com。期待与您一起推动 sqlx 的发展！
+
+    If you are interested in sqlx and would like to participate in its development, we warmly invite you to join our team!
+    Please send your ideas and resume to the email: dawn.hexingmo@gmail.com.
+    We look forward to working with you to advance the development of sqlx!
+    -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">SQLX</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" data-page="dashboard" data-en="Dashboard" data-zh="仪表板">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-page="datasource" data-en="Datasource" data-zh="数据源">Datasource</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-page="cluster" data-en="Cluster" data-zh="集群">Cluster</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-page="routing" data-en="Routing Metrics" data-zh="路由">Routing Metrics</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-page="sql" data-en="SQL Metrics" data-zh="SQL">SQL Metrics</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-page="transaction" data-en="Transaction Metrics" data-zh="事务">Transaction Metrics</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-page="table" data-en="Table Metrics" data-zh="表">Transaction Metrics</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-page="configuration" data-en="Configuration" data-zh="配置">Configuration</a>
+                    </li>
+                </ul>
+                <div class="language-switch" id="languageSwitch" data-language="en">EN / 中</div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div id="pageContent">
+            <!-- 页面内容将通过 load 方法加载到这里 -->
+        </div>
+    </div>
+
+    <script src="./js/jquery-3.6.0.min.js"></script>
+    <script src="./js/bootstrap.bundle.min.js"></script>
+    <script src="./js/sweetalert2@11.js"></script>
+    <script src="./js/jsonViewer.js"></script>
+    <!-- 引入 Chart.js -->
+    <script src="./js/chart.js"></script>
+    <!-- 引入日期适配器 -->
+    <script src="./js/chartjs-adapter-date-fns.js"></script>
+    <script src="./js/js-yaml.min.js"></script>
+    <script src="./js/highlight.min.js"></script>
+    <script src="./js/highlight.json.min.js"></script>
+    <script src="./js/highlight.yaml.min.js"></script>
+    <script src="./js/highlight.properties.min.js"></script>
+
+    <script>
+        // 定义全局变量
+        window.currentLanguage = localStorage.getItem('language') || 'en';
+        // 添加页面清理函数对象
+        const pageCleanupHandlers = {
+            configuration: function() {
+                // 清理配置页面的变量和事件监听器
+                window.currentConfig = null;
+                $('#exportFormat').off('change');
+                $('#exportBtn').off('click');
+                $('#copyBtn').off('click');
+            }
+        };
+        
+        // 设置全局AJAX请求拦截器
+        $.ajaxSetup({
+            statusCode: {
+                302: function(xhr) {
+                    // 获取重定向的URL
+                    const redirectUrl = xhr.getResponseHeader('Location');
+                    if (redirectUrl) {
+                        // 跳转到重定向URL
+                        window.location.href = redirectUrl;
+                    } else {
+                        // 如果没有Location头，默认跳转到登录页面
+                        window.location.href = 'login.html';
+                    }
+                }
+            },
+            complete: function(xhr, status) {
+                // 处理302重定向到登录页面的情况（备用方案）
+                if (xhr.status === 302) {
+                    const redirectUrl = xhr.getResponseHeader('Location');
+                    if (redirectUrl) {
+                        window.location.href = redirectUrl;
+                        return;
+                    }
+                }
+            }
+        });
+        
+        // 定义全局语言更新函数
+        window.updateLanguage = function() {
+            // 更新所有带有 data-en 和 data-zh 属性的元素
+            $('[data-en]').each(function() {
+                const text = $(this).attr(`data-${currentLanguage}`);
+                $(this).text(text);
+            });
+
+            // 更新所有带有 data-en-placeholder 和 data-zh-placeholder 属性的元素
+            $('[data-en-placeholder]').each(function() {
+                const placeholder = $(this).attr(`data-${currentLanguage}-placeholder`);
+                $(this).attr('placeholder', placeholder);
+            });
+
+            // 保存语言设置到 localStorage
+            localStorage.setItem('language', currentLanguage);
+        };
+
+        $(document).ready(function() {
+            // 语言切换功能
+            $('#languageSwitch').click(function() {
+                window.currentLanguage = window.currentLanguage === 'en' ? 'zh' : 'en';
+                window.updateLanguage();
+                $(this).attr('data-language', currentLanguage);
+            });
+
+            // 导航项点击事件
+            $('.nav-link').click(function(e) {
+                e.preventDefault();
+                $('.nav-link').removeClass('active');
+                $(this).addClass('active');
+                
+                // 获取页面标识
+                const pageId = $(this).attr('data-page');
+                loadPage(pageId);
+            });
+
+            // 修改加载页面的方法
+            function loadPage(pageId) {
+                // 如果存在清理函数，先执行清理
+                if (pageCleanupHandlers[pageId]) {
+                    pageCleanupHandlers[pageId]();
+                }
+                
+                // 直接加载对应的HTML文件
+                $('#pageContent').load(`${pageId}.html`, function(response, status, xhr) {
+                    if (status === 'error') {
+                        $('#pageContent').html(`
+                            <div class="alert alert-danger">
+                                ${currentLanguage === 'en' ? 'Failed to load page content' : '加载页面内容失败'}
+                            </div>
+                        `);
+                        return;
+                    }
+                    // 更新语言
+                    updateLanguage();
+                    // 根据页面ID执行特定的初始化函数
+                    if (pageId === 'configuration') {
+                        // 确保 hljs 已配置
+                        hljs.configure({
+                            languages: ['json', 'yaml', 'properties']
+                        });
+                        // 初始化配置页面
+                        if (typeof fetchAndDisplayConfig === 'function') {
+                            fetchAndDisplayConfig();
+                        }
+                    }
+                });
+            }
+
+            // 初始加载datasource页面
+            loadPage('dashboard');
+        });
+    </script>
+</body>
+</html> 

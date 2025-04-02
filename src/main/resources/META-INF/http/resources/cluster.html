@@ -1,0 +1,1011 @@
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0" data-en="Cluster List" data-zh="集群列表">Cluster List</h5>
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-success" id="addClusterBtn" data-en="Add Cluster" data-zh="新增集群">
+                <i class="fas fa-plus"></i> Add Cluster
+            </button>
+            <select class="form-control form-control-sm" id="refreshInterval">
+                <option value="0" data-en="Manual Refresh" data-zh="手动刷新">Manual Refresh</option>
+                <option value="5000" data-en="5 Seconds" data-zh="5秒">5 Seconds</option>
+                <option value="10000" data-en="10 Seconds" data-zh="10秒">10 Seconds</option>
+                <option value="30000" data-en="30 Seconds" data-zh="30秒">30 Seconds</option>
+                <option value="60000" data-en="1 Minute" data-zh="1分钟">1 Minute</option>
+                <option value="300000" data-en="5 Minutes" data-zh="5分钟">5 Minutes</option>
+            </select>
+            <button class="btn btn-sm btn-primary" id="refreshBtn">
+                <i class="fas fa-sync-alt refresh-icon"></i>
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th data-en="Name" data-zh="名称">Name</th>
+                    <th data-en="Nodes" data-zh="节点">Nodes</th>
+                    <th data-en="Default" data-zh="默认集群">Default</th>
+                    <th data-en="Actions" data-zh="操作">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="clusterList">
+                <!-- 数据将通过 AJAX 加载 -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 集群详情模态框 -->
+<div class="modal fade" id="clusterDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" data-en="Cluster Details" data-zh="集群详情">Cluster Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <pre id="jsonDetail" class="json-viewer">
+                    <!-- JSON 数据将在这里展示 -->
+                </pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Close" data-zh="关闭">Close</button>
+                <button type="button" class="btn btn-primary" id="copyJsonBtn" data-en="Copy" data-zh="复制">Copy</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 管理数据源模态框 -->
+<div class="modal fade" id="manageDatasourcesModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <span data-en="Manage Datasources" data-zh="管理数据源">Manage Datasources</span>: 
+                    <span id="currentClusterName"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- 左侧：未加入的节点 -->
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h6 class="mb-0" data-en="Available Nodes" data-zh="可用节点">Available Nodes</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group" id="availableNodes">
+                                    <!-- 可用节点列表将通过 JS 动态加载 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 右侧：已加入的节点 -->
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h6 class="mb-0" data-en="Cluster Nodes" data-zh="集群节点">Cluster Nodes</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group" id="clusterNodes">
+                                    <!-- 集群节点列表将通过 JS 动态加载 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Close" data-zh="关闭">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 新增集群模态框 -->
+<div class="modal fade" id="addClusterModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" data-en="Add Cluster" data-zh="新增集群">Add Cluster</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addClusterForm">
+                    <div class="mb-3">
+                        <label class="form-label required" data-en="Cluster Name" data-zh="集群名称">Cluster Name</label>
+                        <input type="text" class="form-control" name="name" required 
+                            data-en-placeholder="Enter cluster name" 
+                            data-zh-placeholder="请输入集群名称"
+                            placeholder="Enter cluster name">
+                        <div class="invalid-feedback" data-en="Please enter cluster name" data-zh="请输入集群名称"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required" data-en="Nodes" data-zh="节点">Nodes</label>
+                        <div class="nodes-container">
+                            <div id="nodesList" class="nodes-grid">
+                                <!-- 节点列表将通过 JS 动态加载 -->
+                            </div>
+                        </div>
+                        <div id="nodesError" class="invalid-feedback" style="display: none;" 
+                            data-en="Please select at least one node" 
+                            data-zh="请至少选择一个节点">
+                            Please select at least one node
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" data-en="Read Load Balance Type" data-zh="读负载均衡类型">Read Load Balance Type</label>
+                        <select class="form-select" name="readLoadBalanceType" required>
+                            <option value="WEIGHT_RANDOM_BALANCE_ALL" data-en="Weight Random Balance All" data-zh="权重随机均衡(全部)">Weight Random Balance All</option>
+                            <option value="WEIGHT_RANDOM_BALANCE_ONLY_READ" data-en="Weight Random Balance Only Read" data-zh="权重随机均衡(只读)">Weight Random Balance Only Read</option>
+                            <option value="WEIGHT_RANDOM_BALANCE_READ_WRITE" data-en="Weight Random Balance Read Write" data-zh="权重随机均衡(读写)">Weight Random Balance Read Write</option>
+                            <option value="WEIGHT_ROUND_ROBIN_BALANCE_ALL" data-en="Weight Round Robin Balance All" data-zh="权重轮询均衡(全部)">Weight Round Robin Balance All</option>
+                            <option value="WEIGHT_ROUND_ROBIN_BALANCE_ONLY_READ" data-en="Weight Round Robin Balance Only Read" data-zh="权重轮询均衡(只读)">Weight Round Robin Balance Only Read</option>
+                            <option value="WEIGHT_ROUND_ROBIN_BALANCE_READ_WRITE" data-en="Weight Round Robin Balance Read Write" data-zh="权重轮询均衡(读写)">Weight Round Robin Balance Read Write</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" data-en="Write Load Balance Type" data-zh="写负载均衡类型">Write Load Balance Type</label>
+                        <select class="form-select" name="writeLoadBalanceType" required>
+                            <option value="WEIGHT_RANDOM_BALANCE_WRITE_ONLY" data-en="Weight Random Balance Write Only" data-zh="权重随机均衡(只写)">Weight Random Balance Write Only</option>
+                            <option value="WEIGHT_RANDOM_BALANCE_READ_WRITE" data-en="Weight Random Balance Read Write" data-zh="权重随机均衡(读写)">Weight Random Balance Read Write</option>
+                            <option value="WEIGHT_ROUND_ROBIN_BALANCE_WRITE_ONLY" data-en="Weight Round Robin Balance Write Only" data-zh="权重轮询均衡(只写)">Weight Round Robin Balance Write Only</option>
+                            <option value="WEIGHT_ROUND_ROBIN_BALANCE_READ_WRITE" data-en="Weight Round Robin Balance Read Write" data-zh="权重轮询均衡(读写)">Weight Round Robin Balance Read Write</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Cancel" data-zh="取消">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveClusterBtn" data-en="Save" data-zh="保存">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* 节点列表项样式 */
+.node-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    border: 1px solid #dee2e6;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+    background-color: #fff;
+    transition: all 0.2s;
+}
+
+.node-item:hover {
+    background-color: #f8f9fa;
+}
+
+.node-info {
+    flex: 1;
+}
+
+.node-name {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.node-type {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.node-action {
+    margin-left: 1rem;
+}
+
+/* 添加动画效果 */
+.node-item.removing {
+    opacity: 0;
+    transform: translateX(100px);
+}
+
+.node-item.adding {
+    opacity: 0;
+    transform: translateX(-100px);
+}
+
+/* 节点选择区域样式 */
+.nodes-container {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    max-height: 250px;
+    overflow-y: auto;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.nodes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.75rem;
+}
+
+.node-checkbox {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.node-checkbox:hover {
+    border-color: #87CEEB;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transform: translateY(-1px);
+}
+
+.node-checkbox input[type="checkbox"] {
+    margin-right: 0.5rem;
+    width: 1.1em;
+    height: 1.1em;
+}
+
+.node-checkbox label {
+    margin: 0;
+    cursor: pointer;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.node-checkbox .node-type {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-left: 0.25rem;
+}
+
+/* 自定义滚动条样式 */
+.nodes-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.nodes-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.nodes-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.nodes-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* 错误状态样式 */
+.nodes-container.nodes-error {
+    border-color: #dc3545;
+    background-color: #fff8f8;
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* 错误状态下的节点选择框样式 */
+.nodes-error .node-checkbox {
+    border-color: #ffebee;
+}
+
+/* 添加必填标记 */
+.form-label.required::after {
+    content: " *";
+    color: #dc3545;
+}
+
+/* 表单验证样式 */
+.form-control:focus {
+    border-color: #87CEEB;
+    box-shadow: 0 0 0 0.2rem rgba(135, 206, 235, 0.25);
+}
+
+.form-control.is-invalid:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.form-control.is-invalid {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    padding-right: calc(1.5em + 0.75rem);
+}
+
+.invalid-feedback {
+    display: none;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875em;
+    color: #dc3545;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 必填标记样式 */
+.form-label.required::after {
+    content: " *";
+    color: #dc3545;
+    font-weight: bold;
+    margin-left: 4px;
+}
+
+/* 输入框动画效果 */
+.form-control {
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+/* 错误状态抖动动画 */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.form-control.is-invalid {
+    animation: shake 0.5s ease-in-out;
+}
+</style>
+
+<script>
+$(document).ready(function() {
+    let refreshTimer;
+
+    // 加载集群数据
+    loadClusterData();
+
+    // 刷新按钮点击事件
+    $('#refreshBtn').click(function() {
+        loadClusterData();
+    });
+
+    // 自动刷新时间选择
+    $('#refreshInterval').change(function() {
+        clearInterval(refreshTimer);
+        const interval = parseInt($(this).val());
+        const $refreshIcon = $('#refreshBtn .refresh-icon');
+
+        if (interval > 0) {
+            $refreshIcon.addClass('spin');
+            refreshTimer = setInterval(loadClusterData, interval);
+        } else {
+            $refreshIcon.removeClass('spin');
+        }
+    });
+
+    // 新增集群按钮点击事件
+    $('#addClusterBtn').click(function() {
+        $('#addClusterModal').modal('show');
+    });
+
+    // 在模态框显示前加载节点列表
+    $('#addClusterModal').on('show.bs.modal', function () {
+        const form = $('#addClusterForm')[0];
+        form.reset();
+        $('input[name="name"]').removeClass('is-invalid').next('.invalid-feedback').hide();
+        $('.nodes-container').removeClass('nodes-error');
+        $('#nodesError').hide();
+        loadAvailableNodes();
+    });
+
+    // 加载可用节点列表
+    function loadAvailableNodes() {
+        $('#nodesList').html('<div class="text-center"><div class="spinner-border text-primary"></div></div>');
+
+        fetch('/sqlx/v1/datasource')
+            .then(response => response.json())
+            .then(data => {
+                if (data.succeed) {
+                    const nodes = data.payload;
+                    const nodesHtml = nodes.map(node => `
+                        <div class="node-checkbox">
+                            <input type="checkbox" name="nodes" value="${node.name}" id="node-${node.name}">
+                            <label for="node-${node.name}">
+                                <span class="node-name">${node.name}</span>
+                                <span class="node-type">(${node.type})</span>
+                            </label>
+                        </div>
+                    `).join('');
+
+                    $('#nodesList').html(nodesHtml || `
+                        <div class="text-center text-muted">
+                            ${window.currentLanguage === 'en' ? 'No available nodes' : '没有可用节点'}
+                        </div>
+                    `);
+                }
+            });
+    }
+
+    // 保存集群
+    $('#saveClusterBtn').click(function() {
+        const form = $('#addClusterForm')[0];
+        const nameInput = $('input[name="name"]');
+        
+        // 移除之前的验证状态
+        nameInput.removeClass('is-invalid');
+        $('.nodes-container').removeClass('nodes-error');
+        
+        let hasError = false;
+        
+        // 检查名称是否为空
+        if (!nameInput.val().trim()) {
+            nameInput.addClass('is-invalid');
+            nameInput.next('.invalid-feedback').show();
+            hasError = true;
+        }
+        
+        // 检查是否选择了节点
+        const selectedNodes = Array.from(new FormData(form).getAll('nodes'));
+        if (selectedNodes.length === 0) {
+            $('.nodes-container').addClass('nodes-error');
+            $('#nodesError').show();
+            hasError = true;
+        }
+        
+        if (hasError) {
+            return;
+        }
+
+        const clusterName = nameInput.val().trim();
+        
+        // 检查集群名称是否重复
+        fetch('/sqlx/v1/cluster')
+            .then(response => response.json())
+            .then(data => {
+                if (data.succeed) {
+                    const existingClusters = data.payload;
+                    const isNameExists = existingClusters.some(cluster => cluster.name === clusterName);
+                    
+                    if (isNameExists) {
+                        nameInput.addClass('is-invalid');
+                        nameInput.next('.invalid-feedback').text(
+                            window.currentLanguage === 'en' ? 
+                            'This cluster name is already in use' : 
+                            '该集群名称已被使用'
+                        ).show();
+                        return;
+                    }
+                    
+                    // 名称不重复，继续保存操作
+                    saveClusterData(form);
+                }
+            });
+    });
+
+    // 修改输入框内容变化时的处理
+    $(document).on('input', 'input[name="name"]', function() {
+        const $input = $(this);
+        if ($input.val().trim()) {
+            $input.removeClass('is-invalid');
+            $input.next('.invalid-feedback').hide();
+        }
+    });
+
+    // 复制 JSON 按钮点击事件
+    $('#copyJsonBtn').click(function() {
+        copyJsonContent('#jsonDetail');
+    });
+
+    // 修改节点选择的事件处理
+    $(document).on('change', 'input[name="nodes"]', function() {
+        if ($('input[name="nodes"]:checked').length > 0) {
+            $('.nodes-container').removeClass('nodes-error');
+            $('#nodesError').hide();
+        }
+    });
+});
+
+// 加载集群数据
+async function loadClusterData() {
+    try {
+        $('#clusterList').html('<tr><td colspan="4" class="text-center"><div class="spinner-border text-primary" role="status"></div></td></tr>');
+
+        // 使用 fetch API 替代 $.ajax
+        const response = await fetch('/sqlx/v1/cluster', {
+            method: 'GET'
+        });
+
+        // 处理重定向
+        if (response.redirected) {
+            console.log('Redirected to:', response.url);
+            window.location.href = response.url;
+            return;
+        }
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.succeed) {
+                updateClusterTable(data.payload);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                    text: data.msg,
+                    confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                    confirmButtonColor: '#87CEEB'
+                });
+            }
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                text: window.currentLanguage === 'en' ? 'Failed to load cluster data' : '加载集群数据失败',
+                confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                confirmButtonColor: '#87CEEB'
+            });
+        }
+    } catch (error) {
+        console.error('Error loading cluster data:', error);
+        Swal.fire({
+            icon: 'error',
+            title: window.currentLanguage === 'en' ? 'Error' : '错误',
+            text: window.currentLanguage === 'en' ? 'Failed to load cluster data' : '加载集群数据失败',
+            confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+            confirmButtonColor: '#87CEEB'
+        });
+    }
+}
+
+// 更新集群表格
+function updateClusterTable(data) {
+    const tbody = $('#clusterList');
+    tbody.empty();
+    
+    if (!data || data.length === 0) {
+        tbody.html(`
+            <tr>
+                <td colspan="4" class="text-center">
+                    ${window.currentLanguage === 'en' ? 'No data available' : '暂无数据'}
+                </td>
+            </tr>
+        `);
+        return;
+    }
+    
+    data.forEach(item => {
+        const nodesHtml = item.nodeAttributes.map(node => {
+            const statusClass = node.nodeState === 'UP' ? 'success' : 
+                                node.nodeState === 'DOWN' ? 'danger' : 
+                                node.nodeState === 'OUT_OF_SERVICE' ? 'warning' : 
+                                'secondary';  // UNKNOWN 状态使用灰色
+
+            return `<span class="badge bg-${statusClass}">${node.name} (${node.nodeType})</span>`;
+        }).join(' ');
+
+        const defaultBadge = item.defaulted ? 
+            `<span class="badge bg-success">${window.currentLanguage === 'en' ? 'Yes' : '是'}</span>` : 
+            `<span class="badge bg-secondary">${window.currentLanguage === 'en' ? 'No' : '否'}</span>`;
+
+        tbody.append(`
+            <tr>
+                <td><a href="javascript:void(0)" onclick="showClusterDetail('${encodeURIComponent(JSON.stringify(item))}')">${item.name}</a></td>
+                <td>
+                    <div class="d-flex flex-wrap gap-1">
+                        ${nodesHtml}
+                    </div>
+                </td>
+                <td>${defaultBadge}</td>
+                <td>
+                    <button class="btn btn-sm btn-success me-1" onclick="manageDatasources('${item.name}', '${encodeURIComponent(JSON.stringify(item.nodeAttributes))}')"
+                            data-en="Manage Datasources" data-zh="管理数据源">
+                        <i class="fas fa-cog me-1"></i>
+                        <span data-en="Manage Datasources" data-zh="管理数据源">Manage Datasources</span>
+                    </button>
+                </td>
+            </tr>
+        `);
+    });
+    
+    window.updateLanguage();
+}
+
+// 显示集群详情
+async function showClusterDetail(encodedCluster) {
+    try {
+        const cluster = JSON.parse(decodeURIComponent(encodedCluster));
+        const jsonDetail = JSON.stringify(cluster, null, 2);
+        $('#jsonDetail').html(syntaxHighlight(jsonDetail));
+        $('#clusterDetailModal').modal('show');
+    } catch (error) {
+        console.error('Error loading cluster details:', error);
+        Swal.fire({
+            icon: 'error',
+            title: window.currentLanguage === 'en' ? 'Error' : '错误',
+            text: window.currentLanguage === 'en' ? 'Failed to load cluster details' : '加载集群详情失败',
+            confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+            confirmButtonColor: '#87CEEB'
+        });
+    }
+}
+
+// 管理数据源
+function manageDatasources(clusterName, clusterNodes) {
+    // 解析传入的节点数据
+    const nodes = typeof clusterNodes === 'string' ? 
+        JSON.parse(decodeURIComponent(clusterNodes)) : 
+        clusterNodes;
+
+    $('#currentClusterName').text(clusterName);
+    $('#manageDatasourcesModal').modal('show');
+    loadDatasources(clusterName, nodes);
+}
+
+// 加载数据源列表
+function loadDatasources(clusterName, clusterNodes) {
+    // 显示加载状态
+    $('#availableNodes, #clusterNodes').html('<div class="text-center"><div class="spinner-border text-primary"></div></div>');
+
+    // 发送请求获取所有数据源
+    fetch('/sqlx/v1/datasource')
+        .then(response => response.json())
+        .then(data => {
+            if (data.succeed) {
+                updateNodeLists(data.payload, clusterNodes, clusterName);
+            }
+        });
+}
+
+// 更新节点列表
+function updateNodeLists(allNodes, clusterNodes, clusterName) {
+    const $availableNodes = $('#availableNodes');
+    const $clusterNodes = $('#clusterNodes');
+    
+    $availableNodes.empty();
+    $clusterNodes.empty();
+
+    // 获取集群节点的名称列表
+    const clusterNodeNames = clusterNodes.map(node => node.name);
+
+    // 分类并显示节点
+    allNodes.forEach(node => {
+        const isInCluster = clusterNodeNames.includes(node.name);
+        const nodeHtml = createNodeHtml(node, isInCluster, clusterName);
+        
+        if (isInCluster) {
+            $clusterNodes.append(nodeHtml);
+        } else {
+            $availableNodes.append(nodeHtml);
+        }
+    });
+
+    // 如果列表为空，显示提示信息
+    if ($availableNodes.children().length === 0) {
+        $availableNodes.html(`<div class="text-center text-muted">
+            ${window.currentLanguage === 'en' ? 'No available nodes' : '没有可用节点'}
+        </div>`);
+    }
+    if ($clusterNodes.children().length === 0) {
+        $clusterNodes.html(`<div class="text-center text-muted">
+            ${window.currentLanguage === 'en' ? 'No nodes in cluster' : '集群中没有节点'}
+        </div>`);
+    }
+}
+
+// 创建节点 HTML
+function createNodeHtml(node, isInCluster, clusterName) {
+    const actionBtn = isInCluster ? 
+        `<button class="btn btn-sm btn-danger node-action" onclick="removeFromCluster('${node.name}', '${clusterName}')">
+            <i class="fas fa-minus-circle me-1"></i>
+            <span data-en="Remove" data-zh="移除">${window.currentLanguage === 'en' ? 'Remove' : '移除'}</span>
+        </button>` :
+        `<button class="btn btn-sm btn-success node-action" onclick="addToCluster('${node.name}', '${clusterName}')">
+            <i class="fas fa-plus-circle me-1"></i>
+            <span data-en="Add" data-zh="添加">${window.currentLanguage === 'en' ? 'Add' : '添加'}</span>
+        </button>`;
+
+    return `
+        <div class="node-item" id="node-${node.name}">
+            <div class="node-info">
+                <div class="node-name">${node.name}</div>
+                <div class="node-type">${node.type}</div>
+            </div>
+            ${actionBtn}
+        </div>
+    `;
+}
+
+// 显示成功消息
+function showSuccessMessage(message) {
+    Swal.fire({
+        icon: 'success',
+        title: window.currentLanguage === 'en' ? 'Success' : '成功',
+        text: message,
+        timer: 2000,
+        showConfirmButton: false
+    });
+}
+
+// 显示错误消息
+function showErrorMessage(message) {
+    Swal.fire({
+        icon: 'error',
+        title: window.currentLanguage === 'en' ? 'Error' : '错误',
+        text: message,
+        confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定'
+    });
+}
+
+// 添加保存集群的函数
+function saveClusterData(form) {
+    const formData = new FormData(form);
+    const data = {
+        name: formData.get('name'),
+        nodes: Array.from(formData.getAll('nodes')),
+        readLoadBalanceType: formData.get('readLoadBalanceType'),
+        writeLoadBalanceType: formData.get('writeLoadBalanceType')
+    };
+
+    fetch('/sqlx/v1/cluster/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.succeed) {
+            $('#addClusterModal').modal('hide');
+            form.reset();
+            // 刷新集群列表
+            loadClusterData();
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                text: data.msg,
+                confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定'
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error creating cluster:', error);
+        Swal.fire({
+            icon: 'error',
+            title: window.currentLanguage === 'en' ? 'Error' : '错误',
+            text: window.currentLanguage === 'en' ? 'Failed to create cluster' : '创建集群失败',
+            confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定'
+        });
+    });
+}
+
+// 添加节点到集群
+async function addToCluster(nodeName, clusterName) {
+    try {
+        const $node = $(`#node-${nodeName}`);
+        $node.addClass('adding');
+
+        const data = {
+            clusterName: clusterName,
+            nodeName: nodeName
+        };
+
+        // 使用 fetch API 替代 $.ajax
+        const response = await fetch('/sqlx/v1/cluster/add-datasource', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        // 处理重定向
+        if (response.redirected) {
+            console.log('Redirected to:', response.url);
+            window.location.href = response.url;
+            return;
+        }
+
+        if (response.ok) {
+            const responseData = await response.json();
+            if (responseData.succeed) {
+                // 获取节点信息
+                const nodeInfo = {
+                    name: $node.find('.node-name').text(),
+                    type: $node.find('.node-type').text()
+                };
+                
+                const $clusterNodes = $('#clusterNodes');
+                
+                // 如果右侧是空提示，先清除
+                if ($clusterNodes.find('.text-muted').length) {
+                    $clusterNodes.empty();
+                }
+                
+                // 创建新的节点 HTML
+                const newNodeHtml = `
+                    <div class="node-item" id="node-${nodeInfo.name}">
+                        <div class="node-info">
+                            <div class="node-name">${nodeInfo.name}</div>
+                            <div class="node-type">${nodeInfo.type}</div>
+                        </div>
+                        <button class="btn btn-sm btn-danger node-action" onclick="removeFromCluster('${nodeInfo.name}', '${clusterName}')">
+                            <i class="fas fa-minus-circle me-1"></i>
+                            <span data-en="Remove" data-zh="移除">${window.currentLanguage === 'en' ? 'Remove' : '移除'}</span>
+                        </button>
+                    </div>
+                `;
+                
+                // 添加到右侧列表
+                $clusterNodes.append(newNodeHtml);
+                
+                // 移除左侧节点
+                $node.fadeOut(300, function() {
+                    $(this).remove();
+                    
+                    // 如果左侧列表为空，显示提示信息
+                    if ($('#availableNodes').children().length === 0) {
+                        $('#availableNodes').html(`
+                            <div class="text-center text-muted">
+                                ${window.currentLanguage === 'en' ? 'No available nodes' : '没有可用节点'}
+                            </div>
+                        `);
+                    }
+                });
+                
+                // 刷新主页面集群列表
+                loadClusterData();
+            } else {
+                $node.removeClass('adding');
+                Swal.fire({
+                    icon: 'error',
+                    title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                    text: responseData.msg,
+                    confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                    confirmButtonColor: '#87CEEB'
+                });
+            }
+        } else {
+            $node.removeClass('adding');
+            Swal.fire({
+                icon: 'error',
+                title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                text: window.currentLanguage === 'en' ? 'Failed to add node' : '添加节点失败',
+                confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                confirmButtonColor: '#87CEEB'
+            });
+        }
+    } catch (error) {
+        console.error('Error adding node to cluster:', error);
+        const $node = $(`#node-${nodeName}`);
+        $node.removeClass('adding');
+        Swal.fire({
+            icon: 'error',
+            title: window.currentLanguage === 'en' ? 'Error' : '错误',
+            text: window.currentLanguage === 'en' ? 'Failed to add node' : '添加节点失败',
+            confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+            confirmButtonColor: '#87CEEB'
+        });
+    }
+}
+
+// 从集群中移除节点
+async function removeFromCluster(nodeName, clusterName) {
+    try {
+        const $node = $(`#node-${nodeName}`);
+        $node.addClass('removing');
+
+        const data = {
+            clusterName: clusterName,
+            nodeName: nodeName
+        };
+
+        // 使用 fetch API 替代 $.ajax
+        const response = await fetch('/sqlx/v1/cluster/remove-datasource', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        // 处理重定向
+        if (response.redirected) {
+            console.log('Redirected to:', response.url);
+            window.location.href = response.url;
+            return;
+        }
+
+        if (response.ok) {
+            const responseData = await response.json();
+            if (responseData.succeed) {
+                // 获取节点信息
+                const nodeInfo = {
+                    name: $node.find('.node-name').text(),
+                    type: $node.find('.node-type').text()
+                };
+                
+                const $availableNodes = $('#availableNodes');
+                
+                // 如果左侧是空提示，先清除
+                if ($availableNodes.find('.text-muted').length) {
+                    $availableNodes.empty();
+                }
+                
+                // 创建新的节点 HTML
+                const newNodeHtml = `
+                    <div class="node-item" id="node-${nodeInfo.name}">
+                        <div class="node-info">
+                            <div class="node-name">${nodeInfo.name}</div>
+                            <div class="node-type">${nodeInfo.type}</div>
+                        </div>
+                        <button class="btn btn-sm btn-success node-action" onclick="addToCluster('${nodeInfo.name}', '${clusterName}')">
+                            <i class="fas fa-plus-circle me-1"></i>
+                            <span data-en="Add" data-zh="添加">${window.currentLanguage === 'en' ? 'Add' : '添加'}</span>
+                        </button>
+                    </div>
+                `;
+                
+                // 添加到左侧列表
+                $availableNodes.append(newNodeHtml);
+                
+                // 移除右侧节点
+                $node.fadeOut(300, function() {
+                    $(this).remove();
+                    
+                    // 如果右侧列表为空，显示提示信息
+                    if ($('#clusterNodes').children().length === 0) {
+                        $('#clusterNodes').html(`
+                            <div class="text-center text-muted">
+                                ${window.currentLanguage === 'en' ? 'No nodes in cluster' : '集群中没有节点'}
+                            </div>
+                        `);
+                    }
+                });
+
+                // 刷新主页面集群列表
+                loadClusterData();
+            } else {
+                $node.removeClass('removing');
+                Swal.fire({
+                    icon: 'error',
+                    title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                    text: responseData.msg,
+                    confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                    confirmButtonColor: '#87CEEB'
+                });
+            }
+        } else {
+            $node.removeClass('removing');
+            Swal.fire({
+                icon: 'error',
+                title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                text: window.currentLanguage === 'en' ? 'Failed to remove node' : '移除节点失败',
+                confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                confirmButtonColor: '#87CEEB'
+            });
+        }
+    } catch (error) {
+        console.error('Error removing node from cluster:', error);
+        const $node = $(`#node-${nodeName}`);
+        $node.removeClass('removing');
+        Swal.fire({
+            icon: 'error',
+            title: window.currentLanguage === 'en' ? 'Error' : '错误',
+            text: window.currentLanguage === 'en' ? 'Failed to remove node' : '移除节点失败',
+            confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+            confirmButtonColor: '#87CEEB'
+        });
+    }
+}
+</script>

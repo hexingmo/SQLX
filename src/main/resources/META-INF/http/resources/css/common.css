@@ -1,0 +1,147 @@
+/* 排序图标样式 */
+.sortable {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-right: 25px !important;  /* 为排序按钮留出空间 */
+}
+
+.sort-icons {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    opacity: 0.7;
+    transition: all 0.2s;
+    height: 16px;
+}
+
+.sort-icons i {
+    font-size: 12px;
+    line-height: 1;
+    display: block;
+    color: #adb5bd;
+    transition: all 0.2s ease;
+    height: 8px;
+    width: 12px;
+    text-align: center;
+}
+
+.sort-icons .sort-up {
+    margin-bottom: -2px;
+}
+
+.sort-icons .sort-down {
+    margin-top: -2px;
+}
+
+.sortable:hover .sort-icons {
+    opacity: 1;
+}
+
+.sort-icons i:hover {
+    color: #0d6efd;
+    transform: scale(1.2);
+}
+
+/* 当列处于升序状态 */
+.sortable[data-order="asc"] .sort-icons {
+    opacity: 1;
+}
+
+.sortable[data-order="asc"] .sort-icons .sort-up {
+    color: #0d6efd;
+    font-weight: bold;
+    transform: scale(1.2);
+}
+
+.sortable[data-order="asc"] .sort-icons .sort-down {
+    opacity: 0.5;
+    transform: scale(0.8);
+}
+
+/* 当列处于降序状态 */
+.sortable[data-order="desc"] .sort-icons {
+    opacity: 1;
+}
+
+.sortable[data-order="desc"] .sort-icons .sort-down {
+    color: #0d6efd;
+    font-weight: bold;
+    transform: scale(1.2);
+}
+
+.sortable[data-order="desc"] .sort-icons .sort-up {
+    opacity: 0.5;
+    transform: scale(0.8);
+}
+
+/* 鼠标悬停效果 */
+.sortable:hover {
+    background-color: rgba(13, 110, 253, 0.04);
+}
+
+/* 添加响应式调整 */
+@media (max-width: 768px) {
+    .sortable {
+        padding-right: 20px !important;
+    }
+
+    .sort-icons i {
+        font-size: 12px;
+    }
+}
+.json-viewer {
+    background-color: #f8f9fa;
+    padding: 0.75rem;
+    border-radius: 4px;
+    max-height: 500px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+    line-height: 1.3;
+    font-size: 14px;
+    border: 1px solid #e9ecef;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.075);
+}
+
+/* JSON 语法高亮颜色主题 */
+.json-key {
+    color: #0550ae;
+    font-weight: bold;
+}
+
+.json-string {
+    color: #22863a;
+}
+
+.json-number {
+    color: #005cc5;
+}
+
+.json-boolean {
+    color: #d73a49;
+    font-weight: bold;
+}
+
+.json-null {
+    color: #6a737d;
+    font-style: italic;
+}
+
+.refresh-icon {
+    transition: transform 0.5s ease;
+}
+
+.refresh-icon.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+

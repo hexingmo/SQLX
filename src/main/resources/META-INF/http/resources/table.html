@@ -1,0 +1,761 @@
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0" data-en="Table Metrics" data-zh="表指标">Table Statistics</h5>
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-primary me-2" id="advancedSearchBtn" data-en="Advanced Search" data-zh="高级搜索">
+                <i class="fas fa-search me-1"></i>
+                <span data-en="Advanced Search" data-zh="高级搜索">Advanced Search</span>
+            </button>
+            <button class="btn btn-sm btn-primary" id="refreshBtn">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+    </div>
+    <!-- 高级搜索表单 -->
+    <div class="card-body border-bottom" id="advancedSearchForm" style="display: none;">
+        <form class="row g-3">
+            <div class="col-md-3 col-lg-2">
+                <label class="form-label" data-en="Database" data-zh="数据库">Database</label>
+                <div class="tags-input-wrapper">
+                    <div class="tags-container d-flex flex-wrap align-items-center">
+                        <input type="text" class="tags-input" data-name="database"
+                               placeholder="Press Enter to add"
+                               data-en-placeholder="Press Enter to add"
+                               data-zh-placeholder="按回车键添加">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-lg-2">
+                <label class="form-label" data-en="Table" data-zh="表">Table</label>
+                <div class="tags-input-wrapper">
+                    <div class="tags-container d-flex flex-wrap align-items-center">
+                        <input type="text" class="tags-input" data-name="table"
+                               placeholder="Press Enter to add"
+                               data-en-placeholder="Press Enter to add"
+                               data-zh-placeholder="按回车键添加">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <label class="form-label" data-en="Updated Time Range" data-zh="更新时间范围">Updated Time Range</label>
+                <div class="input-group input-group-sm">
+                    <input type="datetime-local" class="form-control form-control-sm" name="startUpdatedTime">
+                    <span class="input-group-text">~</span>
+                    <input type="datetime-local" class="form-control form-control-sm" name="endUpdatedTime">
+                </div>
+            </div>
+            <div class="col-md-12">
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-primary btn-sm" id="searchBtn">
+                        <i class="fas fa-search me-1"></i>
+                        <span data-en="Search" data-zh="搜索">Search</span>
+                    </button>
+                    <button type="button" class="btn btn-success btn-sm" id="exportBtn">
+                        <i class="fas fa-file-excel me-1"></i>
+                        <span data-en="Export CSV" data-zh="导出CSV">Export CSV</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="resetBtn">
+                        <i class="fas fa-undo me-1"></i>
+                        <span data-en="Reset" data-zh="重置">Reset</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <!-- 表格部分 -->
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover" style="min-width: 1200px;">
+                <thead>
+                    <tr>
+                        <th data-en="Database" data-zh="数据库">Database</th>
+                        <th data-en="Table" data-zh="表">Table</th>
+                        <th class="sortable" data-sort="queryCount">
+                            <div class="d-flex align-items-center">
+                                <span data-en="Query Count" data-zh="查询次数" style="flex: 1">Query Count</span>
+                                <div class="sort-icons">
+                                    <i class="fas fa-sort-amount-up sort-up" title="Sort Ascending"></i>
+                                    <i class="fas fa-sort-amount-down sort-down" title="Sort Descending"></i>
+                                </div>
+                            </div>
+                        </th>
+                        <th class="sortable" data-sort="insertCount">
+                            <div class="d-flex align-items-center">
+                                <span data-en="Insert Count" data-zh="插入次数" style="flex: 1">Insert Count</span>
+                                <div class="sort-icons">
+                                    <i class="fas fa-sort-amount-up sort-up" title="Sort Ascending"></i>
+                                    <i class="fas fa-sort-amount-down sort-down" title="Sort Descending"></i>
+                                </div>
+                            </div>
+                        </th>
+                        <th class="sortable" data-sort="updateCount">
+                            <div class="d-flex align-items-center">
+                                <span data-en="Update Count" data-zh="更新次数" style="flex: 1">Update Count</span>
+                                <div class="sort-icons">
+                                    <i class="fas fa-sort-amount-up sort-up" title="Sort Ascending"></i>
+                                    <i class="fas fa-sort-amount-down sort-down" title="Sort Descending"></i>
+                                </div>
+                            </div>
+                        </th>
+                        <th class="sortable" data-sort="deleteCount">
+                            <div class="d-flex align-items-center">
+                                <span data-en="Delete Count" data-zh="删除次数" style="flex: 1">Delete Count</span>
+                                <div class="sort-icons">
+                                    <i class="fas fa-sort-amount-up sort-up" title="Sort Ascending"></i>
+                                    <i class="fas fa-sort-amount-down sort-down" title="Sort Descending"></i>
+                                </div>
+                            </div>
+                        </th>
+                        <th class="sortable" data-sort="readCount">
+                            <div class="d-flex align-items-center">
+                                <span data-en="Read Count" data-zh="读次数" style="flex: 1">Read Count</span>
+                                <div class="sort-icons">
+                                    <i class="fas fa-sort-amount-up sort-up" title="Sort Ascending"></i>
+                                    <i class="fas fa-sort-amount-down sort-down" title="Sort Descending"></i>
+                                </div>
+                            </div>
+                        </th>
+                        <th class="sortable" data-sort="writeCount">
+                            <div class="d-flex align-items-center">
+                                <span data-en="Write Count" data-zh="写次数" style="flex: 1">Write Count</span>
+                                <div class="sort-icons">
+                                    <i class="fas fa-sort-amount-up sort-up" title="Sort Ascending"></i>
+                                    <i class="fas fa-sort-amount-down sort-down" title="Sort Descending"></i>
+                                </div>
+                            </div>
+                        </th>
+                        <th class="sortable" data-sort="totalCount">
+                            <div class="d-flex align-items-center">
+                                <span data-en="Total Count" data-zh="总次数" style="flex: 1">Total Count</span>
+                                <div class="sort-icons">
+                                    <i class="fas fa-sort-amount-up sort-up" title="Sort Ascending"></i>
+                                    <i class="fas fa-sort-amount-down sort-down" title="Sort Descending"></i>
+                                </div>
+                            </div>
+                        </th>
+                        <th class="sortable" data-sort="updatedTime">
+                            <div class="d-flex align-items-center">
+                                <span data-en="Updated Time" data-zh="更新时间" style="flex: 1">Updated Time</span>
+                                <div class="sort-icons">
+                                    <i class="fas fa-sort-amount-up sort-up" title="Sort Ascending"></i>
+                                    <i class="fas fa-sort-amount-down sort-down" title="Sort Descending"></i>
+                                </div>
+                            </div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="tableList">
+                    <!-- 数据将通过 AJAX 加载 -->
+                </tbody>
+            </table>
+        </div>
+        <!-- 分页控件 -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div class="text-muted">
+                <span data-en="Total" data-zh="总共">Total</span>: <span id="totalCount">0</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <select class="form-select form-select-sm" id="pageSize" style="width: auto;">
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                <ul class="pagination pagination-sm mb-0" id="pagination"></ul>
+            </div>
+        </div>
+    </div>
+</div> 
+
+<script>
+$(document).ready(function() {
+    // 使用 window 对象来存储全局变量
+    if (typeof window.tableVars === 'undefined') {
+        window.tableVars = {
+            currentPage: 1,
+            pageSize: 10,
+            totalPages: 1,
+            sortConfig: {
+                queryCount: '',
+                insertCount: '',
+                updateCount: '',
+                deleteCount: '',
+                readCount: '',
+                writeCount: '',
+                totalCount: '',
+                updatedTime: ''
+            },
+            searchParams: {},
+            currentPageData: [] // 用于存储当前页的数据
+        };
+    }
+
+    // 初始加载数据
+    loadTableData();
+
+    // 高级搜索按钮点击事件
+    $('#advancedSearchBtn').click(function() {
+        $('#advancedSearchForm').slideToggle();
+    });
+
+    // 搜索按钮点击事件
+    $('#searchBtn').click(function() {
+        const form = $('#advancedSearchForm');
+        const startTime = form.find('[name="startUpdatedTime"]').val();
+        const endTime = form.find('[name="endUpdatedTime"]').val();
+        window.tableVars.searchParams = {
+            databases: getTagValues('database'),
+            tables: getTagValues('table'),
+            startUpdatedTime: startTime ? new Date(startTime).getTime() : null,
+            endUpdatedTime: endTime ? new Date(endTime).getTime() : null
+        };
+        window.tableVars.currentPage = 1;
+        loadTableData();
+    });
+
+    // 重置按钮点击事件
+    $('#resetBtn').click(function() {
+        $('#advancedSearchForm form')[0].reset();
+        $('.tags-container .tag').remove(); // 清除所有标签
+        window.tableVars.searchParams = {};
+        window.tableVars.currentPage = 1;
+        loadTableData();
+    });
+
+    // 刷新按钮点击事件
+    $('#refreshBtn').click(loadTableData);
+
+    // 页码大小变更事件
+    $('#pageSize').on('change', function() {
+        window.tableVars.pageSize = parseInt($(this).val());
+        window.tableVars.currentPage = 1;
+        loadTableData();
+    });
+
+    // 初始化标签输入
+    initializeTagsInput();
+
+    // 添加导出按钮点击事件
+    $('#exportBtn').on('click', function() {
+        exportToCsv();
+    });
+
+        // 修改表格排序点击事件
+    $('.sortable').click(function() {
+        const column = $(this).data('sort');
+        const currentOrder = $(this).attr('data-order') || '';
+
+        // 重置其他列的排序状态
+        $('.sortable').not(this).removeAttr('data-order');
+
+        // 更新当前列的排序状态
+        let newOrder;
+        if (!currentOrder || currentOrder === 'desc') {
+            newOrder = 'asc';
+        } else {
+            newOrder = 'desc';
+        }
+
+        $(this).attr('data-order', newOrder);
+        window.tableVars.sortConfig[column] = newOrder;
+
+        // 重置其他列的排序状态
+        Object.keys(window.tableVars.sortConfig).forEach(key => {
+            if (key !== column) {
+                window.tableVars.sortConfig[key] = '';
+            }
+        });
+
+        window.tableVars.currentPage = 1;
+        loadTableData();
+    });
+});
+
+// 获取标签值
+function getTagValues(fieldName) {
+    return $(`.tags-input[data-name="${fieldName}"]`)
+        .closest('.tags-container')
+        .find('.tag span:first-child')
+        .map(function() { return $(this).text(); })
+        .get();
+}
+
+// 初始化标签输入
+function initializeTagsInput() {
+    $('.tags-input').each(function() {
+        const $input = $(this);
+        const $container = $input.closest('.tags-container');
+
+        $input.on('keydown', function(e) {
+            const value = $input.val().trim();
+            
+            // 支持回车和逗号添加标签
+            if ((e.key === 'Enter' || e.key === ',') && value) {
+                e.preventDefault();
+                
+                // 如果输入包含逗号，分割并添加多个标签
+                const values = value.split(',').map(v => v.trim()).filter(v => v);
+                values.forEach(v => addTag($container, v));
+                $input.val('');
+            } else if (e.key === 'Backspace' && !value) {
+                e.preventDefault();
+                $container.find('.tag').last().remove();
+            }
+        });
+
+        // 处理粘贴事件
+        $input.on('paste', function(e) {
+            e.preventDefault();
+            const pastedData = (e.originalEvent.clipboardData || window.clipboardData).getData('text');
+            const values = pastedData.split(',').map(v => v.trim()).filter(v => v);
+            values.forEach(v => addTag($container, v));
+        });
+
+        // 处理失去焦点事件，添加当前输入的内容
+        $input.on('blur', function() {
+            const value = $input.val().trim();
+            if (value) {
+                const values = value.split(',').map(v => v.trim()).filter(v => v);
+                values.forEach(v => addTag($container, v));
+                $input.val('');
+            }
+        });
+
+        $container.on('click', '.tag .remove', function() {
+            $(this).closest('.tag').remove();
+        });
+    });
+}
+
+// 添加标签
+function addTag(container, value) {
+    // 检查是否已存在
+    const existingTags = container.find('.tag span:first-child').map(function() {
+        return $(this).text();
+    }).get();
+
+    if (existingTags.includes(value)) return;
+
+    const $tag = $(`
+        <span class="tag">
+            <span>${value}</span>
+            <span class="remove">
+                <i class="fas fa-times"></i>
+            </span>
+        </span>
+    `);
+
+    container.append($tag);
+}
+
+// 加载表数据的函数
+async function loadTableData() {
+
+    try {
+        $('#tableList').html('<tr><td colspan="12" class="text-center"><div class="spinner-border text-primary" role="status"></div></td></tr>');
+        const requestData = {
+            pagingCriteria: {
+                pageNo: window.tableVars.currentPage,
+                pageSize: window.tableVars.pageSize
+            },
+            sortOrderField: {
+                fieldName: Object.keys(window.tableVars.sortConfig).find(key => window.tableVars.sortConfig[key]),
+                sortOrder: Object.values(window.tableVars.sortConfig).find(order => order)
+            },
+            ...window.tableVars.searchParams
+        };
+        const response = await fetch('/sqlx/v1/table-metrics/page', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+        });
+
+        if (response.redirected) {
+            console.log('Redirected to:', response.url);
+            window.location.href = response.url;
+            return;
+        }
+        if (response.ok) {
+            const data = await response.json();
+            if (data.succeed) {
+                const { content, totalCount } = data.payload;
+                window.tableVars.currentPageData = content; // 存储当前页数据
+                renderTableRows(content);
+                updatePagination(totalCount);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                    text: response.msg,
+                    confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                    confirmButtonColor: '#87CEEB'
+                });
+            }
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                text: window.currentLanguage === 'en' ? 'Failed to load data.' : '加载数据失败。',
+                confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                confirmButtonColor: '#87CEEB'
+            });
+        }
+    } catch (error) {
+        console.error('An error occurred:', error);
+        Swal.fire({
+            icon: 'error',
+            title: window.currentLanguage === 'en' ? 'Error' : '错误',
+            text: window.currentLanguage === 'en' ? 'An error occurred' : '发生了一个错误',
+            confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+            confirmButtonColor: '#87CEEB'
+        });
+    }
+}
+
+// 渲染表格行
+function renderTableRows(data) {
+    const tableList = $('#tableList');
+    tableList.empty();
+    
+    if (!data || data.length === 0) {
+        tableList.html(`
+            <tr>
+                <td colspan="9" class="text-center py-4">
+                    <i class="fas fa-info-circle text-muted me-2"></i>
+                    ${window.currentLanguage === 'en' ? 'No data available' : '暂无数据'}
+                </td>
+            </tr>
+        `);
+        return;
+    }
+    
+    data.forEach(item => {
+        const updatedTime = new Date(item.updatedTime).toLocaleString();
+        tableList.append(`
+            <tr>
+                <td>${item.database}</td>
+                <td>${item.table}</td>
+                <td>${item.queryCount.toLocaleString()}</td>
+                <td>${item.insertCount.toLocaleString()}</td>
+                <td>${item.updateCount.toLocaleString()}</td>
+                <td>${item.deleteCount.toLocaleString()}</td>
+                <td>${item.readCount.toLocaleString()}</td>
+                <td>${item.writeCount.toLocaleString()}</td>
+                <td>${item.totalCount.toLocaleString()}</td>
+                <td>${updatedTime}</td>
+            </tr>
+        `);
+    });
+}
+
+// 添加分页更新函数
+function updatePagination(totalCount) {
+    const totalPages = Math.ceil(totalCount / window.tableVars.pageSize);
+    window.tableVars.totalPages = totalPages;
+
+    const pagination = $('#pagination');
+    pagination.empty();
+    $('#totalCount').text(totalCount);
+
+    if (totalPages <= 1) return;
+
+    // 添加上一页按钮
+    pagination.append(`
+        <li class="page-item ${window.tableVars.currentPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="changePage(${window.tableVars.currentPage - 1})">&laquo;</a>
+        </li>
+    `);
+
+    // 计算需要显示的页码范围
+    let startPage = 1;
+    let endPage = totalPages;
+
+    if (totalPages > 5) {
+        if (window.tableVars.currentPage <= 3) {
+            endPage = 5;
+        } else if (window.tableVars.currentPage >= totalPages - 2) {
+            startPage = totalPages - 4;
+        } else {
+            startPage = window.tableVars.currentPage - 2;
+            endPage = window.tableVars.currentPage + 2;
+        }
+    }
+
+    // 添加第一页按钮
+    if (startPage > 1) {
+        pagination.append(`
+            <li class="page-item ${window.tableVars.currentPage === 1 ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="changePage(1)">1</a>
+            </li>
+        `);
+        if (startPage > 2) {
+            pagination.append(`
+                <li class="page-item disabled">
+                    <a class="page-link" href="#">...</a>
+                </li>
+            `);
+        }
+    }
+
+    // 添加中间页码按钮
+    for (let i = startPage; i <= endPage; i++) {
+        pagination.append(`
+            <li class="page-item ${i === window.tableVars.currentPage ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+            </li>
+        `);
+    }
+
+    // 添加最后一页按钮
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            pagination.append(`
+                <li class="page-item disabled">
+                    <a class="page-link" href="#">...</a>
+                </li>
+            `);
+        }
+        pagination.append(`
+            <li class="page-item ${window.tableVars.currentPage === totalPages ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${totalPages})">${totalPages}</a>
+            </li>
+        `);
+    }
+
+    // 添加下一页按钮
+    pagination.append(`
+        <li class="page-item ${window.tableVars.currentPage === totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="changePage(${window.tableVars.currentPage + 1})">&raquo;</a>
+        </li>
+    `);
+}
+
+// 切换页码
+function changePage(page) {
+    if (page < 1 || page > window.tableVars.totalPages) return;
+    window.tableVars.currentPage = page;
+    loadTableData();
+}
+
+// 导出为 CSV
+function exportToCsv() {
+    const data = window.tableVars.currentPageData; // 使用当前页的数据
+    if (!data || data.length === 0) {
+        Swal.fire({
+            icon: 'info',
+            title: window.currentLanguage === 'en' ? 'No Data' : '无数据',
+            text: window.currentLanguage === 'en' ? 'No data available to export.' : '没有可导出的数据。',
+            confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+            confirmButtonColor: '#87CEEB'
+        });
+        return;
+    }
+
+    const headers = {
+        'database': window.currentLanguage === 'en' ? 'Database' : '数据库',
+        'table': window.currentLanguage === 'en' ? 'Table' : '表',
+        'queryCount': window.currentLanguage === 'en' ? 'Query Count' : '查询次数',
+        'insertCount': window.currentLanguage === 'en' ? 'Insert Count' : '插入次数',
+        'updateCount': window.currentLanguage === 'en' ? 'Update Count' : '更新次数',
+        'deleteCount': window.currentLanguage === 'en' ? 'Delete Count' : '删除次数',
+        'readCount': window.currentLanguage === 'en' ? 'Read Count' : '读次数',
+        'writeCount': window.currentLanguage === 'en' ? 'Write Count' : '写次数',
+        'totalCount': window.currentLanguage === 'en' ? 'Total Count' : '总次数',
+        'updatedTime': window.currentLanguage === 'en' ? 'Updated Time' : '更新时间'
+    };
+
+    const headerRow = Object.values(headers).join(',');
+    const dataRows = data.map(item => {
+        const escapeCsvValue = (value) => {
+            if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+                return `"${value.replace(/"/g, '""')}"`;
+            }
+            return value;
+        };
+
+        return [
+            escapeCsvValue(item.database),
+            escapeCsvValue(item.table),
+            item.queryCount,
+            item.insertCount,
+            item.updateCount,
+            item.deleteCount,
+            item.readCount,
+            item.writeCount,
+            item.totalCount,
+            escapeCsvValue(new Date(item.updatedTime).toLocaleString())
+        ].join(',');
+    });
+
+    const csvContent = [headerRow, ...dataRows].join('\n');
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `table_statistics_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+</script>
+
+<style>
+/* 表格样式 */
+.table-responsive {
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, .2) transparent;
+}
+
+.table-responsive::-webkit-scrollbar {
+    height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, .2);
+    border-radius: 3px;
+}
+
+/* 排序图标样式 */
+.sortable {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-right: 25px !important;  /* 为排序按钮留出空间 */
+}
+
+.sort-icons {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    opacity: 0.7;
+    transition: all 0.2s;
+    height: 16px;
+}
+
+.sort-icons i {
+    font-size: 12px;
+    line-height: 1;
+    display: block;
+    color: #adb5bd;
+    transition: all 0.2s ease;
+    height: 8px;
+    width: 12px;
+    text-align: center;
+}
+
+.sort-icons .sort-up {
+    margin-bottom: -2px;
+}
+
+.sort-icons .sort-down {
+    margin-top: -2px;
+}
+
+.sortable:hover .sort-icons {
+    opacity: 1;
+}
+
+.sort-icons i:hover {
+    color: #0d6efd;
+    transform: scale(1.2);
+}
+
+/* 当列处于升序状态 */
+.sortable[data-order="asc"] .sort-icons {
+    opacity: 1;
+}
+
+.sortable[data-order="asc"] .sort-icons .sort-up {
+    color: #0d6efd;
+    font-weight: bold;
+    transform: scale(1.2);
+}
+
+.sortable[data-order="asc"] .sort-icons .sort-down {
+    opacity: 0.5;
+    transform: scale(0.8);
+}
+
+/* 当列处于降序状态 */
+.sortable[data-order="desc"] .sort-icons {
+    opacity: 1;
+}
+
+.sortable[data-order="desc"] .sort-icons .sort-down {
+    color: #0d6efd;
+    font-weight: bold;
+    transform: scale(1.2);
+}
+
+.sortable[data-order="desc"] .sort-icons .sort-up {
+    opacity: 0.5;
+    transform: scale(0.8);
+}
+
+/* 鼠标悬停效果 */
+.sortable:hover {
+    background-color: rgba(13, 110, 253, 0.04);
+}
+
+/* 标签输入样式 */
+.tags-input-wrapper {
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.tags-input {
+    border: none;
+    outline: none;
+    flex: 1;
+    min-width: 100px;
+}
+
+.tag {
+    background-color: #e9ecef;
+    border-radius: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.tag .remove {
+    cursor: pointer;
+    color: #dc3545;
+}
+
+.tag .remove:hover {
+    color: #bd2130;
+}
+
+/* 添加响应式调整 */
+@media (max-width: 768px) {
+    .sortable {
+        padding-right: 20px !important;
+    }
+    
+    .sort-icons i {
+        font-size: 12px;
+    }
+}
+</style> 

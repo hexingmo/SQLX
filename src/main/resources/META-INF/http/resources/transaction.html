@@ -1,0 +1,1038 @@
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0" data-en="Transaction Metrics" data-zh="事务">Transaction History</h5>
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-primary me-2" id="advancedSearchBtn" data-en="Advanced Search" data-zh="高级搜索">
+                <i class="fas fa-search me-1"></i>
+                <span data-en="Advanced Search" data-zh="高级搜索">Advanced Search</span>
+            </button>
+            <button class="btn btn-sm btn-primary" id="refreshBtn">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="card-body border-bottom" id="advancedSearchForm" style="display: none;">
+        <form class="row g-3">
+            <div class="col-md-3 col-lg-2">
+                <label class="form-label" data-en="ID" data-zh="ID">ID</label>
+                <input type="text" class="form-control form-control-sm" name="transactionId">
+            </div>
+            <div class="col-md-3 col-lg-2">
+                <label class="form-label" data-en="Name" data-zh="名称">Name</label>
+                <input type="text" class="form-control form-control-sm" name="transactionName">
+            </div>
+            <div class="col-md-3 col-lg-2">
+                <label class="form-label" data-en="Cluster" data-zh="集群">Cluster</label>
+                <input type="text" class="form-control form-control-sm" name="clusterName">
+            </div>
+            <div class="col-md-3 col-lg-2">
+                <label class="form-label" data-en="Node" data-zh="节点">Node</label>
+                <input type="text" class="form-control form-control-sm" name="nodeName">
+            </div>
+            <div class="col-md-3 col-lg-2">
+                <label class="form-label" data-en="Transaction Status" data-zh="事务状态">Transaction Status</label>
+                <select class="form-select form-select-sm" name="transactionStatus">
+                    <option value="" data-en="All" data-zh="全部">All</option>
+                    <option value="COMMITTING" data-en="Committing" data-zh="提交中">Committing</option>
+                    <option value="COMMITTED" data-en="Committed" data-zh="已提交">Committed</option>
+                    <option value="ROLLBACKING" data-en="Rollbacking" data-zh="回滚中">Rollbacking</option>
+                    <option value="ROLLBACKED" data-en="Rollbacked" data-zh="已回滚">Rollbacked</option>
+                </select>
+            </div>
+            <div class="col-md-3 col-lg-2">
+                <label class="form-label" data-en="Status" data-zh="状态">Status</label>
+                <select class="form-select form-select-sm" name="succeeded">
+                    <option value="" data-en="All" data-zh="全部">All</option>
+                    <option value="true" data-en="Success" data-zh="成功">Success</option>
+                    <option value="false" data-en="Failed" data-zh="失败">Failed</option>
+                </select>
+            </div>
+            <div class="col-md-3 col-lg-2">
+                <label class="form-label" data-en="Databases" data-zh="数据库">Databases</label>
+                <div class="tags-input-wrapper">
+                    <div class="tags-container">
+                        <input type="text" class="tags-input" data-name="databases"
+                               placeholder="Press Enter to add"
+                               data-en-placeholder="Press Enter to add"
+                               data-zh-placeholder="按回车键添加">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-lg-2">
+                <label class="form-label" data-en="Tables" data-zh="表">Tables</label>
+                <div class="tags-input-wrapper">
+                    <div class="tags-container">
+                        <input type="text" class="tags-input" data-name="tables"
+                               placeholder="Press Enter to add"
+                               data-en-placeholder="Press Enter to add"
+                               data-zh-placeholder="按回车键添加">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <label class="form-label" data-en="Created Time Range" data-zh="创建时间范围">Created Time Range</label>
+                <div class="input-group input-group-sm">
+                    <input type="datetime-local" class="form-control form-control-sm" name="startCreatedTime">
+                    <span class="input-group-text">~</span>
+                    <input type="datetime-local" class="form-control form-control-sm" name="endCreatedTime">
+                </div>
+            </div>
+            <div class="col-md-12">
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-primary btn-sm" id="searchBtn">
+                        <i class="fas fa-search me-1"></i>
+                        <span data-en="Search" data-zh="搜索">Search</span>
+                    </button>
+                    <button type="button" class="btn btn-success btn-sm" id="exportBtn">
+                        <i class="fas fa-file-excel me-1"></i>
+                        <span data-en="Export CSV" data-zh="导出CSV">Export CSV</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="resetBtn">
+                        <i class="fas fa-undo me-1"></i>
+                        <span data-en="Reset" data-zh="重置">Reset</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover" style="min-width: 1500px;">
+                <thead>
+                    <tr>
+                        <th data-en="Transaction ID" data-zh="事务ID">Transaction ID</th>
+                        <th data-en="Transaction Name" data-zh="事务名称">Transaction Name</th>
+                        <th data-en="Cluster" data-zh="集群">Cluster</th>
+                        <th data-en="Node" data-zh="节点">Node</th>
+                        <th data-en="SQL" data-zh="SQL">SQL</th>
+                        <th class="sortable" data-sort="sqlExecuteTimeElapsedMillis">
+                            <div class="d-flex align-items-center">
+                                <span data-en="SQL Execute Time(ms)" data-zh="SQL执行时间(ms)" style="flex: 1">SQL Execute Time(ms)</span>
+                                <div class="sort-icons">
+                                    <i class="fas fa-sort-amount-up sort-up" title="Sort Ascending"></i>
+                                    <i class="fas fa-sort-amount-down sort-down" title="Sort Descending"></i>
+                                </div>
+                            </div>
+                        </th>
+                        <th class="sortable" data-sort="timeElapsedMillis">
+                            <div class="d-flex align-items-center">
+                                <span data-en="Commit/Rollback Time(ms)" data-zh="提交/回滚时间(ms)" style="flex: 1">Commit/Rollback Time(ms)</span>
+                                <div class="sort-icons">
+                                    <i class="fas fa-sort-amount-up sort-up" title="Sort Ascending"></i>
+                                    <i class="fas fa-sort-amount-down sort-down" title="Sort Descending"></i>
+                                </div>
+                            </div>
+                        </th>
+                        <th class="sortable" data-sort="totalTimeElapsedMillis">
+                            <div class="d-flex align-items-center">
+                                <span data-en="Total Time(ms)" data-zh="总时间(ms)" style="flex: 1">Total Time(ms)</span>
+                                <div class="sort-icons">
+                                    <i class="fas fa-sort-amount-up sort-up" title="Sort Ascending"></i>
+                                    <i class="fas fa-sort-amount-down sort-down" title="Sort Descending"></i>
+                                </div>
+                            </div>
+                        </th>
+                        <th data-en="Databases" data-zh="数据库">Databases</th>
+                        <th data-en="Tables" data-zh="表">Tables</th>
+                        <th data-en="Transaction Status" data-zh="事务状态">Transaction Status</th>
+                        <th data-en="Status" data-zh="状态">Status</th>
+                        <th data-en="Error Message" data-zh="错误信息">Error Message</th>
+                        <th class="sortable" data-sort="createdTime">
+                            <div class="d-flex align-items-center">
+                                <span data-en="Created Time" data-zh="创建时间" style="flex: 1">Created Time</span>
+                                <div class="sort-icons">
+                                    <i class="fas fa-sort-amount-up sort-up" title="Sort Ascending"></i>
+                                    <i class="fas fa-sort-amount-down sort-down" title="Sort Descending"></i>
+                                </div>
+                            </div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="transactionList">
+                    <!-- 数据将通过 AJAX 加载 -->
+                </tbody>
+            </table>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div class="text-muted">
+                <span data-en="Total" data-zh="总共">Total</span>: <span id="totalCount">0</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <select class="form-select form-select-sm" id="pageSize" style="width: auto;">
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                <ul class="pagination pagination-sm mb-0" id="pagination"></ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="transactionDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" data-en="Transaction Detail" data-zh="事务详情">SQL Detail</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <pre id="jsonDetail" class="json-viewer">
+
+                </pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="copyJsonBtn" data-en="Copy" data-zh="复制">Copy</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* 保持与 sql.html 相同的样式 */
+.sql-keyword {
+    color: #0033b3;
+    font-weight: bold;
+}
+
+.sql-string {
+    color: #067d17;
+}
+
+.sql-number {
+    color: #1750eb;
+}
+
+/* SQL 内容显示相关样式 */
+.sql-content {
+    position: relative;
+    max-width: 400px;
+}
+
+.sql-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+}
+
+.sql-text:hover {
+    background-color: #e9ecef;
+}
+
+.sql-hover-content {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 100%;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 12px;
+    min-width: 600px;
+    max-width: 800px;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.sql-content.show-sql .sql-hover-content {
+    display: block;
+}
+
+/* 复制按钮样式 */
+.copy-sql-btn {
+    padding: 2px 8px;
+    font-size: 12px;
+    color: #6c757d;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.copy-sql-btn:hover {
+    color: #0d6efd;
+    border-color: #0d6efd;
+    background-color: #f8f9fa;
+}
+
+.copy-tooltip {
+    position: fixed;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 1100;
+    pointer-events: none;
+    animation: fadeInOut 1.5s ease;
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; }
+    20% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* 在现有样式中添加 */
+.sql-statement {
+    font-family: monospace;
+    background-color: #f8f9fa;
+    padding: 8px;
+    border-radius: 4px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin: 4px 0;
+}
+
+.sql-content .sql-text {
+    max-width: 300px;
+    font-family: monospace;
+    background-color: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.sql-hover-content {
+    min-width: 600px;
+    max-width: 800px;
+    background-color: #fff;
+    padding: 12px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.tags-input-wrapper {
+    position: relative;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 4px 8px;
+    min-height: 31px;
+    background-color: #fff;
+    cursor: text;
+}
+
+.tags-input-wrapper:focus-within {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+}
+
+.tag {
+    display: inline-flex;
+    align-items: center;
+    background-color: #e9ecef;
+    border: 1px solid #dee2e6;
+    border-radius: 3px;
+    padding: 1px 8px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #495057;
+}
+
+.tag .remove {
+    margin-left: 6px;
+    cursor: pointer;
+    color: #6c757d;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.tag .remove:hover {
+    color: #dc3545;
+}
+
+.tags-input {
+    border: none;
+    outline: none;
+    padding: 2px;
+    font-size: 12px;
+    min-width: 60px;
+    flex-grow: 1;
+    background: transparent;
+}
+
+.tags-input::placeholder {
+    color: #6c757d;
+    opacity: 0.65;
+}
+
+/* 添加下拉建议列表样式 */
+.tags-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin-top: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: none;
+}
+
+.tags-suggestions.show {
+    display: block;
+}
+
+.suggestion-item {
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #495057;
+}
+
+.suggestion-item:hover {
+    background-color: #f8f9fa;
+}
+
+.suggestion-item.active {
+    background-color: #e9ecef;
+}
+
+/* 修改表格单元格样式以适应长内容 */
+.table td {
+    max-width: 400px;
+    vertical-align: top;
+    padding: 12px 8px;
+}
+
+.transaction-detail {
+    color: #0d6efd;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.transaction-detail:hover {
+    text-decoration: underline;
+}
+
+/* 修改模态框样式 */
+.modal-content {
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.modal-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+</style>
+
+<script>
+$(document).ready(function() {
+    // 初始化 transactionVars 对象
+    if (typeof window.transactionVars === 'undefined') {
+        window.transactionVars = {
+            currentPage: 1,
+            pageSize: 10,
+            totalPages: 1,
+            sortConfig: {
+                sqlExecuteTimeElapsedMillis: '',
+                timeElapsedMillis: '',
+                totalTimeElapsedMillis: '',
+                createdTime: ''
+            },
+            searchParams: {},
+            currentPageData: [] // 用于存储当前页的数据
+        };
+    }
+
+    // 设置默认时间范围为当前时间的前一小时到当前时间
+    setDefaultTimeRange();
+
+    // 初始加载数据
+    loadTransactionData();
+
+    // 高级搜索按钮点击事件
+    $('#advancedSearchBtn').click(function() {
+        $('#advancedSearchForm').slideToggle();
+    });
+
+    // 搜索按钮点击事件
+    $('#searchBtn').click(function() {
+        const form = $('#advancedSearchForm');
+        const succeededValue = form.find('[name="succeeded"]').val();
+        const startTime = form.find('[name="startCreatedTime"]').val();
+        const endTime = form.find('[name="endCreatedTime"]').val();
+        window.transactionVars.searchParams = {
+            transactionId: form.find('[name="transactionId"]').val(),
+            transactionName: form.find('[name="transactionName"]').val(),
+            clusterName: form.find('[name="clusterName"]').val(),
+            nodeName: form.find('[name="nodeName"]').val(),
+            transactionStatus: form.find('[name="transactionStatus"]').val(),
+            succeeded: succeededValue === '' ? null : succeededValue === 'true',
+            databases: getTagValues('databases'),
+            tables: getTagValues('tables'),
+            startCreatedTime: startTime ? new Date(startTime).getTime() : null,
+            endCreatedTime: endTime ? new Date(endTime).getTime() : null,
+        };
+        window.transactionVars.currentPage = 1;
+        loadTransactionData();
+    });
+
+    // 重置按钮点击事件
+    $('#resetBtn').click(function() {
+        $('#advancedSearchForm form')[0].reset();
+        $('.tags-container .tag').remove(); // 清除所有标签
+        // 重置后重新设置默认时间范围
+        setDefaultTimeRange();
+        window.transactionVars.searchParams = {};
+        window.transactionVars.currentPage = 1;
+        loadTransactionData();
+    });
+
+    // 刷新按钮点击事件
+    $('#refreshBtn').click(loadTransactionData);
+
+    // 页码大小变更事件
+    $('#pageSize').on('change', function() {
+        window.transactionVars.pageSize = parseInt($(this).val());
+        window.transactionVars.currentPage = 1;
+        loadTransactionData();
+    });
+
+    // 初始化标签输入
+    initializeTagsInput();
+
+    // 添加导出按钮点击事件
+    $('#exportBtn').on('click', function() {
+        exportToCSV();
+    });
+
+    // 为可排序列添加点击事件
+    $('.sortable').click(function() {
+        const sortField = $(this).data('sort');
+        const currentOrder = window.transactionVars.sortConfig[sortField];
+        const newOrder = currentOrder === 'asc' ? 'desc' : 'asc';
+
+        // 重置所有排序配置
+        for (let key in window.transactionVars.sortConfig) {
+            window.transactionVars.sortConfig[key] = '';
+        }
+
+        // 设置新的排序配置
+        window.transactionVars.sortConfig[sortField] = newOrder;
+
+        // 移除所有列的高亮样式
+        $('.sortable').removeClass('sorted-asc sorted-desc');
+
+        // 根据排序顺序添加高亮样式
+        if (newOrder === 'asc') {
+            $(this).addClass('sorted-asc');
+        } else {
+            $(this).addClass('sorted-desc');
+        }
+
+        loadTransactionData();
+    });
+});
+
+// 获取标签值
+function getTagValues(fieldName) {
+    return $(`.tags-input[data-name="${fieldName}"]`)
+        .closest('.tags-container')
+        .find('.tag span:first-child')
+        .map(function() { return $(this).text(); })
+        .get();
+}
+
+// 修改 initializeTagsInput 函数
+function initializeTagsInput() {
+    $('.tags-input').each(function() {
+        const $input = $(this);
+        const $container = $input.closest('.tags-container');
+
+        $input.on('keydown', function(e) {
+            const value = $input.val().trim();
+            
+            // 支持回车和逗号添加标签
+            if ((e.key === 'Enter' || e.key === ',') && value) {
+                e.preventDefault();
+                
+                // 如果输入包含逗号，分割并添加多个标签
+                const values = value.split(',').map(v => v.trim()).filter(v => v);
+                values.forEach(v => addTag($container, v));
+                $input.val('');
+            } else if (e.key === 'Backspace' && !value) {
+                e.preventDefault();
+                $container.find('.tag').last().remove();
+            }
+        });
+
+        // 处理粘贴事件
+        $input.on('paste', function(e) {
+            e.preventDefault();
+            const pastedData = (e.originalEvent.clipboardData || window.clipboardData).getData('text');
+            const values = pastedData.split(',').map(v => v.trim()).filter(v => v);
+            values.forEach(v => addTag($container, v));
+        });
+
+        // 处理失去焦点事件，添加当前输入的内容
+        $input.on('blur', function() {
+            const value = $input.val().trim();
+            if (value) {
+                const values = value.split(',').map(v => v.trim()).filter(v => v);
+                values.forEach(v => addTag($container, v));
+                $input.val('');
+            }
+        });
+
+        $container.on('click', '.tag .remove', function() {
+            $(this).closest('.tag').remove();
+        });
+    });
+}
+
+// 添加标签
+function addTag(container, value) {
+    // 检查是否已存在
+    const existingTags = container.find('.tag span:first-child').map(function() {
+        return $(this).text();
+    }).get();
+
+    if (existingTags.includes(value)) return;
+
+    const $tag = $(`
+        <span class="tag">
+            <span>${value}</span>
+            <span class="remove">
+                <i class="fas fa-times"></i>
+            </span>
+        </span>
+    `);
+
+    $tag.insertBefore(container.find('.tags-input'));
+}
+
+// 设置默认时间范围为当前时间的前一小时到当前时间
+function setDefaultTimeRange() {
+    const now = new Date();
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+
+    // 格式化为 datetime-local 输入框所需的格式 (YYYY-MM-DDTHH:MM)
+    const formatDateForInput = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    };
+
+    // 设置开始时间和结束时间
+    $('input[name="startCreatedTime"]').val(formatDateForInput(oneHourAgo));
+    $('input[name="endCreatedTime"]').val(formatDateForInput(now));
+
+    // 同时更新搜索参数
+    window.transactionVars.searchParams = {
+        ...window.transactionVars.searchParams,
+        startCreatedTime: oneHourAgo.getTime(),
+        endCreatedTime: now.getTime()
+    };
+
+    console.log('设置时间范围:', {
+        开始时间: formatDateForInput(oneHourAgo),
+        结束时间: formatDateForInput(now),
+        开始时间毫秒: oneHourAgo.getTime(),
+        结束时间毫秒: now.getTime()
+    });
+}
+
+// 加载事务数据的函数
+async function loadTransactionData() {
+
+    try {
+
+        $('#transactionList').html('<tr><td colspan="14" class="text-center"><div class="spinner-border text-primary" role="status"></div></td></tr>');
+
+        const requestData = {
+            pagingCriteria: {
+                pageNo: window.transactionVars.currentPage,
+                pageSize: window.transactionVars.pageSize
+            },
+            sortOrderField: {
+                fieldName: Object.keys(window.transactionVars.sortConfig).find(key => window.transactionVars.sortConfig[key]),
+                sortOrder: Object.values(window.transactionVars.sortConfig).find(order => order)
+            },
+            ...window.transactionVars.searchParams
+        };
+
+        const response = await fetch('/sqlx/v1/transaction-metrics/page', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        });
+
+        if (response.redirected) {
+            console.log('Redirected to:', response.url);
+            window.location.href = response.url;
+            return;
+        }
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.succeed) {
+                const { content, totalCount } = data.payload;
+                window.transactionVars.currentPageData = content; // 保存当前页数据
+                updateTransactionTable(content);
+                updatePagination(totalCount);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                    text: response.msg,
+                    confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                    confirmButtonColor: '#87CEEB'
+                });
+            }
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                text: window.currentLanguage === 'en' ? 'Failed to load transaction data' : '加载事务数据失败',
+                confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+                confirmButtonColor: '#87CEEB'
+            });
+        }
+
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: window.currentLanguage === 'en' ? 'Error' : '错误',
+            text: window.currentLanguage === 'en' ? 'An error occurred' : '发生了一个错误',
+            confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+            confirmButtonColor: '#87CEEB'
+        });
+    }
+}
+
+// 更新表格数据
+function updateTransactionTable(data) {
+    const tbody = $('#transactionList');
+    tbody.empty();
+    
+    if (!data || data.length === 0) {
+        tbody.append(`
+            <tr>
+                <td colspan="14" class="text-center">
+                    ${window.currentLanguage === 'en' ? 'No data available' : '暂无数据'}
+                </td>
+            </tr>
+        `);
+        return;
+    }
+    
+    data.forEach(item => {
+        const sqlPreview = item.sqlList.length > 0 ? highlightSQL(item.sqlList[0].sql) : 'No SQL';
+        const sqlDetails = item.sqlList.map((sql, index) => `
+            <div class="sql-detail">
+                <div class="sql-text">
+                    <strong>${index + 1}.</strong> ${highlightSQL(sql.sql)} <span class="text-muted">(${sql.executeTimeElapsedMillis} ms)</span>
+                </div>
+                <button class="copy-sql-btn" data-sql="${encodeURIComponent(sql.sql)}" onclick="copySql(event, this)">
+                    <i class="fas fa-copy"></i>
+                    <span data-en="Copy SQL" data-zh="复制SQL">Copy SQL</span>
+                </button>
+            </div>
+        `).join('');
+
+        tbody.append(`
+            <tr>
+                <td>
+                    <a href="javascript:void(0)" class="transaction-detail" 
+                       onclick='showTransactionDetail(${JSON.stringify(item)})'>
+                        ${item.transactionId}
+                    </a>
+                </td>
+                <td>${item.transactionName}</td>
+                <td>${item.clusterName}</td>
+                <td>${item.node.name}</td>
+                <td>
+                    <div class="sql-preview" onclick="$(this).next('.sql-details').toggle()">
+                        ${sqlPreview} <span class="text-muted">(${item.sqlList.length} SQLs)</span>
+                    </div>
+                    <div class="sql-details" style="display: none;">
+                        ${sqlDetails}
+                    </div>
+                </td>
+                <td>${item.sqlExecuteTimeElapsedMillis}</td>
+                <td>${item.timeElapsedMillis}</td>
+                <td>${item.totalTimeElapsedMillis}</td>
+                <td>${item.databases.join(', ')}</td>
+                <td>${item.tables.join(', ')}</td>
+                <td>${item.transactionStatus}</td>
+                <td>
+                    <span class="badge bg-${item.succeeded ? 'success' : 'danger'}">
+                        ${item.succeeded ? 
+                            (window.currentLanguage === 'en' ? 'Success' : '成功') : 
+                            (window.currentLanguage === 'en' ? 'Failed' : '失败')}
+                    </span>
+                </td>
+                <td>${item.exception || ''}</td>
+                <td>${new Date(item.createdTime).toLocaleString()}</td>
+            </tr>
+        `);
+    });
+    
+    window.updateLanguage();
+}
+
+// 添加分页更新函数
+function updatePagination(totalCount) {
+    const totalPages = Math.ceil(totalCount / window.transactionVars.pageSize);
+    window.transactionVars.totalPages = totalPages;
+
+    const pagination = $('#pagination');
+    pagination.empty();
+    $('#totalCount').text(totalCount);
+
+    if (totalPages <= 1) return;
+
+    // 添加上一页按钮
+    pagination.append(`
+        <li class="page-item ${window.transactionVars.currentPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="changePage(${window.transactionVars.currentPage - 1})">&laquo;</a>
+        </li>
+    `);
+
+    // 计算需要显示的页码范围
+    let startPage = 1;
+    let endPage = totalPages;
+
+    if (totalPages > 5) {
+        if (window.transactionVars.currentPage <= 3) {
+            endPage = 5;
+        } else if (window.transactionVars.currentPage >= totalPages - 2) {
+            startPage = totalPages - 4;
+        } else {
+            startPage = window.transactionVars.currentPage - 2;
+            endPage = window.transactionVars.currentPage + 2;
+        }
+    }
+
+    // 添加第一页按钮
+    if (startPage > 1) {
+        pagination.append(`
+            <li class="page-item ${window.transactionVars.currentPage === 1 ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="changePage(1)">1</a>
+            </li>
+        `);
+        if (startPage > 2) {
+            pagination.append(`
+                <li class="page-item disabled">
+                    <a class="page-link" href="#">...</a>
+                </li>
+            `);
+        }
+    }
+
+    // 添加中间页码按钮
+    for (let i = startPage; i <= endPage; i++) {
+        pagination.append(`
+            <li class="page-item ${i === window.transactionVars.currentPage ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+            </li>
+        `);
+    }
+
+    // 添加最后一页按钮
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            pagination.append(`
+                <li class="page-item disabled">
+                    <a class="page-link" href="#">...</a>
+                </li>
+            `);
+        }
+        pagination.append(`
+            <li class="page-item ${window.transactionVars.currentPage === totalPages ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${totalPages})">${totalPages}</a>
+            </li>
+        `);
+    }
+
+    // 添加下一页按钮
+    pagination.append(`
+        <li class="page-item ${window.transactionVars.currentPage === totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="changePage(${window.transactionVars.currentPage + 1})">&raquo;</a>
+        </li>
+    `);
+}
+
+// 改变页码
+function changePage(page) {
+    if (page < 1 || page > window.transactionVars.totalPages) return;
+    window.transactionVars.currentPage = page;
+    loadTransactionData();
+}
+
+// 添加显示事务详情的函数
+function showTransactionDetail(detail) {
+    // 格式化并高亮 JSON
+    $('#jsonDetail').html(syntaxHighlight(JSON.stringify(detail, null, 2)));
+    $('#transactionDetailModal').modal('show');
+}
+
+// 添加导出为 CSV 的函数
+function exportToCSV() {
+    const data = window.transactionVars.currentPageData; // 使用当前页的数据
+    if (!data || data.length === 0) {
+        Swal.fire({
+            icon: 'info',
+            title: window.currentLanguage === 'en' ? 'No Data' : '无数据',
+            text: window.currentLanguage === 'en' ? 'No data available to export.' : '没有可导出的数据。',
+            confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定',
+            confirmButtonColor: '#87CEEB'
+        });
+        return;
+    }
+
+    const headers = [
+        "Transaction ID", "Transaction Name", "Cluster", "Node", "SQL",
+        "SQL Execute Time(ms)", "Commit/Rollback Time(ms)", "Total Time(ms)",
+        "Databases", "Tables", "Transaction Status", "Status", "Error Message", "Created Time"
+    ];
+
+    const csvRows = [headers.join(',')];
+
+    data.forEach(item => {
+        const row = [
+            item.transactionId,
+            item.transactionName,
+            item.clusterName,
+            item.node.name,
+            item.sqlList.map(sql => sql.sql).join('; '),
+            item.sqlExecuteTimeElapsedMillis,
+            item.timeElapsedMillis,
+            item.totalTimeElapsedMillis,
+            item.databases.join('; '),
+            item.tables.join('; '),
+            item.transactionStatus,
+            item.succeeded ? 'Success' : 'Failed',
+            item.exception || '',
+            new Date(item.createdTime).toLocaleString()
+        ];
+        csvRows.push(row.map(value => `"${value.toString().replace(/"/g, '""')}"`).join(',')); // Escape double quotes
+    });
+
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'transactions.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// 复制 SQL
+function copySql(event, button) {
+    event.stopPropagation();
+    const sql = decodeURIComponent(button.getAttribute('data-sql'));
+    navigator.clipboard.writeText(sql).then(() => {
+        // 显示复制成功提示
+        const $button = $(button);
+        const buttonRect = button.getBoundingClientRect();
+        const tooltip = $(`<div class="copy-tooltip">
+            ${window.currentLanguage === 'en' ? 'Copied!' : '已复制！'}
+        </div>`);
+        
+        tooltip.css({
+            top: buttonRect.top - 30 + 'px',
+            left: buttonRect.left + (buttonRect.width - 60) / 2 + 'px'
+        });
+        
+        $('body').append(tooltip);
+        
+        // 更改按钮状态
+        const $icon = $button.find('i');
+        const $text = $button.find('span');
+        $icon.removeClass('fa-copy').addClass('fa-check text-success');
+        $text.text(window.currentLanguage === 'en' ? 'Copied!' : '已复制！');
+        
+        // 恢复按钮状态
+        setTimeout(() => {
+            $icon.removeClass('fa-check text-success').addClass('fa-copy');
+            $text.text(window.currentLanguage === 'en' ? 'Copy SQL' : '复制SQL');
+            tooltip.remove();
+        }, 1500);
+    });
+}
+
+// 添加 SQL 语法高亮函数
+function highlightSQL(sql) {
+    // SQL 关键字列表
+    const keywords = ['SELECT', 'FROM', 'WHERE', 'INSERT', 'UPDATE', 'DELETE', 'JOIN', 'ON', 'AND', 'OR', 
+                     'INTO', 'VALUES', 'SET', 'CREATE', 'INDEX', 'TABLE', 'AS', 'IN'];
+    const functions = ['COUNT', 'SUM', 'AVG', 'MAX', 'MIN'];
+    
+    // 转义 HTML 特殊字符
+    let highlighted = sql.replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    }[char]));
+    
+    // 高亮关键字
+    keywords.forEach(keyword => {
+        const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
+        highlighted = highlighted.replace(regex, match => 
+            `<span class="sql-keyword">${match}</span>`
+        );
+    });
+    
+    // 高亮函数
+    functions.forEach(func => {
+        const regex = new RegExp(`\\b${func}\\b`, 'gi');
+        highlighted = highlighted.replace(regex, match => 
+            `<span class="sql-function">${match}</span>`
+        );
+    });
+    
+    // 高亮字符串
+    highlighted = highlighted.replace(/'([^']*)'|"([^"]*)"]/g, match => 
+        `<span class="sql-string">${match}</span>`
+    );
+    
+    // 高亮数字
+    highlighted = highlighted.replace(/\b\d+\b/g, match => 
+        `<span class="sql-number">${match}</span>`
+    );
+    
+    return highlighted;
+}
+</script> 

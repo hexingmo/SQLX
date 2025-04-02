@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQLX - Login</title>
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #87CEEB;  /* Sky blue */
+            --primary-dark: #5CACEE;   /* Darker sky blue for hover */
+            --error-color: #dc3545;    /* Bootstrap danger color */
+        }
+
+        body {
+            background-color: #f8f9fa;
+            background-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .login-container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 420px;
+            transition: all 0.3s ease;
+        }
+
+        .login-container:hover {
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .login-title {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 2rem;
+            font-weight: 600;
+            font-size: 2.2rem;
+            letter-spacing: 1px;
+        }
+
+        .form-row {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .form-row label {
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .input-group {
+            position: relative;
+            width: 100%;
+        }
+
+        .form-control {
+            width: 100%;
+            height: 45px;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border-radius: 8px !important;
+            border: 1px solid #ced4da;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        .input-group .form-control {
+            border-radius: 8px !important;
+        }
+
+        .input-group > .form-control:not(:first-child) {
+            border-top-left-radius: 8px !important;
+            border-bottom-left-radius: 8px !important;
+        }
+
+        .input-group > .form-control:not(:last-child) {
+            border-top-right-radius: 8px !important;
+            border-bottom-right-radius: 8px !important;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(135, 206, 235, 0.25);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+
+        .btn-group {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.75rem 0;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: #e9ecef;
+            border-color: #e9ecef;
+            color: #495057;
+        }
+
+        .btn-secondary:hover {
+            background-color: #dde2e6;
+            border-color: #dde2e6;
+            transform: translateY(-2px);
+        }
+
+        .error-message {
+            color: var(--error-color);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .form-control.is-invalid {
+            border-color: var(--error-color);
+        }
+
+        .form-control.is-invalid + .input-icon {
+            color: var(--error-color);
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-container {
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+
+    <!--
+    如果你对 sqlx 感兴趣，并希望参与其开发，欢迎加入我们的团队！请将您的想法和简历发送至邮箱：dawn.hexingmo@gmail.com。期待与您一起推动 sqlx 的发展！
+
+    If you are interested in sqlx and would like to participate in its development, we warmly invite you to join our team!
+    Please send your ideas and resume to the email: dawn.hexingmo@gmail.com.
+    We look forward to working with you to advance the development of sqlx!
+    -->
+
+    <div class="login-container">
+        <h2 class="login-title">SQLX</h2>
+        <form id="loginForm" novalidate>
+            <div class="form-row">
+                <label for="username">Username</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="username" placeholder="Enter your username" required>
+                    <span class="input-icon"><i class="fas fa-user"></i></span>
+                </div>
+                <div class="error-message" id="username-error">Username is required</div>
+            </div>
+            <div class="form-row">
+                <label for="password">Password</label>
+                <div class="input-group">
+                    <input type="password" class="form-control" id="password" placeholder="Enter your password" required>
+                    <span class="input-icon"><i class="fas fa-lock"></i></span>
+                </div>
+                <div class="error-message" id="password-error">Password is required</div>
+            </div>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary">Login</button>
+                <button type="reset" class="btn btn-secondary">Reset</button>
+            </div>
+        </form>
+        <div class="login-footer">
+            &copy; 2023 SQLX. All rights reserved.
+        </div>
+    </div>
+
+    <script src="./js/jquery-3.6.0.min.js"></script>
+    <script src="./js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Check if loaded in iframe or other container
+        if (window.self !== window.top || window.location.pathname.indexOf('login.html') === -1) {
+            window.top.location.href = 'login.html';
+        }
+
+        $(document).ready(function() {
+            // Form validation function
+            function validateForm() {
+                let isValid = true;
+                
+                // Validate username
+                const username = $('#username').val().trim();
+                if (!username) {
+                    $('#username').addClass('is-invalid');
+                    $('#username-error').show();
+                    isValid = false;
+                } else {
+                    $('#username').removeClass('is-invalid');
+                    $('#username-error').hide();
+                }
+                
+                // Validate password
+                const password = $('#password').val();
+                if (!password) {
+                    $('#password').addClass('is-invalid');
+                    $('#password-error').show();
+                    isValid = false;
+                } else {
+                    $('#password').removeClass('is-invalid');
+                    $('#password-error').hide();
+                }
+                
+                return isValid;
+            }
+            
+            // Clear validation errors on input
+            $('#username, #password').on('input', function() {
+                $(this).removeClass('is-invalid');
+                $('#' + this.id + '-error').hide();
+            });
+            
+            // Handle form submission
+            $('#loginForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                if (!validateForm()) {
+                    return false;
+                }
+
+                const username = $('#username').val().trim();
+                const password = $('#password').val();
+
+                // Show loading state
+                const submitBtn = $(this).find('button[type="submit"]');
+                const originalText = submitBtn.text();
+                submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Logging in...');
+
+                // Send JSON login request to the correct API endpoint
+                $.ajax({
+                    url: '/sqlx/v1/login',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        username: username,
+                        password: password
+                    }),
+                    success: function(response) {
+                        // Check if login was successful based on the succeed field
+                        if (response.succeed) {
+                            // Redirect to main page after successful login
+                            window.location.href = 'index.html';
+                        } else {
+                            // Show error message from response
+                            submitBtn.prop('disabled', false).text(originalText);
+                            alert(response.msg || 'Login failed. Please check your username and password.');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        submitBtn.prop('disabled', false).text(originalText);
+                        alert('Login request failed. Please try again later.');
+                    }
+                });
+            });
+            
+            // Handle reset button
+            $('button[type="reset"]').on('click', function() {
+                $('.form-control').removeClass('is-invalid');
+                $('.error-message').hide();
+            });
+        });
+    </script>
+</body>
+</html> 

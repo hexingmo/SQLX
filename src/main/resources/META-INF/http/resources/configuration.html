@@ -1,0 +1,333 @@
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0" data-en="Configuration" data-zh="配置">Configuration</h5>
+    </div>
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex align-items-center gap-3">
+                <label for="exportFormat" class="form-label mb-0" data-en="Format:" data-zh="格式：">Format:</label>
+                <select class="form-select" id="exportFormat" style="width: 150px;">
+                    <option value="json" data-en="JSON" data-zh="JSON">JSON</option>
+                    <option value="properties" data-en="Properties" data-zh="Properties">Properties</option>
+                    <option value="yaml" data-en="YAML" data-zh="YAML">YAML</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" id="exportBtn" data-en="Export" data-zh="导出">
+                <i class="fas fa-download me-1"></i>
+                <span data-en="Export" data-zh="导出">Export</span>
+            </button>
+        </div>
+        <div class="config-preview-container">
+            <div class="preview-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0" data-en="Configuration Preview" data-zh="配置预览">Configuration Preview</h6>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-primary" id="refreshBtn">
+                        <i class="fas fa-sync-alt me-1"></i>
+                        <span data-en="Refresh" data-zh="刷新">Refresh</span>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" id="copyBtn">
+                        <i class="fas fa-copy me-1"></i>
+                        <span data-en="Copy" data-zh="复制">Copy</span>
+                    </button>
+                </div>
+            </div>
+            <pre id="configPreview" class="config-preview"></pre>
+        </div>
+    </div>
+</div>
+
+<style>
+    .config-preview-container {
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .preview-header {
+        background-color: #f8f9fa;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .config-preview {
+        background-color: #fff;
+        padding: 1rem;
+        margin: 0;
+        max-height: 600px;
+        overflow-y: auto;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+        font-size: 0.875rem;
+        line-height: 1.7;
+        white-space: pre;
+    }
+
+    .config-preview::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    .config-preview::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    .config-preview::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+    }
+
+    .config-preview::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+
+    #copyBtn,
+    #refreshBtn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    #copyBtn:hover,
+    #refreshBtn:hover {
+        background-color: #e9ecef;
+    }
+
+    #copyBtn:active,
+    #refreshBtn:active {
+        background-color: #dee2e6;
+    }
+
+    /* 添加刷新按钮旋转动画 */
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .refresh-spin {
+        animation: spin 1s linear;
+    }
+</style>
+
+<script>
+    window.currentConfig = null;
+
+    function json2properties(obj, prefix = '') {
+        let properties = '';
+
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                const value = obj[key];
+                const fullKey = prefix ? `${prefix}.${key}` : key;
+
+                if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                    // 递归处理嵌套对象
+                    properties += json2properties(value, fullKey);
+                } else if (Array.isArray(value)) {
+                    // 处理数组
+                    value.forEach((item, index) => {
+                        if (typeof item === 'object' && item !== null) {
+                            properties += json2properties(item, `${fullKey}[${index}]`);
+                        } else {
+                            properties += `${fullKey}[${index}]=${item}\n`;
+                        }
+                    });
+                } else {
+                    // 处理基本类型
+                    properties += `${fullKey}=${value}\n`;
+                }
+            }
+        }
+
+        return properties;
+    }
+
+    // 抽取的接口调用函数
+    function fetchConfiguration() {
+        return fetch('/sqlx/v1/configuration')
+            .then(response => {
+                if (response.redirected) {
+                    console.log('Redirected to:', response.url);
+                    window.location.href = response.url;
+                    return Promise.reject(new Error('Redirected'));
+                }
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            });
+    }
+
+    function fetchAndDisplayConfig() {
+        fetchConfiguration()
+            .then(data => {
+                if (!data.succeed) {
+                    throw new Error('Failed to fetch configuration');
+                }
+                window.currentConfig = data.payload.config;
+                updateConfigPreview('json'); // 默认显示 JSON 格式
+            })
+            .catch(error => {
+                // 处理错误
+                if (error.message !== 'Redirected') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                        text: window.currentLanguage === 'en' ?
+                            'Failed to fetch configuration' :
+                            '获取配置失败',
+                        confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定'
+                    });
+                }
+            });
+    }
+
+    function updateConfigPreview(format) {
+        const configPreview = document.getElementById('configPreview');
+        let content;
+        let language;
+
+        switch (format) {
+            case 'json':
+                content = JSON.stringify(window.currentConfig, null, 2);
+                language = 'json';
+                break;
+            case 'yaml':
+                const prefixedConfig = { sqlx: { config: window.currentConfig } };
+                content = jsyaml.dump(prefixedConfig);
+                language = 'yaml';
+                break;
+            case 'properties':
+                content = json2properties(window.currentConfig, 'sqlx.config');
+                language = 'properties';
+                break;
+            default:
+                content = 'Unsupported format';
+                language = 'plaintext';
+        }
+
+        configPreview.innerHTML = `<code class="language-${language}">${content}</code>`;
+        hljs.highlightElement(configPreview.querySelector('code'));
+    }
+
+    document.getElementById('exportFormat').addEventListener('change', function() {
+        const format = this.value;
+        updateConfigPreview(format);
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', function() {
+        const format = document.getElementById('exportFormat').value;
+
+        let content;
+        let fileExtension;
+
+        switch (format) {
+            case 'json':
+                content = JSON.stringify(window.currentConfig, null, 2);
+                fileExtension = 'json';
+                break;
+            case 'yaml':
+                const prefixedConfig = { sqlx: { config: window.currentConfig } };
+                content = jsyaml.dump(prefixedConfig);
+                fileExtension = 'yaml';
+                break;
+            case 'properties':
+                content = json2properties(window.currentConfig);
+                fileExtension = 'properties';
+                break;
+            default:
+                throw new Error('Unsupported format');
+        }
+
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `config.${fileExtension}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', function() {
+        const format = document.getElementById('exportFormat').value;
+        let content;
+
+        switch (format) {
+            case 'json':
+                content = JSON.stringify(window.currentConfig, null, 2);
+                break;
+            case 'yaml':
+                const prefixedConfig = { sqlx: { config: window.currentConfig } };
+                content = jsyaml.dump(prefixedConfig);
+                break;
+            case 'properties':
+                content = json2properties(window.currentConfig, 'sqlx.config');
+                break;
+            default:
+                content = 'Unsupported format';
+        }
+
+        navigator.clipboard.writeText(content).then(() => {
+            const $btn = $(this);
+            const $icon = $btn.find('i');
+            const $span = $btn.find('span');
+            const originalIcon = $icon.attr('class');
+            const originalText = $span.text();
+
+            $icon.attr('class', 'fas fa-check me-1');
+            $span.text(window.currentLanguage === 'en' ? 'Copied!' : '已复制！');
+            $btn.addClass('btn-success').removeClass('btn-outline-secondary');
+
+            setTimeout(() => {
+                $icon.attr('class', originalIcon);
+                $span.text(originalText);
+                $btn.removeClass('btn-success').addClass('btn-outline-secondary');
+            }, 2000);
+        }).catch(err => {
+            console.error('Failed to copy text: ', err);
+        });
+    });
+
+    // 添加刷新按钮点击事件
+    document.getElementById('refreshBtn').addEventListener('click', function() {
+        const $btn = $(this);
+        const $icon = $btn.find('i');
+
+        // 添加旋转动画
+        $icon.addClass('refresh-spin');
+
+        // 禁用按钮防止重复点击
+        $btn.prop('disabled', true);
+
+        // 获取最新配置
+        fetchConfiguration()
+            .then(data => {
+                if (!data.succeed) {
+                    throw new Error('Failed to fetch configuration');
+                }
+                window.currentConfig = data.payload.config;
+                // 使用当前选中的格式更新预览
+                const format = document.getElementById('exportFormat').value;
+                updateConfigPreview(format);
+            })
+            .catch(error => {
+                // 显示错误提示
+                if (error.message !== 'Redirected') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: window.currentLanguage === 'en' ? 'Error' : '错误',
+                        text: window.currentLanguage === 'en' ?
+                            'Failed to refresh configuration' :
+                            '刷新配置失败',
+                        confirmButtonText: window.currentLanguage === 'en' ? 'OK' : '确定'
+                    });
+                }
+            })
+            .finally(() => {
+                // 移除旋转动画
+                setTimeout(() => {
+                    $icon.removeClass('refresh-spin');
+                    $btn.prop('disabled', false);
+                }, 1000);
+            });
+    });
+</script>

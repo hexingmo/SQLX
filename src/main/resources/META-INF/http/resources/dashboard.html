@@ -1,0 +1,581 @@
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0" data-en="Dashboard" data-zh="仪表盘">Data Source Monitoring Dashboard</h5>
+        <div class="d-flex gap-2">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text">
+                    <i class="fas fa-clock"></i>
+                </span>
+                <select class="form-select form-select-sm" id="timeRange">
+                    <option value="300000" data-en="Last 5 Minutes" data-zh="最近5分钟">Last 5 Minutes</option>
+                    <option value="900000" data-en="Last 15 Minutes" data-zh="最近15分钟">Last 15 Minutes</option>
+                    <option value="1800000" data-en="Last 30 Minutes" data-zh="最近30分钟">Last 30 Minutes</option>
+                    <option value="3600000" data-en="Last 1 Hour" data-zh="最近1小时">Last 1 Hour</option>
+                </select>
+            </div>
+            <div class="input-group input-group-sm">
+                <span class="input-group-text">
+                    <i class="fas fa-sync-alt"></i>
+                </span>
+                <select class="form-select form-select-sm" id="refreshInterval">
+                    <option value="0" data-en="Manual Refresh" data-zh="手动刷新">Manual Refresh</option>
+                    <option value="5000" data-en="5 Seconds" data-zh="5秒">5 Seconds</option>
+                    <option value="10000" data-en="10 Seconds" data-zh="10秒">10 Seconds</option>
+                    <option value="30000" data-en="30 Seconds" data-zh="30秒">30 Seconds</option>
+                    <option value="60000" data-en="1 Minute" data-zh="1分钟">1 Minute</option>
+                    <option value="300000" data-en="5 Minutes" data-zh="5分钟">5 Minutes</option>
+                </select>
+            </div>
+            <button class="btn btn-sm btn-primary" id="refreshBtn">
+                <i class="fas fa-sync-alt refresh-icon"></i>
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div id="chartsContainer" class="charts-grid">
+            <!-- 图表容器将在这里动态生成 -->
+        </div>
+    </div>
+</div>
+
+<style>
+    .chart-container {
+        margin-bottom: 20px;
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        height: 400px;
+        transition: all 0.3s ease;
+    }
+    
+    .chart-container:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        gap: 20px;
+        padding: 15px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .refresh-spin {
+        animation: spin 1s linear infinite;
+    }
+    
+    #refreshBtn {
+        transition: all 0.3s ease;
+    }
+    
+    #refreshBtn:disabled {
+        opacity: 0.6;
+    }
+
+    .input-group-text {
+        background-color: #f8f9fa;
+        border-right: none;
+    }
+
+    .form-select {
+        border-left: none;
+    }
+
+    .form-select:focus {
+        border-color: #dee2e6;
+        box-shadow: none;
+    }
+</style>
+
+<script>
+    // 存储图表实例的全局对象
+    if (typeof chartInstances === 'undefined') {
+        var chartInstances = {};
+    }
+    
+    // 上次数据获取的结束时间
+    if (typeof lastEndTime === 'undefined') {
+        var lastEndTime = Date.now();
+    }
+    
+    // 是否是首次加载
+    if (typeof isFirstLoad === 'undefined') {
+        var isFirstLoad = true;
+    }
+
+    $(document).ready(function() {
+        let refreshTimer;
+
+        // 刷新按钮点击事件
+        $('#refreshBtn').click(function() {
+            refreshDashboard();
+        });
+
+        // 自动刷新时间选择
+        $('#refreshInterval').change(function() {
+            clearInterval(refreshTimer);
+            const interval = parseInt($(this).val());
+            const $refreshIcon = $('#refreshBtn .refresh-icon');
+
+            if (interval > 0) {
+                $refreshIcon.addClass('refresh-spin');
+                refreshTimer = setInterval(refreshDashboard, interval);
+            } else {
+                $refreshIcon.removeClass('refresh-spin');
+            }
+        });
+
+        // 添加时间范围变化的监听器
+        $('#timeRange').change(function() {
+            // 时间范围变化时，需要重新全量加载
+            isFirstLoad = true;
+            initializeDashboard();
+        });
+    });
+
+    // 用于获取仪表盘数据
+    async function fetchDashboardData(start, end) {
+        const response = await fetch('/sqlx/v1/datasource-dashboard', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                start: start,
+                end: end
+            })
+        });
+        if (response.redirected) {
+            console.log('Redirected to:', response.url);
+            window.location.href = response.url;
+            return;
+        }
+        return response.json();
+    }
+
+    // 初始化仪表盘（全量加载）
+    async function initializeDashboard() {
+        try {
+            // 显示加载状态
+            const chartsContainer = document.getElementById('chartsContainer');
+            chartsContainer.innerHTML = `
+                <div class="text-center w-100 py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            `;
+
+            // 获取当前时间和选择的时间范围
+            const end = Date.now();
+            const timeRange = parseInt($('#timeRange').val());
+            const start = end - timeRange;
+
+            // 获取数据源指标 - 新的API已经包含了数据源类型和状态信息
+            const dashboardData = await fetchDashboardData(start, end);
+
+            if (!dashboardData.succeed) {
+                throw new Error('Failed to fetch dashboard data');
+            }
+
+            // 检查是否有数据源
+            if (!dashboardData.payload || dashboardData.payload.length === 0) {
+                chartsContainer.innerHTML = `
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-database fa-3x mb-3"></i>
+                        <h5>${window.currentLanguage === 'en' ? 
+                            'No Data Sources Available' : 
+                            '没有可用的数据源'}</h5>
+                        <p>${window.currentLanguage === 'en' ? 
+                            'Please add some data sources first.' : 
+                            '请先添加数据源。'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 更新上次的结束时间
+            lastEndTime = end;
+            
+            // 清空图表实例
+            chartInstances = {};
+
+            // 清空图表容器
+            chartsContainer.innerHTML = '';
+
+            // 为每个数据源创建图表
+            dashboardData.payload.forEach(source => {
+                createChart(source, start, end);
+            });
+            
+            // 设置首次加载标志为 false
+            isFirstLoad = false;
+            
+        } catch (error) {
+            console.error('Error initializing dashboard:', error);
+            // 显示错误状态
+            document.getElementById('chartsContainer').innerHTML = `
+                <div class="alert alert-danger text-center m-3" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    ${window.currentLanguage === 'en' ? 
+                        'Failed to load dashboard data' : 
+                        '加载仪表盘数据失败'}
+                </div>
+            `;
+        }
+    }
+    
+    // 刷新仪表盘（增量更新）
+    async function refreshDashboard() {
+        // 如果是首次加载，则执行全量加载
+        if (isFirstLoad) {
+            return initializeDashboard();
+        }
+        
+        try {
+            // 获取当前时间
+            const end = Date.now();
+            
+            // 将 lastEndTime 调整为上一分钟的开始时间
+            // 例如：如果 lastEndTime 是 10:16:32，则调整为 10:16:00
+            const lastEndDate = new Date(lastEndTime);
+            const adjustedLastEndTime = new Date(
+                lastEndDate.getFullYear(),
+                lastEndDate.getMonth(),
+                lastEndDate.getDate(),
+                lastEndDate.getHours(),
+                lastEndDate.getMinutes(),
+                0, 0
+            ).getTime();
+            
+            const start = adjustedLastEndTime;
+            
+            // 如果时间间隔太小，则跳过本次更新
+            if (end - start < 1000) {
+                console.log('Skipping update, time interval too small');
+                return;
+            }
+
+            // 获取增量数据
+            const dashboardData = await fetchDashboardData(start, end);
+
+            if (!dashboardData.succeed || !dashboardData.payload || dashboardData.payload.length === 0) {
+                console.log('No new data available');
+                return;
+            }
+
+            // 更新上次的结束时间
+            lastEndTime = end;
+            
+            // 更新图表数据
+            const timeRange = parseInt($('#timeRange').val());
+            const windowStart = end - timeRange;
+            
+            dashboardData.payload.forEach(source => {
+                if (chartInstances[source.dataSource]) {
+                    updateChart(source, windowStart, end);
+                } else {
+                    // 如果图表不存在，创建新图表
+                    createChart(source, windowStart, end);
+                }
+            });
+            
+        } catch (error) {
+            console.error('Error refreshing dashboard:', error);
+        }
+    }
+    
+    // 创建图表
+    function createChart(source, start, end) {
+        const chartsContainer = document.getElementById('chartsContainer');
+        const chartContainer = document.createElement('div');
+        chartContainer.className = 'chart-container';
+        chartContainer.id = `chart-${source.dataSource}`;
+        const canvas = document.createElement('canvas');
+        chartContainer.appendChild(canvas);
+        chartsContainer.appendChild(chartContainer);
+
+        const ctx = canvas.getContext('2d');
+        const metrics = source.metrics || [];
+
+        const labels = metrics.map(metric => new Date(metric.timestamp));
+        const selectData = metrics.map(metric => metric.selectCount);
+        const insertData = metrics.map(metric => metric.insertCount);
+        const updateData = metrics.map(metric => metric.updateCount);
+        const deleteData = metrics.map(metric => metric.deleteCount);
+
+        // 直接从响应中获取数据源类型和状态
+        const dsType = source.nodeType || 'UNKNOWN';
+        const dsState = source.nodeState || 'UNKNOWN';
+        
+        // 根据状态设置标题颜色
+        let titleColor = '#000000'; // 默认黑色
+        if (dsState === 'UP') {
+            titleColor = '#28a745'; // 绿色
+        } else if (dsState === 'DOWN') {
+            titleColor = '#dc3545'; // 红色
+        } else if (dsState === 'OUT_OF_SERVICE') {
+            titleColor = '#ffc107'; // 黄色
+        } else if (dsState === 'UNKNOWN') {
+            titleColor = '#6c757d'; // 灰色
+        }
+
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: `${source.dataSource} - SELECT`,
+                        data: selectData,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 2,
+                        borderDash: [],
+                        pointStyle: 'circle',
+                        pointRadius: 3,
+                        fill: false
+                    },
+                    {
+                        label: `${source.dataSource} - INSERT`,
+                        data: insertData,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        pointStyle: 'triangle',
+                        pointRadius: 4,
+                        fill: false
+                    },
+                    {
+                        label: `${source.dataSource} - UPDATE`,
+                        data: updateData,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 2,
+                        borderDash: [10, 5],
+                        pointStyle: 'rect',
+                        pointRadius: 3,
+                        fill: false
+                    },
+                    {
+                        label: `${source.dataSource} - DELETE`,
+                        data: deleteData,
+                        borderColor: 'rgba(255, 206, 86, 1)',
+                        borderWidth: 2,
+                        borderDash: [3, 3],
+                        pointStyle: 'star',
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        pointBackgroundColor: 'rgba(255, 206, 86, 1)',
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 300
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: [
+                            source.dataSource,
+                            `Type: ${dsType} - Status: ${dsState}`
+                        ],
+                        position: 'top',
+                        align: 'center',
+                        font: {
+                            size: 16,
+                            weight: 'normal'
+                        },
+                        color: titleColor,
+                        padding: 10
+                    },
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 15,
+                            boxWidth: 8
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.parsed.y}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'minute',
+                            displayFormats: {
+                                minute: 'HH:mm'
+                            }
+                        },
+                        min: start,  // 设置最小时间
+                        max: end,    // 设置最大时间
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0,0,0,0.05)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // 存储图表实例和数据源信息
+        chartInstances[source.dataSource] = {
+            chart: chart,
+            nodeType: source.nodeType,
+            nodeState: source.nodeState
+        };
+    }
+    
+    // 更新图表
+    function updateChart(source, windowStart, windowEnd) {
+        const chartInfo = chartInstances[source.dataSource];
+        if (!chartInfo) return;
+        
+        const chart = chartInfo.chart;
+        if (!chart) return;
+        
+        const metrics = source.metrics || [];
+        if (metrics.length === 0) return;
+        
+        // 检查数据源状态是否变化，如果变化则更新标题颜色
+        if (chartInfo.nodeState !== source.nodeState) {
+            chartInfo.nodeState = source.nodeState;
+            
+            // 根据新状态设置标题颜色
+            let titleColor = '#000000'; // 默认黑色
+            if (source.nodeState === 'UP') {
+                titleColor = '#28a745'; // 绿色
+            } else if (source.nodeState === 'DOWN') {
+                titleColor = '#dc3545'; // 红色
+            } else if (source.nodeState === 'OUT_OF_SERVICE') {
+                titleColor = '#ffc107'; // 黄色
+            } else if (source.nodeState === 'UNKNOWN') {
+                titleColor = '#6c757d'; // 灰色
+            }
+            
+            // 更新标题颜色
+            chart.options.plugins.title.color = titleColor;
+            
+            // 更新标题文本
+            chart.options.plugins.title.text = [
+                source.dataSource,
+                `Type: ${source.nodeType} - Status: ${source.nodeState}`
+            ];
+        }
+        
+        // 创建时间戳到索引的映射，用于快速查找
+        const timestampMap = {};
+        chart.data.labels.forEach((label, index) => {
+            // 使用时间戳作为键
+            timestampMap[label.getTime()] = index;
+        });
+        
+        // 处理新数据点
+        metrics.forEach(metric => {
+            const timestamp = new Date(metric.timestamp);
+            const timestampValue = timestamp.getTime();
+            
+            // 检查该时间戳是否已存在
+            if (timestampValue in timestampMap) {
+                // 更新现有数据点
+                const index = timestampMap[timestampValue];
+                chart.data.datasets[0].data[index] = metric.selectCount;
+                chart.data.datasets[1].data[index] = metric.insertCount;
+                chart.data.datasets[2].data[index] = metric.updateCount;
+                chart.data.datasets[3].data[index] = metric.deleteCount;
+            } else {
+                // 添加新数据点
+                chart.data.labels.push(timestamp);
+                chart.data.datasets[0].data.push(metric.selectCount);
+                chart.data.datasets[1].data.push(metric.insertCount);
+                chart.data.datasets[2].data.push(metric.updateCount);
+                chart.data.datasets[3].data.push(metric.deleteCount);
+                
+                // 更新映射
+                timestampMap[timestampValue] = chart.data.labels.length - 1;
+            }
+        });
+        
+        // 移除时间窗口外的旧数据
+        while (chart.data.labels.length > 0 && chart.data.labels[0] < windowStart) {
+            const removedTimestamp = chart.data.labels[0].getTime();
+            chart.data.labels.shift();
+            chart.data.datasets.forEach(dataset => {
+                dataset.data.shift();
+            });
+            
+            // 从映射中删除
+            delete timestampMap[removedTimestamp];
+            
+            // 更新剩余时间戳的索引
+            Object.keys(timestampMap).forEach(ts => {
+                if (timestampMap[ts] > 0) {
+                    timestampMap[ts]--;
+                }
+            });
+        }
+        
+        // 确保数据点按时间顺序排序
+        const sortedIndices = Object.keys(timestampMap)
+            .map(ts => ({ ts: parseInt(ts), index: timestampMap[ts] }))
+            .sort((a, b) => a.ts - b.ts);
+        
+        if (sortedIndices.length > 0) {
+            const sortedLabels = [];
+            const sortedDatasets = chart.data.datasets.map(() => []);
+            
+            sortedIndices.forEach(item => {
+                const index = item.index;
+                sortedLabels.push(chart.data.labels[index]);
+                chart.data.datasets.forEach((dataset, i) => {
+                    sortedDatasets[i].push(dataset.data[index]);
+                });
+            });
+            
+            chart.data.labels = sortedLabels;
+            chart.data.datasets.forEach((dataset, i) => {
+                dataset.data = sortedDatasets[i];
+            });
+        }
+        
+        // 更新图表的时间范围
+        chart.options.scales.x.min = windowStart;
+        chart.options.scales.x.max = windowEnd;
+        
+        // 更新图表
+        chart.update();
+    }
+
+    // 调用初始化函数
+    initializeDashboard();
+</script>

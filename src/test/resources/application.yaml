@@ -1,0 +1,179 @@
+logging:
+  level:
+    root: trace
+
+############################# mybatis configuration #############################
+
+mybatis:
+  configuration:
+    use-actual-param-name: true
+
+
+decorator:
+  datasource:
+    enabled: true
+    p6spy:
+      enable-logging: true
+      logging: sysout
+      custom-appender-class: com.p6spy.engine.spy.appender.StdoutLogger
+      log-format: "P6SPY: connectionId:%(connectionId) | executionTime:%(executionTime) | sql:%(sqlSingleLine)"
+
+
+spring:
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+    hibernate:
+      naming:
+        implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+        physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+      ddl-auto: create
+  datasource:
+    url: jdbc:h2:mem:~/test1;FILE_LOCK=SOCKET;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;AUTO_RECONNECT=TRUE;IGNORECASE=TRUE;
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: pwd
+
+############################# SQLX configuration #############################
+
+sqlx:
+  config:
+    enabled: true
+    sql-parsing-fail-behavior: warning
+#    sql-parser-class: com.github.sqlx.sql.parser.SimpleSqlParser
+    cluster-enable: true
+    read-load-balance-type: WEIGHT_ROUND_ROBIN_BALANCE_READABLE
+    write-load-balance-type: WEIGHT_RANDOM_BALANCE_WRITABLE
+    default-cluster: cluster_0
+    metrics:
+      enabled: true
+      username: admin
+      password: adminpw
+      collect-scope: slow
+      enable-routing-metrics: true
+      enable-sql-metrics: true
+      enable-transaction-metrics: true
+      slow-sql-millis: 300
+      slow-transaction-millis: 3000
+#      collect-mode: ASYNC
+#      collect-core-pool-size: 10
+#      collect-max-pool-size: 30
+#      collect-keep-alive-millis: 10000
+#      collect-queue-capacity: 3000
+      file-directory: D:\test
+      data-retention-duration: 2h
+    data-sources:
+      - name: write_0
+        type: write
+        weight: 99
+        defaulted: true
+        data-source-class: com.zaxxer.hikari.HikariDataSource
+        init-method:
+        destroy-method: close
+        init-sql-script: classpath:init.sql
+        heartbeat-sql: select 1
+        heartbeat-interval: 3000
+        props:
+          driverClassName: org.h2.Driver
+          jdbcUrl: jdbc:h2:mem:~/test1;FILE_LOCK=SOCKET;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;AUTO_RECONNECT=TRUE;IGNORECASE=TRUE;
+          username: sa
+          password: pwd
+          minIdle: 5
+          maxPoolSize: 30
+          connectionTimeout: 30000
+          isAutoCommit: false
+          isReadOnly: false
+
+      - name: read_0
+        type: READ
+        weight: 6
+        data-source-class: com.zaxxer.hikari.HikariDataSource
+        init-method:
+        destroy-method: close
+        init-sql-script: classpath:init.sql
+        props:
+          driverClassName: org.h2.Driver
+          jdbcUrl: jdbc:h2:mem:~/test2;FILE_LOCK=SOCKET;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;AUTO_RECONNECT=TRUE;IGNORECASE=TRUE;
+          username: sa
+          password: pwd
+          minIdle: 10
+          maxPoolSize: 30
+          connectionTimeout: 40000
+          isAutoCommit: false
+          isReadOnly: true
+
+      - name: read_1
+        type: READ
+        weight: 10
+        data-source-class: com.zaxxer.hikari.HikariDataSource
+        init-method:
+        destroy-method: close
+        init-sql-script: classpath:init.sql
+        props:
+          driverClassName: org.h2.Driver
+          jdbcUrl: jdbc:h2:mem:~/test3;FILE_LOCK=SOCKET;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;AUTO_RECONNECT=TRUE;IGNORECASE=TRUE;
+          username: sa
+          password: pwd
+          minIdle: 15
+          maxPoolSize: 30
+          connectionTimeout: 60000
+          isAutoCommit: false
+          isReadOnly: true
+    clusters:
+      - name: cluster_0
+        nodes:
+          - write_0
+          - read_0
+      - name: cluster_1
+        nodes:
+          - write_0
+          - read_1
+
+    pointcuts:
+      - expression: "execution(* com.github.sqlx.integration.springboot.SqlRoutingPropagationServiceA.expressionPropagation())"
+        cluster: cluster_0
+        nodes:
+          - write_0
+          - read_0
+        propagation: true
+#      - expression: "execution(* com.github.sqlx.integration.springboot.SqlRoutingPropagationServiceA.expressionPropagation())"
+#        cluster: cluster_0
+#        nodes:
+#          - write_0
+#          - read_0
+#          - read_1
+#        propagation: true
+
+    rules:
+      databases:
+        - name: test1
+          nodes:
+            write_0:
+              allowAllSqlTypes: true
+
+        - name: test2
+          nodes:
+            read_0:
+              allowAllSqlTypes: true
+
+        - name: test3
+          nodes:
+            read_1:
+              sqlTypes:
+                - SELECT
+      tables:
+        employee:
+          write_0:
+            sqlTypes:
+              - INSERT
+              - UPDATE
+              - DELETE
+              - OTHER
+          read_0:
+            sqlTypes:
+              - SELECT
+          read_1:
+            sqlTypes:
+              - SELECT

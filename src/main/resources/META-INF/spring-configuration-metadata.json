@@ -1,0 +1,325 @@
+{
+  "groups": [
+    {
+      "name": "sqlx",
+      "type": "com.github.sqlx.integration.springboot.SqlXProperties",
+      "sourceType": "com.github.sqlx.integration.springboot.SqlXProperties"
+    },
+    {
+      "name": "sqlx.config",
+      "type": "com.github.sqlx.config.SqlXConfiguration",
+      "sourceType": "com.github.sqlx.config.SqlXConfiguration"
+    },
+    {
+      "name": "sqlx.config.sql-parsing-fail-behavior",
+      "type": "com.github.sqlx.config.SqlParsingFailBehavior",
+      "sourceType": "com.github.sqlx.config.SqlXConfiguration"
+    },
+    {
+      "name": "sqlx.config.clusters",
+      "type": "com.github.sqlx.config.ClusterConfiguration",
+      "sourceType": "com.github.sqlx.config.ClusterConfiguration"
+    },
+    {
+      "name": "sqlx.config.data-sources",
+      "type": "com.github.sqlx.config.DataSourceConfiguration",
+      "sourceType": "com.github.sqlx.config.DataSourceConfiguration"
+    },
+    {
+      "name": "sqlx.config.metrics",
+      "type": "com.github.sqlx.config.MetricsConfiguration",
+      "sourceType": "com.github.sqlx.config.MetricsConfiguration"
+    },
+    {
+      "name": "sqlx.config.pointcuts",
+      "type": "com.github.sqlx.config.PointcutConfiguration",
+      "sourceType": "com.github.sqlx.config.PointcutConfiguration"
+    }
+  ],
+  "properties": [
+    {
+      "name": "read-load-balance-type",
+      "type": "com.github.sqlx.loadbalance.ReadLoadBalanceType",
+      "sourceType": "com.github.sqlx.config.LoadBalanceConfiguration"
+    },
+    {
+      "name": "sqlx.config",
+      "type": "com.github.sqlx.config.SqlXConfiguration",
+      "sourceType": "com.github.sqlx.integration.springboot.SqlXProperties"
+    },
+    {
+      "name": "sqlx.config.cluster-enable",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.github.sqlx.config.SqlXConfiguration",
+      "defaultValue": false
+    },
+    {
+      "name": "sqlx.config.clusters",
+      "type": "java.util.List<com.github.sqlx.config.ClusterConfiguration>",
+      "sourceType": "com.github.sqlx.config.SqlXConfiguration"
+    },
+    {
+      "name": "sqlx.config.clusters.defaulted",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.github.sqlx.config.ClusterConfiguration",
+      "defaultValue": false
+    },
+    {
+      "name": "sqlx.config.clusters.name",
+      "type": "java.lang.String",
+      "description": "The name of the cluster, used to identify the cluster.",
+      "sourceType": "com.github.sqlx.config.ClusterConfiguration"
+    },
+    {
+      "name": "sqlx.config.clusters.nodes",
+      "type": "java.util.Set<java.lang.String>",
+      "description": "A set of node identifiers, representing all the nodes in the cluster.",
+      "sourceType": "com.github.sqlx.config.ClusterConfiguration"
+    },
+    {
+      "name": "sqlx.config.clusters.read-load-balance-type",
+      "type": "com.github.sqlx.loadbalance.ReadLoadBalanceType",
+      "sourceType": "com.github.sqlx.config.ClusterConfiguration"
+    },
+    {
+      "name": "sqlx.config.clusters.write-load-balance-type",
+      "type": "com.github.sqlx.loadbalance.WriteLoadBalanceType",
+      "sourceType": "com.github.sqlx.config.ClusterConfiguration"
+    },
+    {
+      "name": "sqlx.config.data-sources",
+      "type": "java.util.List<com.github.sqlx.config.DataSourceConfiguration>",
+      "sourceType": "com.github.sqlx.config.SqlXConfiguration"
+    },
+    {
+      "name": "sqlx.config.data-sources.data-source-class",
+      "type": "java.lang.String",
+      "description": "The fully qualified class name of the data source",
+      "sourceType": "com.github.sqlx.config.DataSourceConfiguration"
+    },
+    {
+      "name": "sqlx.config.data-sources.destroy-method",
+      "type": "java.lang.String",
+      "description": "A method name that can be invoked to clean up resources when the data source is no longer needed.",
+      "sourceType": "com.github.sqlx.config.DataSourceConfiguration"
+    },
+    {
+      "name": "sqlx.config.data-sources.heartbeat-interval",
+      "type": "java.lang.Long",
+      "description": "Heartbeat interval cycle in milliseconds",
+      "sourceType": "com.github.sqlx.config.DataSourceConfiguration",
+      "defaultValue": 10000
+    },
+    {
+      "name": "sqlx.config.data-sources.heartbeat-sql",
+      "type": "java.lang.String",
+      "description": "Heartbeat detection sql",
+      "sourceType": "com.github.sqlx.config.DataSourceConfiguration",
+      "defaultValue": "SELECT 1"
+    },
+    {
+      "name": "sqlx.config.data-sources.init-method",
+      "type": "java.lang.String",
+      "description": "The name of the method that can be invoked to initialize the data source when it is first created or configured.",
+      "sourceType": "com.github.sqlx.config.DataSourceConfiguration"
+    },
+    {
+      "name": "sqlx.config.data-sources.init-sql-script",
+      "type": "java.lang.String",
+      "description": "Path to the SQL script that will be executed to initialize the database schema.",
+      "sourceType": "com.github.sqlx.config.DataSourceConfiguration"
+    },
+    {
+      "name": "sqlx.config.data-sources.name",
+      "type": "java.lang.String",
+      "description": "Represents the unique identifier for the data source.",
+      "sourceType": "com.github.sqlx.config.DataSourceConfiguration"
+    },
+    {
+      "name": "sqlx.config.data-sources.node-attribute",
+      "type": "com.github.sqlx.NodeAttribute",
+      "description": "Routing node attributes",
+      "sourceType": "com.github.sqlx.config.DataSourceConfiguration"
+    },
+    {
+      "name": "sqlx.config.data-sources.props",
+      "type": "java.util.Map<java.lang.String,java.lang.String>",
+      "description": "Native data source property configuration",
+      "sourceType": "com.github.sqlx.config.DataSourceConfiguration"
+    },
+    {
+      "name": "sqlx.config.data-sources.type",
+      "type": "com.github.sqlx.NodeType",
+      "description": "The type of the routing node",
+      "sourceType": "com.github.sqlx.config.DataSourceConfiguration"
+    },
+    {
+      "name": "sqlx.config.data-sources.weight",
+      "type": "java.lang.Double",
+      "description": "load balancing weight",
+      "sourceType": "com.github.sqlx.config.DataSourceConfiguration"
+    },
+    {
+      "name": "sqlx.config.default-cluster",
+      "type": "java.lang.String",
+      "sourceType": "com.github.sqlx.config.SqlXConfiguration"
+    },
+    {
+      "name": "sqlx.config.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.github.sqlx.config.SqlXConfiguration",
+      "defaultValue": true
+    },
+    {
+      "name": "sqlx.config.metrics",
+      "type": "com.github.sqlx.config.MetricsConfiguration",
+      "sourceType": "com.github.sqlx.config.SqlXConfiguration"
+    },
+    {
+      "name": "sqlx.config.metrics.collect-core-pool-size",
+      "type": "java.lang.Integer",
+      "sourceType": "com.github.sqlx.config.MetricsConfiguration"
+    },
+    {
+      "name": "sqlx.config.metrics.collect-keep-alive-millis",
+      "type": "java.lang.Long",
+      "sourceType": "com.github.sqlx.config.MetricsConfiguration"
+    },
+    {
+      "name": "sqlx.config.metrics.collect-max-pool-size",
+      "type": "java.lang.Integer",
+      "sourceType": "com.github.sqlx.config.MetricsConfiguration"
+    },
+    {
+      "name": "sqlx.config.metrics.collect-mode",
+      "type": "com.github.sqlx.metrics.MetricsCollectMode",
+      "sourceType": "com.github.sqlx.config.MetricsConfiguration"
+    },
+    {
+      "name": "sqlx.config.metrics.collect-queue-capacity",
+      "type": "java.lang.Integer",
+      "sourceType": "com.github.sqlx.config.MetricsConfiguration"
+    },
+    {
+      "name": "sqlx.config.metrics.collect-scope",
+      "type": "com.github.sqlx.config.MetricsCollectScope",
+      "sourceType": "com.github.sqlx.config.MetricsConfiguration"
+    },
+    {
+      "name": "sqlx.config.metrics.data-retention-duration",
+      "type": "java.time.Duration",
+      "sourceType": "com.github.sqlx.config.MetricsConfiguration",
+      "defaultValue": "7d"
+    },
+    {
+      "name": "sqlx.config.metrics.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.github.sqlx.config.MetricsConfiguration"
+    },
+    {
+      "name": "sqlx.config.metrics.enable-routing-metrics",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.github.sqlx.config.MetricsConfiguration",
+      "defaultValue": true
+    },
+    {
+      "name": "sqlx.config.metrics.enable-sql-metrics",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.github.sqlx.config.MetricsConfiguration",
+      "defaultValue": true
+    },
+    {
+      "name": "sqlx.config.metrics.enable-transaction-metrics",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.github.sqlx.config.MetricsConfiguration",
+      "defaultValue": true
+    },
+    {
+      "name": "sqlx.config.metrics.file-directory",
+      "type": "java.lang.String",
+      "sourceType": "com.github.sqlx.config.MetricsConfiguration"
+    },
+    {
+      "name": "sqlx.config.metrics.password",
+      "type": "java.lang.String",
+      "sourceType": "com.github.sqlx.config.MetricsConfiguration"
+    },
+    {
+      "name": "sqlx.config.metrics.slow-sql-millis",
+      "type": "java.lang.Long",
+      "sourceType": "com.github.sqlx.config.MetricsConfiguration"
+    },
+    {
+      "name": "sqlx.config.metrics.slow-transaction-millis",
+      "type": "java.lang.Long",
+      "sourceType": "com.github.sqlx.config.MetricsConfiguration"
+    },
+    {
+      "name": "sqlx.config.metrics.username",
+      "type": "java.lang.String",
+      "sourceType": "com.github.sqlx.config.MetricsConfiguration"
+    },
+    {
+      "name": "sqlx.config.pointcuts",
+      "type": "java.util.List<com.github.sqlx.config.PointcutConfiguration>",
+      "sourceType": "com.github.sqlx.config.SqlXConfiguration"
+    },
+    {
+      "name": "sqlx.config.pointcuts.cluster",
+      "type": "java.lang.String",
+      "description": "Cluster: Specifies the cluster to which the pointcut belongs, used for routing decisions.",
+      "sourceType": "com.github.sqlx.config.PointcutConfiguration"
+    },
+    {
+      "name": "sqlx.config.pointcuts.expression",
+      "type": "java.lang.String",
+      "description": "Expression: Specifies the pointcut expression, used to define the matching rules for join points.",
+      "sourceType": "com.github.sqlx.config.PointcutConfiguration"
+    },
+    {
+      "name": "sqlx.config.pointcuts.nodes",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Nodes: Specifies a list of nodes, used for detailed routing within the cluster.",
+      "sourceType": "com.github.sqlx.config.PointcutConfiguration"
+    },
+    {
+      "name": "sqlx.config.pointcuts.propagation",
+      "type": "java.lang.Boolean",
+      "description": "Propagation: Indicates whether the routing behavior should be propagated, default is true. When true, the routing behavior will affect subsequent calls in the call chain.",
+      "sourceType": "com.github.sqlx.config.PointcutConfiguration",
+      "defaultValue": true
+    },
+    {
+      "name": "sqlx.config.read-load-balance-type",
+      "type": "com.github.sqlx.loadbalance.ReadLoadBalanceType",
+      "sourceType": "com.github.sqlx.config.SqlXConfiguration"
+    },
+    {
+      "name": "sqlx.config.sql-parser-class",
+      "type": "java.lang.String",
+      "sourceType": "com.github.sqlx.config.SqlXConfiguration"
+    },
+    {
+      "name": "sqlx.config.strict-sql-parsing",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.github.sqlx.config.SqlXConfiguration",
+      "defaultValue": false
+    },
+    {
+      "name": "sqlx.config.writable-routing-node-attributes",
+      "type": "java.util.List<com.github.sqlx.NodeAttribute>",
+      "sourceType": "com.github.sqlx.config.SqlXConfiguration"
+    },
+    {
+      "name": "sqlx.config.write-load-balance-type",
+      "type": "com.github.sqlx.loadbalance.WriteLoadBalanceType",
+      "sourceType": "com.github.sqlx.config.SqlXConfiguration"
+    },
+    {
+      "name": "write-load-balance-type",
+      "type": "com.github.sqlx.loadbalance.WriteLoadBalanceType",
+      "sourceType": "com.github.sqlx.config.LoadBalanceConfiguration"
+    }
+  ],
+  "hints": []
+}
