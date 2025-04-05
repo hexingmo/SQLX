@@ -20,15 +20,13 @@ import com.github.sqlx.NodeAttribute;
 import com.github.sqlx.NodeType;
 import com.github.sqlx.exception.ConfigurationException;
 import com.github.sqlx.exception.ManagementException;
+import com.github.sqlx.util.CollectionUtils;
 import com.google.gson.annotations.Expose;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.util.Iterator;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -40,30 +38,55 @@ import java.util.stream.Collectors;
  * @since 1.0
  */
 @ConfigurationProperties(prefix = "sqlx.config.clusters")
-@Getter
-@Setter
 public class ClusterConfiguration extends LoadBalanceConfiguration implements ConfigurationValidator {
 
     /**
      * The name of the cluster, used to identify the cluster.
      */
     @Expose
+    @Getter
+    @Setter
     private String name;
 
     /**
      * A set of node identifiers, representing all the nodes in the cluster.
      */
-    @Expose
-    private Set<String> nodes;
+    @Getter
+    private Set<String> nodes = new HashSet<>();;
 
     /**
      * A list of attributes for routing nodes, describing the characteristics and roles of each node.
      */
+    @Getter
+    @Setter
     private Set<NodeAttribute> nodeAttributes;
 
     @Expose
+    @Getter
+    @Setter
     private Boolean defaulted = false;
 
+    @Expose
+    @Getter
+    private Set<String> writableNodes = new HashSet<>();
+
+    @Expose
+    @Getter
+    private Set<String> readableNodes = new HashSet<>();
+
+    public void setWritableNodes(Set<String> writableNodes) {
+        if (CollectionUtils.isNotEmpty(writableNodes)) {
+            this.writableNodes.addAll(writableNodes);
+            this.nodes.addAll(writableNodes);
+        }
+    }
+
+    public void setReadableNodes(Set<String> readableNodes) {
+        if (CollectionUtils.isNotEmpty(readableNodes)) {
+            this.readableNodes.addAll(readableNodes);
+            this.nodes.addAll(readableNodes);
+        }
+    }
 
     /**
      * Validates the cluster configuration to ensure it meets the rules.

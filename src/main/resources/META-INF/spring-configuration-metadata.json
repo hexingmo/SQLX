@@ -71,9 +71,13 @@
       "sourceType": "com.github.sqlx.config.ClusterConfiguration"
     },
     {
-      "name": "sqlx.config.clusters.nodes",
+      "name": "sqlx.config.clusters.readable-nodes",
       "type": "java.util.Set<java.lang.String>",
-      "description": "A set of node identifiers, representing all the nodes in the cluster.",
+      "sourceType": "com.github.sqlx.config.ClusterConfiguration"
+    },
+    {
+      "name": "sqlx.config.clusters.writable-nodes",
+      "type": "java.util.Set<java.lang.String>",
       "sourceType": "com.github.sqlx.config.ClusterConfiguration"
     },
     {

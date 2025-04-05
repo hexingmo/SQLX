@@ -122,12 +122,14 @@ sqlx:
           isReadOnly: true
     clusters:
       - name: cluster_0
-        nodes:
+        writable-nodes:
           - write_0
+        readable-nodes:
           - read_0
       - name: cluster_1
-        nodes:
+        writable-nodes:
           - write_0
+        readable-nodes:
           - read_1
 
     pointcuts:
