@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
  * @author He Xing Mo
  * @since 1.0
  */
-
+@Deprecated
 public class ClusterDataSource extends AbstractSqlXDataSource {
 
     /**

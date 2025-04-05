@@ -28,6 +28,7 @@ import java.util.Optional;
  * @author He Xing Mo
  * @since 1.0
  */
+@Deprecated
 public class SqlXDataSourceImpl extends AbstractSqlXDataSource {
 
     private final RouteRule rule;

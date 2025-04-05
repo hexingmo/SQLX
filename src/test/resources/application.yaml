@@ -40,10 +40,9 @@ spring:
 
 sqlx:
   config:
-    enabled: false
+    enabled: true
     sql-parsing-fail-behavior: warning
 #    sql-parser-class: com.github.sqlx.sql.parser.SimpleSqlParser
-    cluster-enable: true
     read-load-balance-type: WEIGHT_ROUND_ROBIN_BALANCE_READABLE
     write-load-balance-type: WEIGHT_RANDOM_BALANCE_WRITABLE
     default-cluster: cluster_0

@@ -6,7 +6,7 @@ public class RouterFunctions {
 
     public static <T> T execute(String node , Function function) {
 
-        function.apply()
+//        function.apply()
         return null;
     }
 }

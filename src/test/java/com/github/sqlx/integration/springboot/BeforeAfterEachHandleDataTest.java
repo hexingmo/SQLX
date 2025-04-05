@@ -27,7 +27,7 @@ public class BeforeAfterEachHandleDataTest extends SpringBootIntegrationTest {
     @Autowired
     DataSource dataSource;
 
-    //@Autowired
+    @Autowired
     DatasourceManager datasourceManager;
 
     //@BeforeEach

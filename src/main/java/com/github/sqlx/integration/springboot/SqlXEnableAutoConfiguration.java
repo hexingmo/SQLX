@@ -93,9 +93,7 @@ import java.util.Set;
 @EnableConfigurationProperties(SqlXProperties.class)
 @ConditionalOnProperty(prefix = "sqlx.config", name = "enabled", havingValue = "true", matchIfMissing = true)
 @Import({SqlXEnableAutoConfiguration.BaseConfiguration.class,
-        SqlXEnableAutoConfiguration.MetricsConfiguration.class,
-        SqlXEnableAutoConfiguration.NonClusterModeConfiguration.class,
-        SqlXEnableAutoConfiguration.ClusterModeConfiguration.class})
+        SqlXEnableAutoConfiguration.MetricsConfiguration.class})
 @Slf4j
 public class SqlXEnableAutoConfiguration {
 
@@ -144,9 +142,17 @@ public class SqlXEnableAutoConfiguration {
         }
 
         @Bean
+        public SqlParser sqlParser(SqlXProperties properties) {
+            SqlXConfiguration configuration = properties.getConfig();
+            return configuration.getSqlParserInstance();
+        }
+
+        @Bean
         public DataSourceInitializer compositeDataSourceInitializer(@Autowired(required = false) Set<GenericDataSourceInitializer<?>> initializers) {
             return new CompositeDataSourceInitializer(initializers);
         }
+
+
 
         @Bean
         public DatasourceManager datasourceManager(SqlXProperties properties, DataSourceInitializer dataSourceInitializer) {
@@ -162,6 +168,35 @@ public class SqlXEnableAutoConfiguration {
             return datasourceManager;
         }
 
+        @Bean
+        public ClusterManager clusterManager(SqlXProperties properties, SqlParser sqlParser, Transaction transaction, @Autowired(required = false) List<RouteGroup<?>> routingGroups, EventListener eventListener, DatasourceManager datasourceManager) {
+            SqlXConfiguration config = properties.getConfig();
+            ClusterManager cm = new ClusterManager(config);
+            for (ClusterConfiguration conf : config.getClusters()) {
+                LoadBalance<NodeAttribute> rlb = conf.getReadLoadBalance();
+                LoadBalance<NodeAttribute> wlb = conf.getWriteLoadBalance();
+                Cluster cluster = new Cluster();
+                cluster.setName(conf.getName());
+                cluster.setNodes(conf.getNodeAttributes());
+
+                CompositeRouteGroup compositeRoutingGroup = new CompositeRouteGroup(eventListener, transaction);
+                compositeRoutingGroup.installFirst(routingGroups);
+                DefaultRouteGroup defaultRoutingGroup = DefaultRoutingGroupBuilder.builder()
+                        .sqlXConfiguration(config)
+                        .sqlParser(sqlParser)
+                        .transaction(transaction)
+                        .readLoadBalance(rlb)
+                        .writeLoadBalance(wlb)
+                        .datasourceManager(datasourceManager)
+                        .build();
+                compositeRoutingGroup.installLast(defaultRoutingGroup);
+                cluster.setRule(compositeRoutingGroup);
+
+                cm.addCluster(conf.getName(), cluster);
+            }
+            return cm;
+        }
+
 
         @Bean
         public EventListener eventListener(@Autowired(required = false) List<EventListener> eventListeners) {
@@ -175,10 +210,36 @@ public class SqlXEnableAutoConfiguration {
         }
 
         @Bean
-        public SqlParser sqlParser(SqlXProperties properties) {
-            SqlXConfiguration configuration = properties.getConfig();
-            return configuration.getSqlParserInstance();
+        public CompositeRouteGroup routingGroup(SqlXProperties properties, SqlParser sqlParser, Transaction transaction, @Autowired(required = false) List<RouteGroup<?>> routingGroups, EventListener eventListener, DatasourceManager datasourceManager) {
+
+            SqlXConfiguration routing = properties.getConfig();
+            LoadBalance<NodeAttribute> rlb = routing.getReadLoadBalance();
+            LoadBalance<NodeAttribute> wlb = routing.getWriteLoadBalance();
+            DefaultRouteGroup drg = DefaultRoutingGroupBuilder.builder()
+                    .sqlXConfiguration(routing)
+                    .sqlParser(sqlParser)
+                    .transaction(transaction)
+                    .readLoadBalance(rlb)
+                    .writeLoadBalance(wlb)
+                    .datasourceManager(datasourceManager)
+                    .build();
+            CompositeRouteGroup compositeRoutingGroup = new CompositeRouteGroup(eventListener, transaction);
+            compositeRoutingGroup.installFirst(routingGroups);
+            compositeRoutingGroup.installLast(drg);
+            return compositeRoutingGroup;
         }
+
+        @Bean
+        public StatManager statManager(SqlXProperties properties, DataSourceInitializer dataSourceInitializer, DatasourceManager datasourceManager, ClusterManager clusterManager, List<RouteGroup<?>> routingGroups, EventListener eventListener, Transaction transaction) {
+            return new StatManager(properties.getConfig(), dataSourceInitializer, datasourceManager, clusterManager, routingGroups, eventListener, transaction);
+        }
+
+        @Bean("sqlXDataSource")
+        public SqlXDataSource sqlXDataSource(StatManager statManager, ClusterManager clusterManager, DatasourceManager datasourceManager, EventListener eventListener , CompositeRouteGroup compositeRouteGroup) {
+            registerMBean(statManager);
+            return new DefaultSqlXDataSource(clusterManager ,datasourceManager, eventListener , compositeRouteGroup);
+        }
+
     }
 
 
@@ -273,86 +334,4 @@ public class SqlXEnableAutoConfiguration {
         }
     }
 
-    @Configuration
-    @ConditionalOnProperty(prefix = "sqlx.config", name = "cluster-enable", havingValue = "false")
-    class NonClusterModeConfiguration {
-
-        @Bean
-        public CompositeRouteGroup routingGroup(SqlXProperties properties, SqlParser sqlParser, Transaction transaction, @Autowired(required = false) List<RouteGroup<?>> routingGroups, EventListener eventListener, DatasourceManager datasourceManager) {
-
-            SqlXConfiguration routing = properties.getConfig();
-            LoadBalance<NodeAttribute> rlb = routing.getReadLoadBalance();
-            LoadBalance<NodeAttribute> wlb = routing.getWriteLoadBalance();
-            DefaultRouteGroup drg = DefaultRoutingGroupBuilder.builder()
-                    .sqlXConfiguration(routing)
-                    .sqlParser(sqlParser)
-                    .transaction(transaction)
-                    .readLoadBalance(rlb)
-                    .writeLoadBalance(wlb)
-                    .datasourceManager(datasourceManager)
-                    .build();
-            CompositeRouteGroup compositeRoutingGroup = new CompositeRouteGroup(eventListener, transaction);
-            compositeRoutingGroup.installFirst(routingGroups);
-            compositeRoutingGroup.installLast(drg);
-            return compositeRoutingGroup;
-        }
-
-        @Bean
-        public StatManager statManager(SqlXProperties properties, DataSourceInitializer dataSourceInitializer, DatasourceManager datasourceManager, List<RouteGroup<?>> routingGroups, EventListener eventListener, Transaction transaction) {
-            return new StatManager(properties.getConfig(), dataSourceInitializer, datasourceManager, null, routingGroups, eventListener, transaction);
-        }
-
-        @Bean("sqlXDataSource")
-        public DataSource sqlXDataSource(StatManager statManager, DatasourceManager datasourceManager, CompositeRouteGroup compositeRoutingGroup, EventListener eventListener) {
-            registerMBean(statManager);
-            return new SqlXDataSourceImpl(datasourceManager, eventListener, compositeRoutingGroup);
-        }
-    }
-
-    @Configuration
-    @ConditionalOnProperty(prefix = "sqlx.config", name = "cluster-enable", havingValue = "true")
-    class ClusterModeConfiguration {
-
-
-        @Bean
-        public ClusterManager clusterManager(SqlXProperties properties, SqlParser sqlParser, Transaction transaction, @Autowired(required = false) List<RouteGroup<?>> routingGroups, EventListener eventListener, DatasourceManager datasourceManager) {
-
-            SqlXConfiguration config = properties.getConfig();
-            ClusterManager cm = new ClusterManager(config);
-            for (ClusterConfiguration conf : config.getClusters()) {
-                LoadBalance<NodeAttribute> rlb = conf.getReadLoadBalance();
-                LoadBalance<NodeAttribute> wlb = conf.getWriteLoadBalance();
-                Cluster cluster = new Cluster();
-                cluster.setName(conf.getName());
-                cluster.setNodes(conf.getNodeAttributes());
-
-                CompositeRouteGroup compositeRoutingGroup = new CompositeRouteGroup(eventListener, transaction);
-                compositeRoutingGroup.installFirst(routingGroups);
-                DefaultRouteGroup defaultRoutingGroup = DefaultRoutingGroupBuilder.builder()
-                        .sqlXConfiguration(config)
-                        .sqlParser(sqlParser)
-                        .transaction(transaction)
-                        .readLoadBalance(rlb)
-                        .writeLoadBalance(wlb)
-                        .datasourceManager(datasourceManager)
-                        .build();
-                compositeRoutingGroup.installLast(defaultRoutingGroup);
-                cluster.setRule(compositeRoutingGroup);
-
-                cm.addCluster(conf.getName(), cluster);
-            }
-            return cm;
-        }
-
-        @Bean
-        public StatManager statManager(SqlXProperties properties, DataSourceInitializer dataSourceInitializer, DatasourceManager datasourceManager, ClusterManager clusterManager, List<RouteGroup<?>> routingGroups, EventListener eventListener, Transaction transaction) {
-            return new StatManager(properties.getConfig(), dataSourceInitializer, datasourceManager, clusterManager, routingGroups, eventListener, transaction);
-        }
-
-        @Bean("sqlXDataSource")
-        public SqlXDataSource sqlXDataSource(StatManager statManager, ClusterManager clusterManager, DatasourceManager datasourceManager, EventListener eventListener) {
-            registerMBean(statManager);
-            return new ClusterDataSource(datasourceManager, clusterManager, eventListener);
-        }
-    }
 }
