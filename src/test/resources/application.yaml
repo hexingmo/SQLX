@@ -40,7 +40,7 @@ spring:
 
 sqlx:
   config:
-    enabled: true
+    enabled: false
     sql-parsing-fail-behavior: warning
 #    sql-parser-class: com.github.sqlx.sql.parser.SimpleSqlParser
     cluster-enable: true
@@ -51,7 +51,7 @@ sqlx:
       enabled: true
       username: admin
       password: adminpw
-      collect-scope: slow
+      collect-scope: all
       enable-routing-metrics: true
       enable-sql-metrics: true
       enable-transaction-metrics: true

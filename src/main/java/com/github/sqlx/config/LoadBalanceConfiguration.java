@@ -52,14 +52,6 @@ public abstract class LoadBalanceConfiguration {
 
     private LoadBalance<NodeAttribute> writeLoadBalance;
 
-    public void setReadLoadBalanceType(ReadLoadBalanceType readLoadBalanceType) {
-        this.readLoadBalanceType = readLoadBalanceType;
-    }
-
-    public void setWriteLoadBalanceType(WriteLoadBalanceType writeLoadBalanceType) {
-        this.writeLoadBalanceType = writeLoadBalanceType;
-    }
-
     public void initLoadBalance() {
         this.readLoadBalance = createReadLoadBalance();
         this.writeLoadBalance = createWriteLoadBalance();
