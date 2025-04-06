@@ -21,9 +21,9 @@ import com.github.sqlx.config.SqlXConfiguration;
 import com.github.sqlx.loadbalance.LoadBalance;
 import com.github.sqlx.sql.SqlAttribute;
 import com.github.sqlx.sql.parser.SqlParser;
+import com.github.sqlx.util.RandomUtils;
 
 import java.util.List;
-import java.util.Random;
 
 /**
  * @author He Xing Mo
@@ -31,19 +31,17 @@ import java.util.Random;
  */
 public class RandomRouteWritableRule extends AbstractRouteRule {
 
-    private final Random random = new Random();
+    private final SqlXConfiguration configuration;
 
-    private final SqlXConfiguration routingConf;
-
-    public RandomRouteWritableRule(Integer priority, SqlParser sqlParser, LoadBalance<NodeAttribute> readLoadBalance, LoadBalance<NodeAttribute> writeLoadBalance, SqlXConfiguration routingConf) {
+    public RandomRouteWritableRule(Integer priority, SqlParser sqlParser, LoadBalance readLoadBalance, LoadBalance writeLoadBalance, SqlXConfiguration configuration) {
         super(priority, sqlParser, readLoadBalance, writeLoadBalance);
-        this.routingConf = routingConf;
+        this.configuration = configuration;
     }
 
     @Override
     public NodeAttribute routing(SqlAttribute sqlAttribute) {
-        List<NodeAttribute> nodeAttributes = routingConf.getWritableRoutingNodeAttributes();
-        int index = random.nextInt(nodeAttributes.size());
+        List<NodeAttribute> nodeAttributes = configuration.getWritableRoutingNodeAttributes();
+        int index = RandomUtils.nextInt(0, nodeAttributes.size());
         return nodeAttributes.get(index);
     }
 }

@@ -81,7 +81,7 @@ public class LoggingEventListener implements EventListener {
             NodeAttribute nodeAttr = routeInfo.getHitNodeAttr();
             String node = "N/A";
             if (Objects.nonNull(nodeAttr)) {
-                node = "Name[" + nodeAttr.getName() + "], Type[" + nodeAttr.getNodeType() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
+                node = "Name[" + nodeAttr.getName() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
             }
             String hitGroup = "N/A";
             if (Objects.nonNull(routeInfo.getHitRoutingGroup())) {
@@ -135,7 +135,7 @@ public class LoggingEventListener implements EventListener {
             NodeAttribute nodeAttr = routeInfo.getHitNodeAttr();
             String node = "N/A";
             if (Objects.nonNull(nodeAttr)) {
-                node = "Name[" + nodeAttr.getName() + "], Type[" + nodeAttr.getNodeType() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
+                node = "Name[" + nodeAttr.getName() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
             }
             String actualConnection = "N/A";
             Connection physicalConnection = ((ProxyConnection) connectionInfo.getConnection()).getPhysicalConnection();
@@ -187,7 +187,7 @@ public class LoggingEventListener implements EventListener {
             NodeAttribute nodeAttr = routeInfo.getHitNodeAttr();
             String node = "N/A";
             if (Objects.nonNull(nodeAttr)) {
-                node = "Name[" + nodeAttr.getName() + "], Type[" + nodeAttr.getNodeType() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
+                node = "Name[" + nodeAttr.getName() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
             }
             String actualConnection = "N/A";
             Connection physicalConnection = ((ProxyConnection) connectionInfo.getConnection()).getPhysicalConnection();
@@ -242,7 +242,7 @@ public class LoggingEventListener implements EventListener {
             NodeAttribute nodeAttr = routeInfo.getHitNodeAttr();
             String node = "N/A";
             if (Objects.nonNull(nodeAttr)) {
-                node = "Name[" + nodeAttr.getName() + "], Type[" + nodeAttr.getNodeType() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
+                node = "Name[" + nodeAttr.getName() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
             }
             String actualConnection = "N/A";
             Connection physicalConnection = ((ProxyConnection) connectionInfo.getConnection()).getPhysicalConnection();
@@ -295,7 +295,7 @@ public class LoggingEventListener implements EventListener {
             NodeAttribute nodeAttr = routeInfo.getHitNodeAttr();
             String node = "N/A";
             if (Objects.nonNull(nodeAttr)) {
-                node = "Name[" + nodeAttr.getName() + "], Type[" + nodeAttr.getNodeType() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
+                node = "Name[" + nodeAttr.getName() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
             }
             String actualConnection = "N/A";
             Connection physicalConnection = ((ProxyConnection) connectionInfo.getConnection()).getPhysicalConnection();
@@ -375,7 +375,7 @@ public class LoggingEventListener implements EventListener {
             NodeAttribute nodeAttr = currentRouteInfo.getHitNodeAttr();
             String node = "N/A";
             if (Objects.nonNull(nodeAttr)) {
-                node = "Name[" + nodeAttr.getName() + "], Type[" + nodeAttr.getNodeType() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
+                node = "Name[" + nodeAttr.getName() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
             }
             String actualConnection = "N/A";
             Connection physicalConnection = ((ProxyConnection) connectionInfo.getConnection()).getPhysicalConnection();
@@ -437,7 +437,7 @@ public class LoggingEventListener implements EventListener {
             NodeAttribute nodeAttr = currentRouteInfo.getHitNodeAttr();
             String node = "N/A";
             if (Objects.nonNull(nodeAttr)) {
-                node = "Name[" + nodeAttr.getName() + "], Type[" + nodeAttr.getNodeType() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
+                node = "Name[" + nodeAttr.getName() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
             }
             String actualConnection = "N/A";
             Connection physicalConnection = ((ProxyConnection) connectionInfo.getConnection()).getPhysicalConnection();
@@ -503,7 +503,7 @@ public class LoggingEventListener implements EventListener {
             NodeAttribute nodeAttr = currentRouteInfo.getHitNodeAttr();
             String node = "N/A";
             if (Objects.nonNull(nodeAttr)) {
-                node = "Name[" + nodeAttr.getName() + "], Type[" + nodeAttr.getNodeType() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
+                node = "Name[" + nodeAttr.getName() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
             }
             String actualConnection = "N/A";
             Connection physicalConnection = ((ProxyConnection) connectionInfo.getConnection()).getPhysicalConnection();
@@ -574,7 +574,7 @@ public class LoggingEventListener implements EventListener {
             NodeAttribute nodeAttr = currentRouteInfo.getHitNodeAttr();
             String node = "N/A";
             if (Objects.nonNull(nodeAttr)) {
-                node = "Name[" + nodeAttr.getName() + "], Type[" + nodeAttr.getNodeType() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
+                node = "Name[" + nodeAttr.getName() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
             }
             String actualConnection = "N/A";
             Connection physicalConnection = ((ProxyConnection) connectionInfo.getConnection()).getPhysicalConnection();
@@ -650,7 +650,7 @@ public class LoggingEventListener implements EventListener {
             NodeAttribute nodeAttr = currentRouteInfo.getHitNodeAttr();
             String node = "N/A";
             if (Objects.nonNull(nodeAttr)) {
-                node = "Name[" + nodeAttr.getName() + "], Type[" + nodeAttr.getNodeType() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
+                node = "Name[" + nodeAttr.getName() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
             }
             String actualConnection = "N/A";
             Connection physicalConnection = ((ProxyConnection) connectionInfo.getConnection()).getPhysicalConnection();
@@ -712,7 +712,7 @@ public class LoggingEventListener implements EventListener {
             NodeAttribute nodeAttr = currentRouteInfo.getHitNodeAttr();
             String node = "N/A";
             if (Objects.nonNull(nodeAttr)) {
-                node = "Name[" + nodeAttr.getName() + "], Type[" + nodeAttr.getNodeType() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
+                node = "Name[" + nodeAttr.getName() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
             }
             String actualConnection = "N/A";
             Connection physicalConnection = ((ProxyConnection) connectionInfo.getConnection()).getPhysicalConnection();
@@ -768,7 +768,7 @@ public class LoggingEventListener implements EventListener {
             NodeAttribute nodeAttr = routeInfo.getHitNodeAttr();
             String node = "N/A";
             if (Objects.nonNull(nodeAttr)) {
-                node = "Name[" + nodeAttr.getName() + "], Type[" + nodeAttr.getNodeType() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
+                node = "Name[" + nodeAttr.getName() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
             }
             String actualConnection = "N/A";
             Connection physicalConnection = ((ProxyConnection) connectionInfo.getConnection()).getPhysicalConnection();
@@ -823,7 +823,7 @@ public class LoggingEventListener implements EventListener {
             NodeAttribute nodeAttr = routeInfo.getHitNodeAttr();
             String node = "N/A";
             if (Objects.nonNull(nodeAttr)) {
-                node = "Name[" + nodeAttr.getName() + "], Type[" + nodeAttr.getNodeType() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
+                node = "Name[" + nodeAttr.getName() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
             }
             String actualConnection = "N/A";
             Connection physicalConnection = ((ProxyConnection) connectionInfo.getConnection()).getPhysicalConnection();
@@ -883,7 +883,7 @@ public class LoggingEventListener implements EventListener {
             NodeAttribute nodeAttr = routeInfo.getHitNodeAttr();
             String node = "N/A";
             if (Objects.nonNull(nodeAttr)) {
-                node = "Name[" + nodeAttr.getName() + "], Type[" + nodeAttr.getNodeType() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
+                node = "Name[" + nodeAttr.getName() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
             }
             String actualConnection = "N/A";
             Connection physicalConnection = ((ProxyConnection) connectionInfo.getConnection()).getPhysicalConnection();
@@ -940,7 +940,7 @@ public class LoggingEventListener implements EventListener {
             NodeAttribute nodeAttr = routeInfo.getHitNodeAttr();
             String node = "N/A";
             if (Objects.nonNull(nodeAttr)) {
-                node = "Name[" + nodeAttr.getName() + "], Type[" + nodeAttr.getNodeType() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
+                node = "Name[" + nodeAttr.getName() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
             }
             String actualConnection = "N/A";
             Connection physicalConnection = ((ProxyConnection) connectionInfo.getConnection()).getPhysicalConnection();
@@ -1039,7 +1039,7 @@ public class LoggingEventListener implements EventListener {
             NodeAttribute nodeAttr = routeInfo.getHitNodeAttr();
             String node = "N/A";
             if (Objects.nonNull(nodeAttr)) {
-                node = "Name[" + nodeAttr.getName() + "], Type[" + nodeAttr.getNodeType() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
+                node = "Name[" + nodeAttr.getName() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
             }
             String actualConnection = "N/A";
             Connection physicalConnection = ((ProxyConnection) connectionInfo.getConnection()).getPhysicalConnection();
@@ -1097,7 +1097,7 @@ public class LoggingEventListener implements EventListener {
             String node = "N/A";
             if (Objects.nonNull(routeInfo) && Objects.nonNull(routeInfo.getHitNodeAttr())) {
                 NodeAttribute nodeAttr = routeInfo.getHitNodeAttr();
-                node = "Name[" + nodeAttr.getName() + "], Type[" + nodeAttr.getNodeType() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
+                node = "Name[" + nodeAttr.getName() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
             }
             String actualConnection = "N/A";
             Connection physicalConnection = ((ProxyConnection) connectionInfo.getConnection()).getPhysicalConnection();
@@ -1222,7 +1222,7 @@ public class LoggingEventListener implements EventListener {
             NodeAttribute nodeAttr = routeInfo.getHitNodeAttr();
             String node = "N/A";
             if (Objects.nonNull(nodeAttr)) {
-                node = "Name[" + nodeAttr.getName() + "], Type[" + nodeAttr.getNodeType() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
+                node = "Name[" + nodeAttr.getName() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
             }
             String actualConnection = "N/A";
             Connection physicalConnection = ((ProxyConnection) connectionInfo.getConnection()).getPhysicalConnection();
@@ -1279,7 +1279,7 @@ public class LoggingEventListener implements EventListener {
             NodeAttribute nodeAttr = routeInfo.getHitNodeAttr();
             String node = "N/A";
             if (Objects.nonNull(nodeAttr)) {
-                node = "Name[" + nodeAttr.getName() + "], Type[" + nodeAttr.getNodeType() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
+                node = "Name[" + nodeAttr.getName() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
             }
             String actualConnection = "N/A";
             Connection physicalConnection = ((ProxyConnection) connectionInfo.getConnection()).getPhysicalConnection();
@@ -1363,7 +1363,7 @@ public class LoggingEventListener implements EventListener {
             NodeAttribute nodeAttr = routeInfo.getHitNodeAttr();
             String node = "N/A";
             if (Objects.nonNull(nodeAttr)) {
-                node = "Name[" + nodeAttr.getName() + "], Type[" + nodeAttr.getNodeType() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
+                node = "Name[" + nodeAttr.getName() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
             }
             String actualConnection = "N/A";
             Connection physicalConnection = ((ProxyConnection) connectionInfo.getConnection()).getPhysicalConnection();
@@ -1418,7 +1418,7 @@ public class LoggingEventListener implements EventListener {
             NodeAttribute nodeAttr = routeInfo.getHitNodeAttr();
             String node = "N/A";
             if (Objects.nonNull(nodeAttr)) {
-                node = "Name[" + nodeAttr.getName() + "], Type[" + nodeAttr.getNodeType() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
+                node = "Name[" + nodeAttr.getName() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
             }
             String actualConnection = "N/A";
             Connection physicalConnection = ((ProxyConnection) connectionInfo.getConnection()).getPhysicalConnection();
@@ -1478,7 +1478,7 @@ public class LoggingEventListener implements EventListener {
             NodeAttribute nodeAttr = routeInfo.getHitNodeAttr();
             String node = "N/A";
             if (Objects.nonNull(nodeAttr)) {
-                node = "Name[" + nodeAttr.getName() + "], Type[" + nodeAttr.getNodeType() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
+                node = "Name[" + nodeAttr.getName() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
             }
             String actualConnection = "N/A";
             Connection physicalConnection = ((ProxyConnection) connectionInfo.getConnection()).getPhysicalConnection();
@@ -1535,7 +1535,7 @@ public class LoggingEventListener implements EventListener {
             NodeAttribute nodeAttr = routeInfo.getHitNodeAttr();
             String node = "N/A";
             if (Objects.nonNull(nodeAttr)) {
-                node = "Name[" + nodeAttr.getName() + "], Type[" + nodeAttr.getNodeType() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
+                node = "Name[" + nodeAttr.getName() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "] , URL[" + nodeAttr.getUrl() + "]";
             }
             String actualConnection = "N/A";
             Connection physicalConnection = ((ProxyConnection) connectionInfo.getConnection()).getPhysicalConnection();

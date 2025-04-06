@@ -25,6 +25,7 @@ import java.util.Objects;
  * @author He Xing Mo
  * @since 1.0
  */
+@Deprecated
 public enum NodeType {
 
     /**

@@ -19,7 +19,7 @@ package com.github.sqlx.loadbalance;
 import com.github.sqlx.NodeAttribute;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 /**
  * Round-robin load balancing.
@@ -27,14 +27,14 @@ import java.util.stream.Collectors;
  * @author He Xing Mo
  * @since 1.0
  */
-public class WeightRoundRobinLoadBalance extends AbstractLoadBalance<NodeAttribute> {
+public class WeightRoundRobinLoadBalance extends AbstractLoadBalance {
 
     private Integer currentIndex;
     private Double currentWeight;
     private Double maxWeight;
     private Double gcdWeight;
 
-    public WeightRoundRobinLoadBalance(List<NodeAttribute> options) {
+    public WeightRoundRobinLoadBalance(Set<NodeAttribute> options) {
         super(options);
         this.currentIndex = -1;
         this.currentWeight = 0d;
@@ -43,29 +43,16 @@ public class WeightRoundRobinLoadBalance extends AbstractLoadBalance<NodeAttribu
     }
 
     @Override
-    public NodeAttribute choose() {
-
-        NodeAttribute chosen;
-        List<NodeAttribute> validOptions = getOptions().stream()
-                .filter(nodeAttr -> nodeAttr.getNodeState().isAvailable())
-                .collect(Collectors.toList());
-
-        if (validOptions.isEmpty()) {
-            return null;
-        }
-
-        if (validOptions.size() == 1) {
-            return validOptions.get(0);
-        }
-
-        for (NodeAttribute target : validOptions) {
+    protected NodeAttribute choose(List<NodeAttribute> availableOptions) {
+        for (NodeAttribute target : availableOptions) {
             double weight = target.getWeight();
             maxWeight = Math.max(maxWeight, weight);
             gcdWeight = gcd(gcdWeight, weight);
         }
 
+        NodeAttribute chosen;
         while (true) {
-            currentIndex = (currentIndex + 1) % validOptions.size();
+            currentIndex = (currentIndex + 1) % availableOptions.size();
             if (currentIndex == 0) {
                 currentWeight = currentWeight - gcdWeight;
                 if (currentWeight <= 0) {
@@ -75,7 +62,7 @@ public class WeightRoundRobinLoadBalance extends AbstractLoadBalance<NodeAttribu
                     }
                 }
             }
-            NodeAttribute target = validOptions.get(currentIndex);
+            NodeAttribute target = availableOptions.get(currentIndex);
             if (target.getWeight() >= currentWeight) {
                 chosen = target;
                 break;

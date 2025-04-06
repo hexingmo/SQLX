@@ -34,7 +34,7 @@ import java.util.Objects;
 public class ReadWriteSplittingRouteRule extends AbstractRouteRule {
 
 
-    public ReadWriteSplittingRouteRule(Integer priority, SqlParser sqlParser, LoadBalance<NodeAttribute> readLoadBalance, LoadBalance<NodeAttribute> writeLoadBalance) {
+    public ReadWriteSplittingRouteRule(Integer priority, SqlParser sqlParser, LoadBalance readLoadBalance, LoadBalance writeLoadBalance) {
         super(priority, sqlParser, readLoadBalance, writeLoadBalance);
     }
 

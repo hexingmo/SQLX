@@ -20,7 +20,7 @@ import com.github.sqlx.NodeAttribute;
 
 import java.util.List;
 import java.util.Random;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 /**
  * Random load balancing.
@@ -28,41 +28,28 @@ import java.util.stream.Collectors;
  * @author He Xing Mo
  * @since 1.0
  */
-public class WeightRandomLoadBalance extends AbstractLoadBalance<NodeAttribute> {
+public class WeightRandomLoadBalance extends AbstractLoadBalance {
 
     private final Random random = new Random();
 
-    public WeightRandomLoadBalance(List<NodeAttribute> options) {
+    public WeightRandomLoadBalance(Set<NodeAttribute> options) {
         super(options);
     }
 
 
     @Override
-    public NodeAttribute choose() {
-
-        List<NodeAttribute> validOptions = getOptions().stream()
-                .filter(nodeAttr -> nodeAttr.getNodeState().isAvailable())
-                .collect(Collectors.toList());
-
-        if (validOptions.isEmpty()) {
-            return null;
-        }
-
-        if (validOptions.size() == 1) {
-            return validOptions.get(0);
-        }
-
-        double totalWeight = validOptions.stream().mapToDouble(NodeAttribute::getWeight).sum();
+    protected NodeAttribute choose(List<NodeAttribute> availableOptions) {
+        double totalWeight = availableOptions.stream().mapToDouble(NodeAttribute::getWeight).sum();
         double randomWeight = random.nextDouble() * totalWeight;
 
         double cumulativeWeight = 0;
-        for (NodeAttribute node : validOptions) {
+        for (NodeAttribute node : availableOptions) {
             cumulativeWeight += node.getWeight();
             if (cumulativeWeight >= randomWeight) {
                 return node;
             }
         }
 
-        return validOptions.get(0);
+        return availableOptions.get(0);
     }
 }

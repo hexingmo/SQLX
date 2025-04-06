@@ -38,11 +38,11 @@ public class RoutingNameSqlHintRouteRule extends AbstractRouteRule {
 
     private static final SqlHintConverter<String> SQL_HINT_CONVERTER = new NodeNameSqlHintConverter();
 
-    private final SqlXConfiguration routingConf;
+    private final SqlXConfiguration configuration;
 
-    public RoutingNameSqlHintRouteRule(Integer priority, SqlParser sqlParser, LoadBalance<NodeAttribute> readLoadBalance, LoadBalance<NodeAttribute> writeLoadBalance, SqlXConfiguration routingConf) {
+    public RoutingNameSqlHintRouteRule(Integer priority, SqlParser sqlParser, LoadBalance readLoadBalance, LoadBalance writeLoadBalance, SqlXConfiguration configuration) {
         super(priority, sqlParser, readLoadBalance, writeLoadBalance);
-        this.routingConf = routingConf;
+        this.configuration = configuration;
     }
 
     @Override
@@ -62,6 +62,6 @@ public class RoutingNameSqlHintRouteRule extends AbstractRouteRule {
         }
 
         String nodeName = SQL_HINT_CONVERTER.convert(sqlHint);
-        return routingConf.getRoutingNodeAttribute(nodeName);
+        return configuration.getNodeAttribute(nodeName);
     }
 }

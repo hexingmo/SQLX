@@ -30,8 +30,6 @@ public class NodeInfo {
 
     private String url;
 
-    private NodeType nodeType;
-
     private NodeState nodeState;
 
     private String name;

@@ -249,7 +249,6 @@ public abstract class MetricsUtils {
         return new NodeInfo()
                 .setUrl(nodeAttr.getUrl())
                 .setNodeState(nodeAttr.getNodeState())
-                .setNodeType(nodeAttr.getNodeType())
                 .setName(nodeAttr.getName())
                 .setWeight(nodeAttr.getWeight());
     }

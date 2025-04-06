@@ -21,11 +21,13 @@ import com.github.sqlx.NodeType;
 import com.github.sqlx.exception.ConfigurationException;
 import com.github.sqlx.exception.ManagementException;
 import com.github.sqlx.util.CollectionUtils;
+import com.github.sqlx.util.StringUtils;
 import com.google.gson.annotations.Expose;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.sql.Driver;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -38,7 +40,7 @@ import java.util.stream.Collectors;
  * @since 1.0
  */
 @ConfigurationProperties(prefix = "sqlx.config.clusters")
-public class ClusterConfiguration extends LoadBalanceConfiguration implements ConfigurationValidator {
+public class ClusterConfiguration implements ConfigurationValidator {
 
     /**
      * The name of the cluster, used to identify the cluster.
@@ -74,6 +76,16 @@ public class ClusterConfiguration extends LoadBalanceConfiguration implements Co
     @Getter
     private Set<String> readableNodes = new HashSet<>();
 
+    @Expose
+    @Getter
+    @Setter
+    private String writeLoadBalanceClass;
+
+    @Expose
+    @Getter
+    @Setter
+    private String readLoadBalanceClass;
+
     public void setWritableNodes(Set<String> writableNodes) {
         if (CollectionUtils.isNotEmpty(writableNodes)) {
             this.writableNodes.addAll(writableNodes);
@@ -88,6 +100,18 @@ public class ClusterConfiguration extends LoadBalanceConfiguration implements Co
         }
     }
 
+    public Set<NodeAttribute> getWritableRoutingNodeAttributes() {
+        return nodeAttributes.stream()
+                .filter(nodeAttribute -> this.writableNodes.contains(nodeAttribute.getName()))
+                .collect(Collectors.toSet());
+    }
+
+    public Set<NodeAttribute> getReadableRoutingNodeAttributes() {
+        return nodeAttributes.stream()
+                .filter(nodeAttribute -> this.readableNodes.contains(nodeAttribute.getName()))
+                .collect(Collectors.toSet());
+    }
+
     /**
      * Validates the cluster configuration to ensure it meets the rules.
      * This method checks if there is at least one writable node in the cluster and if there are any independent nodes.
@@ -97,18 +121,6 @@ public class ClusterConfiguration extends LoadBalanceConfiguration implements Co
      */
     @Override
     public void validate() {
-        // Check if there is at least one writable node in the cluster
-        Optional<NodeAttribute> anyCanWrite = nodeAttributes.stream().filter(n -> n.getNodeType().canWrite()).findAny();
-        if (!anyCanWrite.isPresent()) {
-            throw new ConfigurationException(String.format("At least one writable node is included in %s cluster" , name));
-        }
-
-        // Check if there are any independent nodes, which are not allowed in the cluster
-        Optional<NodeAttribute> anyIndependent = nodeAttributes.stream().filter(n -> Objects.equals(NodeType.INDEPENDENT, n.getNodeType())).findAny();
-        if (anyIndependent.isPresent()) {
-            throw new ConfigurationException("Independent nodes are not allowed in the cluster");
-        }
-
         // Check if all nodes in the cluster have the same database type
         Set<String> databaseTypes = nodeAttributes.stream()
                 .map(NodeAttribute::getDatabaseType)
@@ -118,19 +130,24 @@ public class ClusterConfiguration extends LoadBalanceConfiguration implements Co
             String differentTypes = String.join(", ", databaseTypes);
             throw new ConfigurationException(String.format("All nodes in the cluster must have the same database type. Found different types: %s", differentTypes));
         }
+
+        if (StringUtils.isNotBlank(this.writeLoadBalanceClass)) {
+            try {
+                Class.forName(this.writeLoadBalanceClass);
+            } catch (ClassNotFoundException e) {
+                throw new ConfigurationException(String.format("writeLoadBalanceClass [%s] Class Not Found" , this.writeLoadBalanceClass));
+            }
+        }
+
+        if (StringUtils.isNotBlank(this.readLoadBalanceClass)) {
+            try {
+                Class.forName(this.readLoadBalanceClass);
+            } catch (ClassNotFoundException e) {
+                throw new ConfigurationException(String.format("readLoadBalanceClass [%s] Class Not Found" , this.readLoadBalanceClass));
+            }
+        }
     }
 
-
-    /**
-     * Returns the list of routing node attributes.
-     * This method is used to get the list of node attributes for routing decisions.
-     *
-     * @return The list of routing node attributes.
-     */
-    @Override
-    protected synchronized Set<NodeAttribute> getRoutingNodeAttribute() {
-        return nodeAttributes;
-    }
 
     /**
      * Removes the routing node attribute with the specified name.

@@ -80,7 +80,7 @@ public class NodeSynchronization implements TransactionSynchronization , Ordered
         }
         String node = "None";
         if (Objects.nonNull(nodeAttr)) {
-            node = "Name[" + nodeAttr.getName() + "], Type[" + nodeAttr.getNodeType() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "]";
+            node = "Name[" + nodeAttr.getName() + "], Weight[" + nodeAttr.getWeight() + "], State[" + nodeAttr.getNodeState() + "]";
         }
 
         StringBuilder sqlMsg = new StringBuilder("[");

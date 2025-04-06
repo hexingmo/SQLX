@@ -19,10 +19,5 @@ class Dbcp2DataSourceTest {
     @Autowired
     DatasourceManager datasourceManager;
 
-    @Test
-    void test() throws Exception {
-        datasourceManager.getReadableDataSource();
-        //Thread.sleep(1000000000);
-        LockSupport.park(Thread.currentThread());
-    }
+
 }

@@ -43,9 +43,9 @@ public class DefaultRoutingGroupBuilder {
 
     private Transaction transaction;
 
-    private LoadBalance<NodeAttribute> readLoadBalance;
+    private LoadBalance readLoadBalance;
 
-    private LoadBalance<NodeAttribute> writeLoadBalance;
+    private LoadBalance writeLoadBalance;
 
     private DatasourceManager datasourceManager;
 
@@ -68,12 +68,12 @@ public class DefaultRoutingGroupBuilder {
         return this;
     }
 
-    public DefaultRoutingGroupBuilder readLoadBalance(LoadBalance<NodeAttribute> readLoadBalance) {
+    public DefaultRoutingGroupBuilder readLoadBalance(LoadBalance readLoadBalance) {
         this.readLoadBalance = readLoadBalance;
         return this;
     }
 
-    public DefaultRoutingGroupBuilder writeLoadBalance(LoadBalance<NodeAttribute> writeLoadBalance) {
+    public DefaultRoutingGroupBuilder writeLoadBalance(LoadBalance writeLoadBalance) {
         this.writeLoadBalance = writeLoadBalance;
         return this;
     }

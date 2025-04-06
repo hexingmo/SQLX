@@ -16,34 +16,43 @@
 
 package com.github.sqlx.loadbalance;
 
+import com.github.sqlx.NodeAttribute;
+
 /**
- * Load balancing among multiple data sources.
+ * The LoadBalance interface defines the contract for implementing load balancing strategies.
+ * It provides methods to manage a pool of nodes and select a node based on the implemented strategy.
+ * This interface can be implemented to support various load balancing algorithms such as round-robin,
+ * random selection, or weighted distribution.
  *
  * @author He Xing Mo
  * @since 1.0
  */
-public interface LoadBalance<T> {
-
+public interface LoadBalance {
 
     /**
-     * Add a option.
+     * Adds a node to the pool of available options for load balancing.
+     * This method allows the load balancer to include the specified node in its selection process.
      *
-     * @param option option to be added.
+     * @param node the node to be added to the load balancing pool
      */
-    void addOption(T option);
+    void addOption(NodeAttribute node);
+
 
     /**
-     * Remove a option.
+     * Removes a node from the pool of available options for load balancing.
+     * This method ensures that the specified node is no longer considered for selection.
      *
-     * @param option option to be removed.
+     * @param node the node to be removed from the load balancing pool
      */
-    void removeOption(T option);
+    void removeOption(NodeAttribute node);
 
     /**
-     * Choose an option that fits the load balancing algorithm.
-     * @return Generic instance
+     * Selects a node from the pool of available options using the implemented load balancing strategy.
+     * The selection logic depends on the specific algorithm used by the implementation.
+     *
+     * @return the selected node, or null if no nodes are available in the pool
      */
-    T choose();
+    NodeAttribute choose();
 
 
 }

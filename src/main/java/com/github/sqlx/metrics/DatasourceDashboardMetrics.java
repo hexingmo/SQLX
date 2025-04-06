@@ -32,8 +32,6 @@ public class DatasourceDashboardMetrics {
 
     private String dataSource;
 
-    private NodeType nodeType;
-
     private NodeState nodeState;
 
     private List<NodeSqlExecuteNumMetrics> metrics;

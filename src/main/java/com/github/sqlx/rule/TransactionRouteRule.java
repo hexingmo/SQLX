@@ -39,7 +39,7 @@ public class TransactionRouteRule extends AbstractRouteRule {
     private final Transaction transaction;
 
 
-    public TransactionRouteRule(Integer priority, SqlParser sqlParser, LoadBalance<NodeAttribute> readLoadBalance, LoadBalance<NodeAttribute> writeLoadBalance, Transaction transaction) {
+    public TransactionRouteRule(Integer priority, SqlParser sqlParser, LoadBalance readLoadBalance, LoadBalance writeLoadBalance, Transaction transaction) {
         super(priority, sqlParser, readLoadBalance, writeLoadBalance);
         this.transaction = transaction;
     }

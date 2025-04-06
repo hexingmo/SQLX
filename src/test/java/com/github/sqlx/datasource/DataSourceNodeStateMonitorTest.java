@@ -23,12 +23,12 @@ class DataSourceNodeStateMonitorTest {
 
         JdbcDataSource ds0 = new JdbcDataSource();
         ds0.setUrl("jdbc:h2:mem:~/test0;");
-        DataSourceWrapper dsw0 = new DataSourceWrapper("testDS-0" , ds0 , new DataSourceAttribute(ds0.getURL() , NodeType.READ, NodeState.UNKNOWN , "read-0" , 1.0 , "select 1" , 1000 , null) , true);
+        DataSourceWrapper dsw0 = new DataSourceWrapper("testDS-0" , ds0 , new DataSourceAttribute(ds0.getURL() , NodeState.UNKNOWN , "read-0" , 1.0 , "select 1" , 1000 , null) , true);
         monitor.monitor(dsw0);
 
         JdbcDataSource ds1 = new JdbcDataSource();
         ds1.setUrl("jdbc:h2:mem:~/test1;");
-        DataSourceWrapper dsw1 = new DataSourceWrapper("testDS-1" , ds1 , new DataSourceAttribute(ds1.getURL() , NodeType.READ, NodeState.UNKNOWN , "read-1" , 1.0 , "select 2" , 2000 , null) , false);
+        DataSourceWrapper dsw1 = new DataSourceWrapper("testDS-1" , ds1 , new DataSourceAttribute(ds1.getURL() , NodeState.UNKNOWN , "read-1" , 1.0 , "select 2" , 2000 , null) , false);
         monitor.monitor(dsw1);
 
         LockSupport.park(Thread.currentThread());

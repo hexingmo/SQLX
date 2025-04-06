@@ -28,8 +28,6 @@ public interface NodeAttribute {
 
     String getDatabaseType();
 
-    NodeType getNodeType();
-
     NodeState getNodeState();
 
     void setNodeState(NodeState nodeState);

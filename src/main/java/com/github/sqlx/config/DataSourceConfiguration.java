@@ -53,11 +53,6 @@ public class DataSourceConfiguration implements ConfigurationValidator {
     @Expose
     private Boolean defaulted = false;
 
-    /**
-     * The type of the routing node
-     */
-    @Expose
-    private NodeType type;
 
     /**
      * The fully qualified class name of the data source
@@ -124,7 +119,7 @@ public class DataSourceConfiguration implements ConfigurationValidator {
      */
     public synchronized NodeAttribute getNodeAttribute() {
         if (nodeAttribute == null) {
-            nodeAttribute = new DataSourceAttribute(getJdbcUrl() , type, NodeState.UNKNOWN ,name, weight , heartbeatSql , heartbeatInterval , destroyMethod);
+            nodeAttribute = new DataSourceAttribute(getJdbcUrl() , NodeState.UNKNOWN ,name, weight , heartbeatSql , heartbeatInterval , destroyMethod);
         }
         return nodeAttribute;
     }
@@ -185,9 +180,6 @@ public class DataSourceConfiguration implements ConfigurationValidator {
     public void validate() {
         if (StringUtils.isBlank(name)) {
             throw new ConfigurationException("dataSources [name] attr must not be empty");
-        }
-        if (Objects.isNull(type)) {
-            throw new ConfigurationException("dataSources [type] attr must not be null");
         }
         if (StringUtils.isBlank(dataSourceClass)) {
             throw new ConfigurationException("dataSources [dataSourceClass] attr must not be null");

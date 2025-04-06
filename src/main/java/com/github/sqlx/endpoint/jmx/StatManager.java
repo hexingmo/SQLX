@@ -144,18 +144,6 @@ public class StatManager implements StatManagerMBean {
     }
 
     @Override
-    public String getReadLoadBalanceType() {
-        ReadLoadBalanceType type = sqlXConfiguration.getReadLoadBalanceType();
-        return type != null ? type.name() : "N/A";
-    }
-
-    @Override
-    public String getWriteLoadBalanceType() {
-        WriteLoadBalanceType type = sqlXConfiguration.getWriteLoadBalanceType();
-        return type != null ? type.name() : "N/A";
-    }
-
-    @Override
     public TabularData getDataSourceList() throws JMException {
         CompositeType rowType = DATASOURCE_COMPOSITE_TYPE;
         String[] indexNames = rowType.keySet().toArray(new String[0]);
@@ -256,8 +244,9 @@ public class StatManager implements StatManagerMBean {
                 .sqlXConfiguration(sqlXConfiguration)
                 .sqlParser(sqlXConfiguration.getSqlParserInstance())
                 .transaction(transaction)
-                .readLoadBalance(configuration.getReadLoadBalance())
-                .writeLoadBalance(configuration.getWriteLoadBalance())
+                // TODO
+                .readLoadBalance(null)
+                .writeLoadBalance(null)
                 .datasourceManager(datasourceManager)
                 .build();
         compositeRoutingGroup.installLast(defaultRoutingGroup);
@@ -280,7 +269,6 @@ public class StatManager implements StatManagerMBean {
         map.put("Url" , dsConf.getJdbcUrl());
         map.put("Username" , dsConf.getUsername());
         map.put("Weight" , dsConf.getWeight());
-        map.put("Type" , dsConf.getType().name());
         map.put("HeartbeatSql" , dsConf.getHeartbeatSql());
         map.put("HeartbeatInterval" , dsConf.getHeartbeatInterval());
         map.put("DestroyMethod" , dsConf.getDestroyMethod());
@@ -291,19 +279,14 @@ public class StatManager implements StatManagerMBean {
     private CompositeDataSupport getClusterCompositeData(ClusterConfiguration conf) throws JMException {
         Map<String, Object> map = new HashMap<>();
         map.put("Name" , conf.getName());
-
-        ReadLoadBalanceType readType = conf.getReadLoadBalanceType();
-        WriteLoadBalanceType writeType = conf.getWriteLoadBalanceType();
-        map.put("ReadLoadBalanceType" , readType != null ? readType.name() : "N/A");
-        map.put("WriteLoadBalanceType" , writeType != null ? writeType.name() : "N/A");
-        map.put("ReadLoadBalanceClass" , conf.getReadLoadBalance().getClass().getName());
-        map.put("WriteLoadBalanceClass" , conf.getWriteLoadBalance().getClass().getName());
+        map.put("ReadLoadBalanceClass" , conf.getReadLoadBalanceClass());
+        map.put("WriteLoadBalanceClass" , conf.getWriteLoadBalanceClass());
 
 
         Set<NodeAttribute> nodes = conf.getNodeAttributes();
         List<String> nodesStr = new ArrayList<>();
         for (NodeAttribute node : nodes) {
-            String nodeStr = "Name:" + node.getName() + " ,Type: " + node.getNodeType().name() + " ,State: " + node.getNodeState().name() + " ,Weight: " + node.getWeight();
+            String nodeStr = "Name:" + node.getName() + " ,State: " + node.getNodeState().name() + " ,Weight: " + node.getWeight();
             nodesStr.add(nodeStr);
         }
         map.put("Nodes" , nodesStr.toArray(new String[0]));

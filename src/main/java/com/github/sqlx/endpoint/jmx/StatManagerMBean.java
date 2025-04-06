@@ -39,23 +39,6 @@ public interface StatManagerMBean {
      */
     String getVersion();
 
-    /**
-     * Gets the load balance type for read operations.
-     * This method returns the load balancing strategy type configured for read operations in the system.
-     * It allows dynamically retrieving information on how the system distributes load across multiple read sources.
-     *
-     * @return The load balance type for read operations as a string.
-     */
-    String getReadLoadBalanceType();
-
-    /**
-     * Gets the load balance type for write operations.
-     * This method returns the load balancing strategy type configured for write operations in the system.
-     * It allows dynamically retrieving information on how the system distributes load across multiple write targets.
-     *
-     * @return The load balance type for write operations as a string.
-     */
-    String getWriteLoadBalanceType();
 
     /**
      * Retrieves the list of configured data sources.

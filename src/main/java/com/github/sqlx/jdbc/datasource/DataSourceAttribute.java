@@ -18,7 +18,6 @@ package com.github.sqlx.jdbc.datasource;
 
 import com.github.sqlx.NodeState;
 import com.github.sqlx.NodeAttribute;
-import com.github.sqlx.NodeType;
 import com.github.sqlx.util.JdbcUtils;
 
 import java.util.Objects;
@@ -36,8 +35,6 @@ public class DataSourceAttribute implements NodeAttribute {
 
     private final String databaseType;
 
-    private final NodeType nodeType;
-
     private NodeState nodeState;
 
     private final String name;
@@ -50,11 +47,10 @@ public class DataSourceAttribute implements NodeAttribute {
 
     private final String destroyMethod;
 
-    public DataSourceAttribute(String url, NodeType nodeType, NodeState nodeState, String name, Double weight , String heartbeatSql , long heartbeatInterval , String destroyMethod) {
+    public DataSourceAttribute(String url, NodeState nodeState, String name, Double weight , String heartbeatSql , long heartbeatInterval , String destroyMethod) {
         this.url = url;
         this.databaseType = JdbcUtils.getDbType(url);
         this.database = JdbcUtils.getDatabaseName(url);
-        this.nodeType = nodeType;
         this.nodeState = nodeState;
         this.name = name;
         if (weight == null) {
@@ -79,11 +75,6 @@ public class DataSourceAttribute implements NodeAttribute {
     @Override
     public String getDatabaseType() {
         return databaseType;
-    }
-
-    @Override
-    public NodeType getNodeType() {
-        return nodeType;
     }
 
     @Override

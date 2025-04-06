@@ -17,7 +17,7 @@ public class SingleDatasourceRouteRule extends AbstractRouteRule {
 
     private final DatasourceManager datasourceManager;
 
-    public SingleDatasourceRouteRule(Integer priority, SqlParser sqlParser, LoadBalance<NodeAttribute> readLoadBalance, LoadBalance<NodeAttribute> writeLoadBalance , DatasourceManager datasourceManager) {
+    public SingleDatasourceRouteRule(Integer priority, SqlParser sqlParser, LoadBalance readLoadBalance, LoadBalance writeLoadBalance , DatasourceManager datasourceManager) {
         super(priority, sqlParser, readLoadBalance, writeLoadBalance);
         this.datasourceManager = datasourceManager;
     }

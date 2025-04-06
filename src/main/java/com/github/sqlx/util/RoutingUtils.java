@@ -54,12 +54,13 @@ public final class RoutingUtils {
         }
 
         if (connection instanceof ProxyConnection) {
+            // TODO 重构影响点
             ProxyConnection rc = (ProxyConnection) connection;
-            NodeType nodeType = rc.getRoutingInfoList().get(0).getHitNodeAttr().getNodeType();
-            if (Objects.isNull(nodeType)) {
-                return false;
-            }
-            return Objects.equals(targetMode, nodeType) || Objects.equals(NodeType.READ_WRITE, nodeType);
+//            NodeType nodeType = rc.getRoutingInfoList().get(0).getHitNodeAttr().getNodeType();
+//            if (Objects.isNull(nodeType)) {
+//                return false;
+//            }
+//            return Objects.equals(targetMode, nodeType) || Objects.equals(NodeType.READ_WRITE, nodeType);
         }
         return false;
     }

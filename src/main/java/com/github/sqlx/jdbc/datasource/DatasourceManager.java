@@ -18,7 +18,6 @@ package com.github.sqlx.jdbc.datasource;
 
 import com.github.sqlx.NodeState;
 import com.github.sqlx.NodeAttribute;
-import com.github.sqlx.NodeType;
 import com.github.sqlx.config.SqlXConfiguration;
 import com.github.sqlx.exception.ManagementException;
 import com.github.sqlx.exception.NoSuchDataSourceException;
@@ -91,15 +90,6 @@ public class DatasourceManager {
         return dataSources.values().stream().filter(DataSourceWrapper::getDefaulted).findAny();
     }
 
-    public synchronized List<DataSourceWrapper> getDataSourceList(NodeType type) {
-        List<DataSourceWrapper> dataSourceWrappers = new ArrayList<>();
-        dataSources.forEach((k , v) -> {
-            if (Objects.equals(v.getNodeAttribute().getNodeType() , type)) {
-                dataSourceWrappers.add(v);
-            }
-        });
-        return dataSourceWrappers;
-    }
 
     public synchronized List<DataSourceWrapper> getDataSourceList(NodeState state) {
         List<DataSourceWrapper> dataSourceWrappers = new ArrayList<>();
@@ -111,25 +101,6 @@ public class DatasourceManager {
         return dataSourceWrappers;
     }
 
-    public synchronized List<DataSourceWrapper> getReadableDataSource() {
-        List<DataSourceWrapper> dataSourceWrappers = new ArrayList<>();
-        dataSources.forEach((k , v) -> {
-            if (v.getNodeAttribute().getNodeType().canRead()) {
-                dataSourceWrappers.add(v);
-            }
-        });
-        return dataSourceWrappers;
-    }
-
-    public synchronized List<DataSourceWrapper> getWritableDataSource() {
-        List<DataSourceWrapper> dataSourceWrappers = new ArrayList<>();
-        dataSources.forEach((k , v) -> {
-            if (v.getNodeAttribute().getNodeType().canWrite()) {
-                dataSourceWrappers.add(v);
-            }
-        });
-        return dataSourceWrappers;
-    }
 
     public boolean containsDataSource(String nodeName) {
         return dataSources.containsKey(nodeName);

@@ -47,6 +47,7 @@ import com.github.sqlx.listener.LoggingEventListener;
 import com.github.sqlx.listener.MetricsCollectEventListener;
 import com.github.sqlx.listener.EventListener;
 import com.github.sqlx.loadbalance.LoadBalance;
+import com.github.sqlx.loadbalance.WeightRandomLoadBalance;
 import com.github.sqlx.metrics.*;
 import com.github.sqlx.metrics.nitrite.*;
 import com.github.sqlx.rule.group.CompositeRouteGroup;
@@ -55,7 +56,9 @@ import com.github.sqlx.rule.group.DefaultRouteGroup;
 import com.github.sqlx.rule.group.DefaultRoutingGroupBuilder;
 import com.github.sqlx.rule.group.RouteGroup;
 import com.github.sqlx.sql.parser.SqlParser;
+import com.github.sqlx.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.joor.Reflect;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -75,13 +78,7 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import javax.sql.DataSource;
 import java.lang.management.ManagementFactory;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Auto-configuration class for SQLX, enabling various components and configurations
@@ -173,8 +170,29 @@ public class SqlXEnableAutoConfiguration {
             SqlXConfiguration config = properties.getConfig();
             ClusterManager cm = new ClusterManager(config);
             for (ClusterConfiguration conf : config.getClusters()) {
-                LoadBalance<NodeAttribute> rlb = conf.getReadLoadBalance();
-                LoadBalance<NodeAttribute> wlb = conf.getWriteLoadBalance();
+                String writeLoadBalanceClass = conf.getWriteLoadBalanceClass();
+                LoadBalance wlb;
+                if (StringUtils.isBlank(writeLoadBalanceClass)) {
+                    wlb = new WeightRandomLoadBalance(conf.getWritableRoutingNodeAttributes());
+                } else {
+                    wlb = Reflect.onClass(writeLoadBalanceClass).create().get();
+                    for (NodeAttribute node : conf.getWritableRoutingNodeAttributes()) {
+                        wlb.addOption(node);
+                    }
+                }
+
+                String readLoadBalanceClass = conf.getReadLoadBalanceClass();
+
+                LoadBalance rlb;
+                if (StringUtils.isBlank(readLoadBalanceClass)) {
+                    rlb = new WeightRandomLoadBalance(conf.getReadableRoutingNodeAttributes());
+                } else {
+                    rlb = Reflect.onClass(readLoadBalanceClass).create().get();
+                    for (NodeAttribute node : conf.getReadableRoutingNodeAttributes()) {
+                        rlb.addOption(node);
+                    }
+                }
+
                 Cluster cluster = new Cluster();
                 cluster.setName(conf.getName());
                 cluster.setNodes(conf.getNodeAttributes());
@@ -213,8 +231,8 @@ public class SqlXEnableAutoConfiguration {
         public CompositeRouteGroup routingGroup(SqlXProperties properties, SqlParser sqlParser, Transaction transaction, @Autowired(required = false) List<RouteGroup<?>> routingGroups, EventListener eventListener, DatasourceManager datasourceManager) {
 
             SqlXConfiguration routing = properties.getConfig();
-            LoadBalance<NodeAttribute> rlb = routing.getReadLoadBalance();
-            LoadBalance<NodeAttribute> wlb = routing.getWriteLoadBalance();
+            LoadBalance rlb = new WeightRandomLoadBalance(new HashSet<>());
+            LoadBalance wlb = new WeightRandomLoadBalance(new HashSet<>());
             DefaultRouteGroup drg = DefaultRoutingGroupBuilder.builder()
                     .sqlXConfiguration(routing)
                     .sqlParser(sqlParser)

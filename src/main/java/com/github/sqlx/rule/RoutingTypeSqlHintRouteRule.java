@@ -34,11 +34,12 @@ import java.util.Objects;
  * @author He Xing Mo
  * @since 1.0
  */
+@Deprecated
 public class RoutingTypeSqlHintRouteRule extends AbstractRouteRule {
 
     private static final SqlHintConverter<NodeType> SQL_HINT_CONVERTER = new NodeTypeSqlHintConverter();
 
-    public RoutingTypeSqlHintRouteRule(Integer priority, SqlParser sqlParser, LoadBalance<NodeAttribute> readLoadBalance, LoadBalance<NodeAttribute> writeLoadBalance) {
+    public RoutingTypeSqlHintRouteRule(Integer priority, SqlParser sqlParser, LoadBalance readLoadBalance, LoadBalance writeLoadBalance) {
         super(priority, sqlParser, readLoadBalance, writeLoadBalance);
     }
 

@@ -20,6 +20,7 @@ package com.github.sqlx.loadbalance;
  * @author He Xing Mo
  * @since 1.0
  */
+@Deprecated
 public enum ReadLoadBalanceType {
 
     /**
