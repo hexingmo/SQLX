@@ -64,13 +64,10 @@ public class SqlXConfiguration implements ConfigurationValidator {
     @Expose
     private SqlParsingFailBehavior sqlParsingFailBehavior = SqlParsingFailBehavior.WARNING;
 
-    @Expose
-    private String defaultCluster;
-
     private SqlParser sqlParserInstance;
 
     @Expose
-    private List<DataSourceConfiguration> dataSources;
+    private List<DataSourceConfiguration> dataSources = new ArrayList<>();
 
     @Expose
     private List<ClusterConfiguration> clusters = new ArrayList<>();
@@ -214,17 +211,23 @@ public class SqlXConfiguration implements ConfigurationValidator {
         if (CollectionUtils.isNotEmpty(clusterNameSubtract)) {
             throw new ConfigurationException(String.format("cluster name duplicate %s" , clusterNameSubtract));
         }
-        if (CollectionUtils.isNotEmpty(clusters) && StringUtils.isBlank(defaultCluster)) {
-            throw new ConfigurationException("When there are multiple clusters, a default cluster must be specified");
-        }
-        if (StringUtils.isNotBlank(defaultCluster)) {
-            Optional<ClusterConfiguration> optional = clusters.stream().filter(c -> c.getName().equals(defaultCluster)).findFirst();
-            if (!optional.isPresent()) {
-                throw new ConfigurationException(String.format("The default cluster %s does not exist" , defaultCluster));
-            }
-            optional.get().setDefaulted(true);
-        }
+
+
         if (CollectionUtils.isNotEmpty(clusters)) {
+            if (clusters.size() > 1) {
+                // Check if there is at least one defaulted cluster
+                boolean hasDefaultedCluster = clusters.stream().anyMatch(ClusterConfiguration::getDefaulted);
+                if (!hasDefaultedCluster) {
+                    throw new ConfigurationException("When there are multiple clusters, at least one cluster must be set as defaulted");
+                }
+            }
+
+            // Set the default cluster if there is only one cluster
+            if (clusters.size() == 1) {
+                ClusterConfiguration singleCluster = clusters.get(0);
+                singleCluster.setDefaulted(true);
+            }
+
             for (ClusterConfiguration cluster : clusters) {
                 cluster.validate();
             }
@@ -236,9 +239,6 @@ public class SqlXConfiguration implements ConfigurationValidator {
             for (ClusterConfiguration cluster : clusters) {
                 cluster.setNodeAttributes(getNodeAttributes(cluster.getNodes()));
             }
-        }
-        if (CollectionUtils.isNotEmpty(clusters) && clusters.size() == 1) {
-            this.defaultCluster = clusters.get(0).getName();
         }
     }
 
