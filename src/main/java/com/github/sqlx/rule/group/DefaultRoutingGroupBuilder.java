@@ -19,14 +19,11 @@ package com.github.sqlx.rule.group;
 import com.github.sqlx.config.SqlXConfiguration;
 import com.github.sqlx.jdbc.datasource.DatasourceManager;
 import com.github.sqlx.jdbc.transaction.Transaction;
-import com.github.sqlx.loadbalance.LoadBalance;
 import com.github.sqlx.rule.DefaultDataSourceRouteRule;
 import com.github.sqlx.rule.SingleDatasourceRouteRule;
 import com.github.sqlx.rule.TransactionRouteRule;
 import com.github.sqlx.sql.parser.SqlParser;
 import com.github.sqlx.rule.ForceTargetRouteRule;
-import com.github.sqlx.rule.NullSqlAttributeRouteRule;
-import com.github.sqlx.rule.ReadWriteSplittingRouteRule;
 import com.github.sqlx.rule.RoutingNameSqlHintRouteRule;
 
 /**
@@ -35,15 +32,11 @@ import com.github.sqlx.rule.RoutingNameSqlHintRouteRule;
  */
 public class DefaultRoutingGroupBuilder {
 
-    private SqlXConfiguration sqlXConfiguration;
+    private SqlXConfiguration configuration;
 
     private SqlParser sqlParser;
 
     private Transaction transaction;
-
-    private LoadBalance readLoadBalance;
-
-    private LoadBalance writeLoadBalance;
 
     private DatasourceManager datasourceManager;
 
@@ -51,8 +44,8 @@ public class DefaultRoutingGroupBuilder {
         return new DefaultRoutingGroupBuilder();
     }
 
-    public DefaultRoutingGroupBuilder sqlXConfiguration(SqlXConfiguration sqlXConfiguration) {
-        this.sqlXConfiguration = sqlXConfiguration;
+    public DefaultRoutingGroupBuilder sqlXConfiguration(SqlXConfiguration configuration) {
+        this.configuration = configuration;
         return this;
     }
 
@@ -66,16 +59,6 @@ public class DefaultRoutingGroupBuilder {
         return this;
     }
 
-    public DefaultRoutingGroupBuilder readLoadBalance(LoadBalance readLoadBalance) {
-        this.readLoadBalance = readLoadBalance;
-        return this;
-    }
-
-    public DefaultRoutingGroupBuilder writeLoadBalance(LoadBalance writeLoadBalance) {
-        this.writeLoadBalance = writeLoadBalance;
-        return this;
-    }
-
     public DefaultRoutingGroupBuilder datasourceManager(DatasourceManager datasourceManager) {
         this.datasourceManager = datasourceManager;
         return this;
@@ -83,13 +66,11 @@ public class DefaultRoutingGroupBuilder {
 
     public DefaultRouteGroup build() {
         DefaultRouteGroup routingGroup = new DefaultRouteGroup(sqlParser);
-        routingGroup.install(new SingleDatasourceRouteRule(-10 , sqlParser , readLoadBalance , writeLoadBalance , datasourceManager));
-        routingGroup.install(new TransactionRouteRule(0 , sqlParser , readLoadBalance , writeLoadBalance , transaction));
-        routingGroup.install(new ForceTargetRouteRule(10 , sqlParser , sqlXConfiguration));
-        routingGroup.install(new RoutingNameSqlHintRouteRule(30 , sqlParser , sqlXConfiguration));
-        routingGroup.install(new ReadWriteSplittingRouteRule(40 , sqlParser ,  readLoadBalance , writeLoadBalance));
-        routingGroup.install(new NullSqlAttributeRouteRule(50 , sqlParser ,  readLoadBalance , writeLoadBalance));
-        routingGroup.install(new DefaultDataSourceRouteRule(60 , sqlParser , datasourceManager));
+        routingGroup.install(new SingleDatasourceRouteRule(0 , sqlParser , datasourceManager));
+        routingGroup.install(new TransactionRouteRule(10 , sqlParser , configuration , transaction));
+        routingGroup.install(new ForceTargetRouteRule(20 , sqlParser , configuration));
+        routingGroup.install(new RoutingNameSqlHintRouteRule(30 , sqlParser , configuration));
+        routingGroup.install(new DefaultDataSourceRouteRule(40 , sqlParser , datasourceManager));
         return routingGroup;
     }
 }

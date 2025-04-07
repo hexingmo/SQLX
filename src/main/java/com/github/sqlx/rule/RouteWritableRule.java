@@ -17,32 +17,22 @@
 package com.github.sqlx.rule;
 
 import com.github.sqlx.NodeAttribute;
-import com.github.sqlx.config.SqlXConfiguration;
 import com.github.sqlx.loadbalance.LoadBalance;
 import com.github.sqlx.sql.SqlAttribute;
 import com.github.sqlx.sql.parser.SqlParser;
-import com.github.sqlx.util.RandomUtils;
-
-import java.util.List;
 
 /**
  * @author He Xing Mo
  * @since 1.0
  */
-@Deprecated
-public class RandomRouteWritableRule extends AbstractRouteRule {
+public class RouteWritableRule extends AbstractRouteRule {
 
-    private final SqlXConfiguration configuration;
-
-    public RandomRouteWritableRule(Integer priority, SqlParser sqlParser, LoadBalance readLoadBalance, LoadBalance writeLoadBalance, SqlXConfiguration configuration) {
+    public RouteWritableRule(Integer priority, SqlParser sqlParser, LoadBalance readLoadBalance, LoadBalance writeLoadBalance) {
         super(priority, sqlParser, readLoadBalance, writeLoadBalance);
-        this.configuration = configuration;
     }
 
     @Override
     public NodeAttribute routing(SqlAttribute sqlAttribute) {
-        List<NodeAttribute> nodeAttributes = configuration.getWritableRoutingNodeAttributes();
-        int index = RandomUtils.nextInt(0, nodeAttributes.size());
-        return nodeAttributes.get(index);
+        return chooseWriteNode();
     }
 }

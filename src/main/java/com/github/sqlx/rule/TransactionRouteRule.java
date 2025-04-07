@@ -17,10 +17,19 @@
 package com.github.sqlx.rule;
 
 import com.github.sqlx.NodeAttribute;
+import com.github.sqlx.RoutingContext;
+import com.github.sqlx.config.ClusterConfiguration;
+import com.github.sqlx.config.SqlXConfiguration;
+import com.github.sqlx.exception.SqlRouteException;
+import com.github.sqlx.integration.springboot.RouteAttribute;
 import com.github.sqlx.jdbc.transaction.Transaction;
-import com.github.sqlx.loadbalance.LoadBalance;
 import com.github.sqlx.sql.SqlAttribute;
 import com.github.sqlx.sql.parser.SqlParser;
+import com.github.sqlx.util.CollectionUtils;
+import com.github.sqlx.util.RandomUtils;
+
+import java.util.List;
+import java.util.Set;
 
 /**
  * When transactions exist, the routing rules are as follows:
@@ -38,9 +47,12 @@ public class TransactionRouteRule extends AbstractRouteRule {
 
     private final Transaction transaction;
 
+    private final SqlXConfiguration configuration;
 
-    public TransactionRouteRule(Integer priority, SqlParser sqlParser, LoadBalance readLoadBalance, LoadBalance writeLoadBalance, Transaction transaction) {
-        super(priority, sqlParser, readLoadBalance, writeLoadBalance);
+
+    public TransactionRouteRule(Integer priority, SqlParser sqlParser,SqlXConfiguration configuration, Transaction transaction) {
+        super(priority, sqlParser);
+        this.configuration = configuration;
         this.transaction = transaction;
     }
 
@@ -55,10 +67,35 @@ public class TransactionRouteRule extends AbstractRouteRule {
             transaction.addSql(attribute);
             return node;
         }
-        node = chooseWriteNode();
+
+        RouteAttribute ra = RoutingContext.getRoutingAttribute();
+        if (ra == null) {
+            throw new SqlRouteException("Transaction is active, but no routing attribute is found.");
+        }
+        node = getNode(ra);
         if (node != null) {
             transaction.registerNode(node , attribute);
         }
         return node;
+    }
+
+
+    private NodeAttribute getNode(RouteAttribute ra) {
+
+        List<String> nodes = ra.getNodes();
+        if (CollectionUtils.isNotEmpty(nodes)) {
+            int index = RandomUtils.nextInt(0, nodes.size());
+            return configuration.getNodeAttribute(nodes.get(index));
+        }
+        ClusterConfiguration cluster = configuration.getCluster(ra.getCluster());
+        if (cluster != null) {
+            Set<NodeAttribute> writableNodes = cluster.getWritableRoutingNodeAttributes();
+            if (CollectionUtils.isEmpty(writableNodes)) {
+                throw new SqlRouteException("Transaction is active,But no writable nodes found in cluster: " + ra.getCluster());
+            }
+            int index = RandomUtils.nextInt(0, writableNodes.size());
+            return (NodeAttribute) writableNodes.toArray()[index];
+        }
+        return null;
     }
 }

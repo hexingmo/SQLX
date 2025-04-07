@@ -242,13 +242,6 @@ public class SqlXConfiguration implements ConfigurationValidator {
         }
     }
 
-    public List<NodeAttribute> getWritableRoutingNodeAttributes() {
-        return dataSources.stream()
-                .map(DataSourceConfiguration::getNodeAttribute)
-//                .filter(nodeAttribute -> nodeAttribute.getNodeType().canWrite())
-                .collect(Collectors.toList());
-    }
-
     /**
      * Synchronized method to remove a data source configuration by its name.
      * This method iterates over the data source configurations, finds the one with the specified name,

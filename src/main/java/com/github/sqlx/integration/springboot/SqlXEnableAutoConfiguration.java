@@ -50,6 +50,7 @@ import com.github.sqlx.loadbalance.LoadBalance;
 import com.github.sqlx.loadbalance.WeightRandomLoadBalance;
 import com.github.sqlx.metrics.*;
 import com.github.sqlx.metrics.nitrite.*;
+import com.github.sqlx.rule.group.ClusterRoutingGroupBuilder;
 import com.github.sqlx.rule.group.CompositeRouteGroup;
 import com.github.sqlx.rule.group.DefaultRouteGroup;
 
@@ -199,13 +200,12 @@ public class SqlXEnableAutoConfiguration {
 
                 CompositeRouteGroup compositeRoutingGroup = new CompositeRouteGroup(eventListener, transaction);
                 compositeRoutingGroup.installFirst(routingGroups);
-                DefaultRouteGroup defaultRoutingGroup = DefaultRoutingGroupBuilder.builder()
+                DefaultRouteGroup defaultRoutingGroup = ClusterRoutingGroupBuilder.builder()
                         .sqlXConfiguration(config)
                         .sqlParser(sqlParser)
                         .transaction(transaction)
                         .readLoadBalance(rlb)
                         .writeLoadBalance(wlb)
-                        .datasourceManager(datasourceManager)
                         .build();
                 compositeRoutingGroup.installLast(defaultRoutingGroup);
                 cluster.setRule(compositeRoutingGroup);
@@ -231,14 +231,10 @@ public class SqlXEnableAutoConfiguration {
         public CompositeRouteGroup routingGroup(SqlXProperties properties, SqlParser sqlParser, Transaction transaction, @Autowired(required = false) List<RouteGroup<?>> routingGroups, EventListener eventListener, DatasourceManager datasourceManager) {
 
             SqlXConfiguration routing = properties.getConfig();
-            LoadBalance rlb = new WeightRandomLoadBalance(new HashSet<>());
-            LoadBalance wlb = new WeightRandomLoadBalance(new HashSet<>());
             DefaultRouteGroup drg = DefaultRoutingGroupBuilder.builder()
                     .sqlXConfiguration(routing)
                     .sqlParser(sqlParser)
                     .transaction(transaction)
-                    .readLoadBalance(rlb)
-                    .writeLoadBalance(wlb)
                     .datasourceManager(datasourceManager)
                     .build();
             CompositeRouteGroup compositeRoutingGroup = new CompositeRouteGroup(eventListener, transaction);

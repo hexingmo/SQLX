@@ -229,8 +229,6 @@ public class StatManager implements StatManagerMBean {
                 .sqlParser(sqlXConfiguration.getSqlParserInstance())
                 .transaction(transaction)
                 // TODO
-                .readLoadBalance(null)
-                .writeLoadBalance(null)
                 .datasourceManager(datasourceManager)
                 .build();
         compositeRoutingGroup.installLast(defaultRoutingGroup);
