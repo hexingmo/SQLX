@@ -15,6 +15,8 @@ import static org.mockito.Mockito.*;
 /**
  * Unit tests for {@link FailBehaviorSqlParser}.
  * This class tests the behavior of FailBehaviorSqlParser when parsing succeeds or fails.
+ * Author: He Xing Mo
+ * Version: 1.0
  */
 class FailBehaviorSqlParserTest {
 

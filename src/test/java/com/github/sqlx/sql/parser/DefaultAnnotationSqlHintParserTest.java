@@ -12,6 +12,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * Unit tests for {@link DefaultAnnotationSqlHintParser}.
  * This class tests the behavior of DefaultAnnotationSqlHintParser when parsing SQL with annotations.
+ * Author: He Xing Mo
+ * Version: 1.0
  */
 class DefaultAnnotationSqlHintParserTest {
 

@@ -43,9 +43,6 @@ sqlx:
     enabled: true
     sql-parsing-fail-behavior: warning
 #    sql-parser-class: com.github.sqlx.sql.parser.SimpleSqlParser
-    read-load-balance-type: WEIGHT_ROUND_ROBIN_BALANCE_READABLE
-    write-load-balance-type: WEIGHT_RANDOM_BALANCE_WRITABLE
-    default-cluster: cluster_0
     metrics:
       enabled: true
       username: admin
@@ -65,7 +62,6 @@ sqlx:
       data-retention-duration: 2h
     data-sources:
       - name: write_0
-        type: write
         weight: 99
         defaulted: true
         data-source-class: com.zaxxer.hikari.HikariDataSource
@@ -86,7 +82,6 @@ sqlx:
           isReadOnly: false
 
       - name: read_0
-        type: READ
         weight: 6
         data-source-class: com.zaxxer.hikari.HikariDataSource
         init-method:
@@ -104,7 +99,6 @@ sqlx:
           isReadOnly: true
 
       - name: read_1
-        type: READ
         weight: 10
         data-source-class: com.zaxxer.hikari.HikariDataSource
         init-method:
@@ -122,6 +116,7 @@ sqlx:
           isReadOnly: true
     clusters:
       - name: cluster_0
+        defaulted: true
         writable-nodes:
           - write_0
         readable-nodes:
@@ -146,35 +141,3 @@ sqlx:
 #          - read_0
 #          - read_1
 #        propagation: true
-
-    rules:
-      databases:
-        - name: test1
-          nodes:
-            write_0:
-              allowAllSqlTypes: true
-
-        - name: test2
-          nodes:
-            read_0:
-              allowAllSqlTypes: true
-
-        - name: test3
-          nodes:
-            read_1:
-              sqlTypes:
-                - SELECT
-      tables:
-        employee:
-          write_0:
-            sqlTypes:
-              - INSERT
-              - UPDATE
-              - DELETE
-              - OTHER
-          read_0:
-            sqlTypes:
-              - SELECT
-          read_1:
-            sqlTypes:
-              - SELECT

@@ -11,6 +11,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Unit tests for {@link NodeNameSqlHintConverter}.
  * This class tests the behavior of NodeNameSqlHintConverter when converting SQL hints.
+ * @author He Xing Mo
+ * @since 1.0
  */
 class NodeNameSqlHintConverterTest {
 

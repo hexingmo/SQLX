@@ -10,7 +10,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Unit tests for SimpleSqlParser.
  * This class tests the parsing of different SQL statements to ensure
  * correct identification of SQL type and read/write status.
- * 
+ * @author He Xing Mo
+ * @since 1.0
  * @see SimpleSqlParser
  */
 class SimpleSqlParserTest {
