@@ -21,6 +21,7 @@ import com.github.sqlx.NodeAttribute;
 import com.github.sqlx.config.SqlXConfiguration;
 import com.github.sqlx.exception.ManagementException;
 import com.github.sqlx.exception.NoSuchDataSourceException;
+import com.github.sqlx.exception.SqlXRuntimeException;
 import com.github.sqlx.util.MapUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,10 +44,10 @@ public class DatasourceManager {
 
     private final Map<String , DataSourceWrapper> dataSources = new ConcurrentHashMap<>();
 
-    private final SqlXConfiguration sqlXConfiguration;
+    private final SqlXConfiguration configuration;
 
-    public DatasourceManager(SqlXConfiguration sqlXConfiguration) {
-        this.sqlXConfiguration = sqlXConfiguration;
+    public DatasourceManager(SqlXConfiguration configuration) {
+        this.configuration = configuration;
         registerShutdownHook();
     }
 
@@ -65,7 +66,7 @@ public class DatasourceManager {
         if (!containsDataSource(name)) {
             throw new ManagementException("No such datasource: " + name);
         }
-        boolean removed = sqlXConfiguration.removeDataSourceConfiguration(name);
+        boolean removed = configuration.removeDataSourceConfiguration(name);
         if (removed) {
             DataSourceWrapper dataSourceWrapper = dataSources.remove(name);
             if (dataSourceWrapper != null) {
@@ -86,8 +87,12 @@ public class DatasourceManager {
         return Collections.unmodifiableList(new ArrayList<>(dataSources.values()));
     }
 
-    public Optional<DataSourceWrapper> getDefaultDataSource() {
-        return dataSources.values().stream().filter(DataSourceWrapper::getDefaulted).findAny();
+    public DataSourceWrapper getDefaultDataSource() {
+        Optional<DataSourceWrapper> optional = dataSources.values().stream().filter(DataSourceWrapper::getDefaulted).findFirst();
+        if (!optional.isPresent()) {
+            throw new SqlXRuntimeException("No default datasource found");
+        }
+        return optional.get();
     }
 
 

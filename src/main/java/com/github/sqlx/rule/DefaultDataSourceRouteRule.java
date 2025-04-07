@@ -16,12 +16,10 @@
 package com.github.sqlx.rule;
 
 import com.github.sqlx.NodeAttribute;
-import com.github.sqlx.jdbc.datasource.DataSourceWrapper;
 import com.github.sqlx.jdbc.datasource.DatasourceManager;
 import com.github.sqlx.sql.SqlAttribute;
 import com.github.sqlx.sql.parser.SqlParser;
 
-import java.util.Optional;
 
 /**
  * @author He Xing Mo
@@ -38,7 +36,6 @@ public class DefaultDataSourceRouteRule extends AbstractRouteRule {
 
     @Override
     public NodeAttribute routing(SqlAttribute sqlAttribute) {
-        Optional<DataSourceWrapper> optional = datasourceManager.getDefaultDataSource();
-        return optional.map(DataSourceWrapper::getNodeAttribute).orElse(null);
+        return datasourceManager.getDefaultDataSource().getNodeAttribute();
     }
 }

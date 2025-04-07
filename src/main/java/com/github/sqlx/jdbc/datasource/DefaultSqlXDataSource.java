@@ -116,7 +116,7 @@ public class DefaultSqlXDataSource extends AbstractSqlXDataSource {
             List<DataSource> dataSourceList = getDataSourceWithName(names);
             dataSource = dataSourceList.get(0);
         } else {
-            dataSource = datasourceManager.getDefaultDataSource().get();
+            dataSource = datasourceManager.getDefaultDataSource();
         }
         
         RouteInfo routeInfo = new RouteInfo();
@@ -140,7 +140,6 @@ public class DefaultSqlXDataSource extends AbstractSqlXDataSource {
         } else {
             cluster = clusterManager.getDefaultCluster();
         }
-        
-        return Optional.of(cluster);
+        return Optional.ofNullable(cluster);
     }
 }
