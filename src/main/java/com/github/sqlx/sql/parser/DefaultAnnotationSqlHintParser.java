@@ -54,12 +54,12 @@ public class DefaultAnnotationSqlHintParser implements AnnotationSqlHintParser {
 
     private Map<String , String> splitHint(String hintString) {
         if (hintString == null || hintString.length() == 0) {
-            return null;
+            return new HashMap<>();
         }
 
         String[] hints = hintString.split(HINT_DELIMITER_REGEX);
         if (hints.length == 0) {
-            return null;
+            return new HashMap<>();
         }
 
         Map<String , String> hintMap = new HashMap<>();
