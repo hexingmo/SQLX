@@ -124,4 +124,12 @@ class DataSourceConfigurationTest {
     void testGetNodeAttribute() {
         assertNotNull(config.getNodeAttribute());
     }
+
+    @Test
+    void testEqualsAndHashCode() {
+        DataSourceConfiguration anotherConfig = new DataSourceConfiguration();
+        anotherConfig.setName("TestDataSource");
+        assertEquals(config, anotherConfig);
+        assertEquals(config.hashCode(), anotherConfig.hashCode());
+    }
 }

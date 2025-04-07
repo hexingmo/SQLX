@@ -203,13 +203,12 @@ public class ClusterConfiguration implements ConfigurationValidator {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof ClusterConfiguration)) return false;
-        if (!super.equals(o)) return false;
         ClusterConfiguration that = (ClusterConfiguration) o;
-        return Objects.equals(getName(), that.getName());
+        return Objects.equals(this.name, that.getName());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), getName());
+        return Objects.hash(this.name);
     }
 }

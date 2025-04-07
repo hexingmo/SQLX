@@ -30,6 +30,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.sql.Driver;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Represents the configuration information of a data source.
@@ -232,5 +233,18 @@ public class DataSourceConfiguration implements ConfigurationValidator {
         if (!succeed) {
             throw new ConfigurationException(String.format("test connection failed , driver class : %s , url : %s , username : %s , password : **" , getDriverClass() , getJdbcUrl() , getUsername()));
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof DataSourceConfiguration)) return false;
+        DataSourceConfiguration that = (DataSourceConfiguration) o;
+        return Objects.equals(this.name, that.getName());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.name);
     }
 }
