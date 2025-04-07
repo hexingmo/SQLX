@@ -18,7 +18,6 @@ package com.github.sqlx.rule;
 
 import com.github.sqlx.NodeAttribute;
 import com.github.sqlx.config.SqlXConfiguration;
-import com.github.sqlx.loadbalance.LoadBalance;
 import com.github.sqlx.sql.AnnotationSqlAttribute;
 import com.github.sqlx.sql.SqlAttribute;
 import com.github.sqlx.sql.parser.NodeNameSqlHintConverter;
@@ -29,18 +28,18 @@ import com.github.sqlx.sql.parser.SqlParser;
 import java.util.Objects;
 
 /**
- * Annotation Hint routingTargetName Routing Rule
+ * Annotation Hint DataSourceName Routing Rule
  *
  * @author He Xing Mo
  * @since 1.0
  */
-public class RoutingNameSqlHintRouteRule extends AbstractRouteRule {
+public class DataSourceNameSqlHintRouteRule extends AbstractRouteRule {
 
     private static final SqlHintConverter<String> SQL_HINT_CONVERTER = new NodeNameSqlHintConverter();
 
     private final SqlXConfiguration configuration;
 
-    public RoutingNameSqlHintRouteRule(Integer priority, SqlParser sqlParser, SqlXConfiguration configuration) {
+    public DataSourceNameSqlHintRouteRule(Integer priority, SqlParser sqlParser, SqlXConfiguration configuration) {
         super(priority, sqlParser);
         this.configuration = configuration;
     }
