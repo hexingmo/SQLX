@@ -29,7 +29,6 @@ import com.github.sqlx.rule.NullSqlAttributeRouteRule;
 import com.github.sqlx.rule.RandomRouteWritableRule;
 import com.github.sqlx.rule.ReadWriteSplittingRouteRule;
 import com.github.sqlx.rule.RoutingNameSqlHintRouteRule;
-import com.github.sqlx.rule.RoutingTypeSqlHintRouteRule;
 
 /**
  * @author He Xing Mo
@@ -88,7 +87,6 @@ public class DefaultRoutingGroupBuilder {
         routingGroup.install(new SingleDatasourceRouteRule(-10 , sqlParser , readLoadBalance , writeLoadBalance , datasourceManager));
         routingGroup.install(new TransactionRouteRule(0 , sqlParser , readLoadBalance , writeLoadBalance , transaction));
         routingGroup.install(new ForceTargetRouteRule(10 , sqlParser ,  readLoadBalance , writeLoadBalance , sqlXConfiguration));
-        routingGroup.install(new RoutingTypeSqlHintRouteRule(20 ,sqlParser , readLoadBalance , writeLoadBalance));
         routingGroup.install(new RoutingNameSqlHintRouteRule(30 , sqlParser ,  readLoadBalance , writeLoadBalance , sqlXConfiguration));
         routingGroup.install(new ReadWriteSplittingRouteRule(40 , sqlParser ,  readLoadBalance , writeLoadBalance));
         routingGroup.install(new NullSqlAttributeRouteRule(50 , sqlParser ,  readLoadBalance , writeLoadBalance));
