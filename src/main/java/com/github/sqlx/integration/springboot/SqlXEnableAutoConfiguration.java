@@ -167,7 +167,7 @@ public class SqlXEnableAutoConfiguration {
         }
 
         @Bean
-        public ClusterManager clusterManager(SqlXProperties properties, SqlParser sqlParser, Transaction transaction, @Autowired(required = false) List<RouteGroup<?>> routingGroups, EventListener eventListener, DatasourceManager datasourceManager) {
+        public ClusterManager clusterManager(SqlXProperties properties, SqlParser sqlParser, Transaction transaction, EventListener eventListener) {
             SqlXConfiguration config = properties.getConfig();
             ClusterManager cm = new ClusterManager(config);
             for (ClusterConfiguration conf : config.getClusters()) {
@@ -199,7 +199,6 @@ public class SqlXEnableAutoConfiguration {
                 cluster.setNodes(conf.getNodeAttributes());
 
                 CompositeRouteGroup compositeRoutingGroup = new CompositeRouteGroup(eventListener, transaction);
-                compositeRoutingGroup.installFirst(routingGroups);
                 DefaultRouteGroup defaultRoutingGroup = ClusterRoutingGroupBuilder.builder()
                         .sqlXConfiguration(config)
                         .sqlParser(sqlParser)
@@ -249,9 +248,18 @@ public class SqlXEnableAutoConfiguration {
         }
 
         @Bean("sqlXDataSource")
-        public SqlXDataSource sqlXDataSource(StatManager statManager, ClusterManager clusterManager, DatasourceManager datasourceManager, EventListener eventListener , CompositeRouteGroup compositeRouteGroup) {
+        public SqlXDataSource sqlXDataSource(SqlXProperties properties ,StatManager statManager, ClusterManager clusterManager, DatasourceManager datasourceManager, EventListener eventListener , Transaction transaction) {
             registerMBean(statManager);
-            return new DefaultSqlXDataSource(clusterManager ,datasourceManager, eventListener , compositeRouteGroup);
+            SqlXConfiguration configuration = properties.getConfig();
+            DefaultRouteGroup drg = DefaultRoutingGroupBuilder.builder()
+                    .sqlXConfiguration(configuration)
+                    .sqlParser(configuration.getSqlParserInstance())
+                    .transaction(transaction)
+                    .datasourceManager(datasourceManager)
+                    .build();
+            CompositeRouteGroup compositeRoutingGroup = new CompositeRouteGroup(eventListener, transaction);
+            compositeRoutingGroup.installLast(drg);
+            return new DefaultSqlXDataSource(clusterManager ,datasourceManager, eventListener , compositeRoutingGroup);
         }
 
     }
