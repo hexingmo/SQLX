@@ -147,6 +147,14 @@ public class ClusterConfiguration implements ConfigurationValidator {
                 throw new ConfigurationException(String.format("readLoadBalanceClass [%s] Class Not Found" , this.readLoadBalanceClass));
             }
         }
+
+        if (CollectionUtils.isEmpty(this.writableNodes)) {
+            throw new ConfigurationException(String.format("At least one writable node is required in the [%s] cluster." , name));
+        }
+
+        if (CollectionUtils.isEmpty(this.readableNodes)) {
+            throw new ConfigurationException(String.format("At least one readable node is required in the [%s] cluster." , name));
+        }
     }
 
 
