@@ -40,8 +40,8 @@ public class RoutingNameSqlHintRouteRule extends AbstractRouteRule {
 
     private final SqlXConfiguration configuration;
 
-    public RoutingNameSqlHintRouteRule(Integer priority, SqlParser sqlParser, LoadBalance readLoadBalance, LoadBalance writeLoadBalance, SqlXConfiguration configuration) {
-        super(priority, sqlParser, readLoadBalance, writeLoadBalance);
+    public RoutingNameSqlHintRouteRule(Integer priority, SqlParser sqlParser, SqlXConfiguration configuration) {
+        super(priority, sqlParser);
         this.configuration = configuration;
     }
 

@@ -20,12 +20,12 @@ import com.github.sqlx.config.SqlXConfiguration;
 import com.github.sqlx.jdbc.datasource.DatasourceManager;
 import com.github.sqlx.jdbc.transaction.Transaction;
 import com.github.sqlx.loadbalance.LoadBalance;
+import com.github.sqlx.rule.DefaultDataSourceRouteRule;
 import com.github.sqlx.rule.SingleDatasourceRouteRule;
 import com.github.sqlx.rule.TransactionRouteRule;
 import com.github.sqlx.sql.parser.SqlParser;
 import com.github.sqlx.rule.ForceTargetRouteRule;
 import com.github.sqlx.rule.NullSqlAttributeRouteRule;
-import com.github.sqlx.rule.RandomRouteWritableRule;
 import com.github.sqlx.rule.ReadWriteSplittingRouteRule;
 import com.github.sqlx.rule.RoutingNameSqlHintRouteRule;
 
@@ -85,11 +85,11 @@ public class DefaultRoutingGroupBuilder {
         DefaultRouteGroup routingGroup = new DefaultRouteGroup(sqlParser);
         routingGroup.install(new SingleDatasourceRouteRule(-10 , sqlParser , readLoadBalance , writeLoadBalance , datasourceManager));
         routingGroup.install(new TransactionRouteRule(0 , sqlParser , readLoadBalance , writeLoadBalance , transaction));
-        routingGroup.install(new ForceTargetRouteRule(10 , sqlParser ,  readLoadBalance , writeLoadBalance , sqlXConfiguration));
-        routingGroup.install(new RoutingNameSqlHintRouteRule(30 , sqlParser ,  readLoadBalance , writeLoadBalance , sqlXConfiguration));
+        routingGroup.install(new ForceTargetRouteRule(10 , sqlParser , sqlXConfiguration));
+        routingGroup.install(new RoutingNameSqlHintRouteRule(30 , sqlParser , sqlXConfiguration));
         routingGroup.install(new ReadWriteSplittingRouteRule(40 , sqlParser ,  readLoadBalance , writeLoadBalance));
         routingGroup.install(new NullSqlAttributeRouteRule(50 , sqlParser ,  readLoadBalance , writeLoadBalance));
-        routingGroup.install(new RandomRouteWritableRule(60 , sqlParser ,  readLoadBalance , writeLoadBalance , sqlXConfiguration));
+        routingGroup.install(new DefaultDataSourceRouteRule(60 , sqlParser , datasourceManager));
         return routingGroup;
     }
 }

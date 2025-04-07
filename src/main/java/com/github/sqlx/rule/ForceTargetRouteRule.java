@@ -42,8 +42,8 @@ public class ForceTargetRouteRule extends AbstractRouteRule {
 
     private final SqlXConfiguration configuration;
 
-    public ForceTargetRouteRule(Integer priority, SqlParser sqlParser, LoadBalance readLoadBalance, LoadBalance writeLoadBalance, SqlXConfiguration configuration) {
-        super(priority, sqlParser, readLoadBalance, writeLoadBalance);
+    public ForceTargetRouteRule(Integer priority, SqlParser sqlParser, SqlXConfiguration configuration) {
+        super(priority, sqlParser);
         this.configuration = configuration;
     }
 

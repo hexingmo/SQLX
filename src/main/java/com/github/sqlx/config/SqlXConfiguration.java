@@ -19,7 +19,11 @@ package com.github.sqlx.config;
 import com.github.sqlx.NodeAttribute;
 import com.github.sqlx.exception.ConfigurationException;
 import com.github.sqlx.exception.ManagementException;
-import com.github.sqlx.sql.parser.*;
+import com.github.sqlx.sql.parser.AbstractSqlParser;
+import com.github.sqlx.sql.parser.AnnotationSqlParser;
+import com.github.sqlx.sql.parser.DefaultAnnotationSqlHintParser;
+import com.github.sqlx.sql.parser.JSqlParser;
+import com.github.sqlx.sql.parser.SqlParser;
 import com.github.sqlx.util.CollectionUtils;
 import com.github.sqlx.util.StringUtils;
 import com.google.gson.annotations.Expose;
@@ -29,7 +33,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.joor.Reflect;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -54,9 +66,6 @@ public class SqlXConfiguration implements ConfigurationValidator {
 
     @Expose
     private String defaultCluster;
-
-    @Expose
-    private Boolean clusterEnable = false;
 
     private SqlParser sqlParserInstance;
 
@@ -126,18 +135,6 @@ public class SqlXConfiguration implements ConfigurationValidator {
         Collection<String> dataSourceNameSubtract = CollectionUtils.subtract(dataSourceNames, new HashSet<>(dataSourceNames));
         if (CollectionUtils.isNotEmpty(dataSourceNameSubtract)) {
             throw new ConfigurationException(String.format("dataSources name duplicate %s" , dataSourceNameSubtract));
-        }
-
-        if (Boolean.FALSE.equals(clusterEnable)) {
-            List<String> defaultedDataSourceNames = dataSources.stream()
-                    .filter(DataSourceConfiguration::getDefaulted)
-                    .map(DataSourceConfiguration::getName)
-                    .collect(Collectors.toList());
-            if (CollectionUtils.isEmpty(defaultedDataSourceNames)) {
-                throw new ConfigurationException("When clusterEnable is false, it is must to configure defaulted dataSource");
-            } else if (defaultedDataSourceNames.size() > 1) {
-                throw new ConfigurationException("When clusterEnable is false, it is must to configure only one defaulted dataSource");
-            }
         }
 
         validateCluster();
@@ -212,12 +209,6 @@ public class SqlXConfiguration implements ConfigurationValidator {
     }
 
     private void validateCluster() {
-        if (Boolean.TRUE.equals(clusterEnable) && CollectionUtils.isEmpty(clusters)) {
-            throw new ConfigurationException("clusterEnable is true, it is must to configure clusters");
-        }
-        if (Boolean.FALSE.equals(clusterEnable)) {
-            return;
-        }
         List<String> clusterNames = clusters.stream().map(ClusterConfiguration::getName).collect(Collectors.toList());
         Collection<String> clusterNameSubtract = CollectionUtils.subtract(clusterNames, new HashSet<>(clusterNames));
         if (CollectionUtils.isNotEmpty(clusterNameSubtract)) {

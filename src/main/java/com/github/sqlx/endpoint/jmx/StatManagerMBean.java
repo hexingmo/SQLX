@@ -48,12 +48,6 @@ public interface StatManagerMBean {
      */
     TabularData getDataSourceList() throws JMException;
 
-    /**
-     * Checks if the cluster feature is enabled.
-     *
-     * @return true if the cluster feature is enabled, false otherwise.
-     */
-    boolean getClusterEnable();
 
     /**
      * Returns the default cluster name.

@@ -30,8 +30,6 @@ import com.github.sqlx.jdbc.datasource.DataSourceWrapper;
 import com.github.sqlx.jdbc.datasource.DatasourceManager;
 import com.github.sqlx.jdbc.transaction.Transaction;
 import com.github.sqlx.listener.EventListener;
-import com.github.sqlx.loadbalance.ReadLoadBalanceType;
-import com.github.sqlx.loadbalance.WriteLoadBalanceType;
 import com.github.sqlx.rule.group.CompositeRouteGroup;
 import com.github.sqlx.rule.group.DefaultRouteGroup;
 import com.github.sqlx.rule.group.DefaultRoutingGroupBuilder;
@@ -114,9 +112,6 @@ public class StatManager implements StatManagerMBean {
     @Override
     public void removeNodeInCluster(String clusterName, String nodeName) {
         log.info("Attempting to remove node: {} from cluster: {}", nodeName, clusterName);
-        if (Boolean.FALSE.equals(sqlXConfiguration.getClusterEnable())) {
-            throw new ManagementException("Cluster mode is not enabled. Please check if the cluster mode is enabled in the configuration.");
-        }
         if (clusterManager == null) {
             throw new ManagementException("clusterManager is null. Please check if the cluster mode is enabled in the configuration. Cannot perform the operation to remove a node from the cluster.");
         }
@@ -126,9 +121,6 @@ public class StatManager implements StatManagerMBean {
     @Override
     public void addNodeInCluster(String clusterName, String nodeName) {
         log.info("Attempting to add node: {} to cluster: {}", nodeName, clusterName);
-        if (Boolean.FALSE.equals(sqlXConfiguration.getClusterEnable())) {
-            throw new ManagementException("Cluster mode is not enabled. Please check if the cluster mode is enabled in the configuration.");
-        }
         if (clusterManager == null) {
             throw new ManagementException("clusterManager is null. Please check if the cluster mode is enabled in the configuration. Cannot perform the operation to remove a node from the cluster.");
         }
@@ -156,11 +148,6 @@ public class StatManager implements StatManagerMBean {
             data.put(getDataSourceCompositeData(dsConf));
         }
         return data;
-    }
-
-    @Override
-    public boolean getClusterEnable() {
-        return sqlXConfiguration.getClusterEnable();
     }
 
     @Override
@@ -223,9 +210,6 @@ public class StatManager implements StatManagerMBean {
 
     @Override
     public synchronized void addCluster(String clusterConfJson) {
-        if (Boolean.FALSE.equals(sqlXConfiguration.getClusterEnable())) {
-            throw new ManagementException("Cluster mode is not enabled. Please check if the cluster mode is enabled in the configuration. Cannot perform the operation to add a cluster.");
-        }
         if (StringUtils.isBlank(clusterConfJson)) {
             throw new ManagementException("clusterConfJson cannot be empty");
         }
