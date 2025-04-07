@@ -38,20 +38,9 @@
   ],
   "properties": [
     {
-      "name": "read-load-balance-type",
-      "type": "com.github.sqlx.loadbalance.ReadLoadBalanceType",
-      "sourceType": "com.github.sqlx.config.LoadBalanceConfiguration"
-    },
-    {
       "name": "sqlx.config",
       "type": "com.github.sqlx.config.SqlXConfiguration",
       "sourceType": "com.github.sqlx.integration.springboot.SqlXProperties"
-    },
-    {
-      "name": "sqlx.config.cluster-enable",
-      "type": "java.lang.Boolean",
-      "sourceType": "com.github.sqlx.config.SqlXConfiguration",
-      "defaultValue": false
     },
     {
       "name": "sqlx.config.clusters",
@@ -81,13 +70,13 @@
       "sourceType": "com.github.sqlx.config.ClusterConfiguration"
     },
     {
-      "name": "sqlx.config.clusters.read-load-balance-type",
-      "type": "com.github.sqlx.loadbalance.ReadLoadBalanceType",
+      "name": "sqlx.config.clusters.write-load-balance-class",
+      "type": "java.lang.String",
       "sourceType": "com.github.sqlx.config.ClusterConfiguration"
     },
     {
-      "name": "sqlx.config.clusters.write-load-balance-type",
-      "type": "com.github.sqlx.loadbalance.WriteLoadBalanceType",
+      "name": "sqlx.config.clusters.read-load-balance-class",
+      "type": "java.lang.String",
       "sourceType": "com.github.sqlx.config.ClusterConfiguration"
     },
     {
@@ -140,21 +129,9 @@
       "sourceType": "com.github.sqlx.config.DataSourceConfiguration"
     },
     {
-      "name": "sqlx.config.data-sources.node-attribute",
-      "type": "com.github.sqlx.NodeAttribute",
-      "description": "Routing node attributes",
-      "sourceType": "com.github.sqlx.config.DataSourceConfiguration"
-    },
-    {
       "name": "sqlx.config.data-sources.props",
       "type": "java.util.Map<java.lang.String,java.lang.String>",
       "description": "Native data source property configuration",
-      "sourceType": "com.github.sqlx.config.DataSourceConfiguration"
-    },
-    {
-      "name": "sqlx.config.data-sources.type",
-      "type": "com.github.sqlx.NodeType",
-      "description": "The type of the routing node",
       "sourceType": "com.github.sqlx.config.DataSourceConfiguration"
     },
     {
@@ -162,11 +139,6 @@
       "type": "java.lang.Double",
       "description": "load balancing weight",
       "sourceType": "com.github.sqlx.config.DataSourceConfiguration"
-    },
-    {
-      "name": "sqlx.config.default-cluster",
-      "type": "java.lang.String",
-      "sourceType": "com.github.sqlx.config.SqlXConfiguration"
     },
     {
       "name": "sqlx.config.enabled",
@@ -294,35 +266,9 @@
       "defaultValue": true
     },
     {
-      "name": "sqlx.config.read-load-balance-type",
-      "type": "com.github.sqlx.loadbalance.ReadLoadBalanceType",
-      "sourceType": "com.github.sqlx.config.SqlXConfiguration"
-    },
-    {
       "name": "sqlx.config.sql-parser-class",
       "type": "java.lang.String",
       "sourceType": "com.github.sqlx.config.SqlXConfiguration"
-    },
-    {
-      "name": "sqlx.config.strict-sql-parsing",
-      "type": "java.lang.Boolean",
-      "sourceType": "com.github.sqlx.config.SqlXConfiguration",
-      "defaultValue": false
-    },
-    {
-      "name": "sqlx.config.writable-routing-node-attributes",
-      "type": "java.util.List<com.github.sqlx.NodeAttribute>",
-      "sourceType": "com.github.sqlx.config.SqlXConfiguration"
-    },
-    {
-      "name": "sqlx.config.write-load-balance-type",
-      "type": "com.github.sqlx.loadbalance.WriteLoadBalanceType",
-      "sourceType": "com.github.sqlx.config.SqlXConfiguration"
-    },
-    {
-      "name": "write-load-balance-type",
-      "type": "com.github.sqlx.loadbalance.WriteLoadBalanceType",
-      "sourceType": "com.github.sqlx.config.LoadBalanceConfiguration"
     }
   ],
   "hints": []
