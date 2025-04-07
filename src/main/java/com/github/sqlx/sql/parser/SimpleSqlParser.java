@@ -16,17 +16,10 @@ import com.github.sqlx.util.StringUtils;
  * @author He Xing Mo
  * @since 1.0
  */
-public class SimpleSqlParser extends AbstractSqlParser {
-
-    public SimpleSqlParser() {}
-
-    public SimpleSqlParser(SqlXConfiguration routingConf) {
-        super(routingConf);
-    }
+public class SimpleSqlParser implements SqlParser {
 
     @Override
-    protected SqlAttribute internalParse(String sql) throws Exception {
-
+    public SqlAttribute parse(String sql) {
         SqlType sqlType = SqlType.OTHER;
         boolean isRead = StringUtils.startsWithIgnoreCase(sql, "select");
         if (isRead) {

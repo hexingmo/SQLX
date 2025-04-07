@@ -20,11 +20,7 @@ import com.github.sqlx.NodeAttribute;
 import com.github.sqlx.exception.ConfigurationException;
 import com.github.sqlx.exception.ManagementException;
 import com.github.sqlx.exception.SqlXRuntimeException;
-import com.github.sqlx.sql.parser.AbstractSqlParser;
-import com.github.sqlx.sql.parser.AnnotationSqlParser;
-import com.github.sqlx.sql.parser.DefaultAnnotationSqlHintParser;
-import com.github.sqlx.sql.parser.JSqlParser;
-import com.github.sqlx.sql.parser.SqlParser;
+import com.github.sqlx.sql.parser.*;
 import com.github.sqlx.util.CollectionUtils;
 import com.github.sqlx.util.StringUtils;
 import com.google.gson.annotations.Expose;
@@ -83,16 +79,12 @@ public class SqlXConfiguration implements ConfigurationValidator {
         if (Objects.isNull(this.sqlParserInstance)) {
             SqlParser sqlParser;
             if (StringUtils.isNotBlank(this.sqlParserClass)) {
-                if (AbstractSqlParser.class.isAssignableFrom(Reflect.onClass(this.sqlParserClass).type())) {
-                    sqlParser = Reflect.onClass(this.sqlParserClass).create(this).get();
-                } else {
-                    sqlParser = Reflect.onClass(this.sqlParserClass).create().get();
-                }
+                sqlParser = Reflect.onClass(this.sqlParserClass).create().get();
             } else {
                 log.warn("sqlParserClass is empty , default use {}" , JSqlParser.class.getName());
-                sqlParser = new JSqlParser(this);
+                sqlParser = new JSqlParser();
             }
-            this.sqlParserInstance = new AnnotationSqlParser(sqlParser , new DefaultAnnotationSqlHintParser());
+            this.sqlParserInstance = new AnnotationSqlParser(new FailBehaviorSqlParser(sqlParser, this.sqlParsingFailBehavior) , new DefaultAnnotationSqlHintParser());
         }
         return this.sqlParserInstance;
     }

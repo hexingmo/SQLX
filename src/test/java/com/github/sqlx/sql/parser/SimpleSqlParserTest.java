@@ -1,6 +1,5 @@
 package com.github.sqlx.sql.parser;
 
-import com.github.sqlx.config.SqlXConfiguration;
 import com.github.sqlx.sql.SqlAttribute;
 import com.github.sqlx.sql.SqlType;
 import org.junit.jupiter.api.Test;
@@ -16,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class SimpleSqlParserTest {
 
-    static SqlParser sqlParser = new SimpleSqlParser(new SqlXConfiguration());
+    static SqlParser sqlParser = new SimpleSqlParser();
 
 
     @Test
