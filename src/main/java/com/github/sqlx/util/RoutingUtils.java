@@ -16,13 +16,7 @@
 
 package com.github.sqlx.util;
 
-import com.github.sqlx.NodeType;
-import com.github.sqlx.jdbc.ProxyConnection;
 import com.github.sqlx.listener.RouteInfo;
-
-
-import java.sql.Connection;
-import java.util.Objects;
 
 /**
  * @author He Xing Mo
@@ -40,28 +34,4 @@ public final class RoutingUtils {
         }
     }
 
-    public static boolean isRoutingRead(Connection connection) {
-        return isRoutingTarget(NodeType.READ , connection);
-    }
-
-    public static boolean isRoutingWrite(Connection connection) {
-        return isRoutingTarget(NodeType.WRITE , connection);
-    }
-
-    public static boolean isRoutingTarget(NodeType targetMode , Connection connection) {
-        if (Objects.isNull(connection)) {
-            return false;
-        }
-
-        if (connection instanceof ProxyConnection) {
-            // TODO 重构影响点
-            ProxyConnection rc = (ProxyConnection) connection;
-//            NodeType nodeType = rc.getRoutingInfoList().get(0).getHitNodeAttr().getNodeType();
-//            if (Objects.isNull(nodeType)) {
-//                return false;
-//            }
-//            return Objects.equals(targetMode, nodeType) || Objects.equals(NodeType.READ_WRITE, nodeType);
-        }
-        return false;
-    }
 }
