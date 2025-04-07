@@ -17,7 +17,6 @@
 package com.github.sqlx.rule.group;
 
 import com.github.sqlx.NodeAttribute;
-import com.github.sqlx.NodeState;
 import com.github.sqlx.listener.RouteInfo;
 import com.github.sqlx.rule.PriorityRouteRule;
 import com.github.sqlx.rule.RoutingKey;
@@ -64,6 +63,7 @@ public class DefaultRouteGroup extends AbstractComparableRouteGroup<SqlAttribute
             }
             if (Objects.nonNull(target.getNodeState()) && !target.getNodeState().isAvailable()) {
                 log.warn("Node with state '{}' is unavailable, ignoring routing rule '{}'.", target.getNodeState(), routingRule.getClass().getSimpleName());
+                target = null;
                 continue;
             }
             rule = routingRule;
