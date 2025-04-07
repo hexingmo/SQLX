@@ -24,8 +24,11 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 
 /**
@@ -57,7 +60,7 @@ public class PointcutConfiguration implements ConfigurationValidator {
      * Nodes: Specifies a list of nodes, used for detailed routing within the cluster.
      */
     @Expose
-    private List<String> nodes;
+    private List<String> nodes = new ArrayList<>();
 
     /**
      * Propagation: Indicates whether the routing behavior should be propagated, default is true.
