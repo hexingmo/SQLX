@@ -30,7 +30,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.sql.Driver;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Represents the configuration information of a data source.
@@ -108,7 +107,7 @@ public class DataSourceConfiguration implements ConfigurationValidator {
      * Native data source property configuration
      */
     @Expose
-    private Map<String , String> props;
+    private Map<String , String> props = new HashMap<>();
 
     /**
      * Gets the routing node attribute instance
@@ -130,10 +129,11 @@ public class DataSourceConfiguration implements ConfigurationValidator {
      * @param value property value
      */
     public void addProperty(String key, String value) {
-        if (Objects.isNull(props)) {
-            this.props = new HashMap<>(5);
-        }
         this.props.put(key, value);
+    }
+
+    public String removeProperty(String key) {
+        return this.props.remove(key);
     }
 
 
@@ -189,8 +189,13 @@ public class DataSourceConfiguration implements ConfigurationValidator {
         } catch (ClassNotFoundException e) {
             throw new ConfigurationException(String.format("%s Class Not Found" , dataSourceClass));
         }
-        if (StringUtils.isBlank(destroyMethod)) {
-            throw new ConfigurationException("dataSources [destroyMethod] attr must not be null");
+
+        if (StringUtils.isNotBlank(destroyMethod)) {
+            try {
+                dsClass.getDeclaredMethod(destroyMethod);
+            } catch (NoSuchMethodException e) {
+                throw new ConfigurationException(String.format("Destroy Method [%s] does not exist in %s" , destroyMethod , dataSourceClass));
+            }
         }
 
         if (StringUtils.isNotBlank(initMethod)) {
@@ -199,12 +204,6 @@ public class DataSourceConfiguration implements ConfigurationValidator {
             } catch (NoSuchMethodException e) {
                 throw new ConfigurationException(String.format("Init Method [%s] does not exist in %s" , initMethod , dataSourceClass));
             }
-        }
-
-        try {
-            dsClass.getDeclaredMethod(destroyMethod);
-        } catch (NoSuchMethodException e) {
-            throw new ConfigurationException(String.format("Destroy Method [%s] does not exist in %s" , destroyMethod , dataSourceClass));
         }
 
         if (MapUtils.isEmpty(props)) {
