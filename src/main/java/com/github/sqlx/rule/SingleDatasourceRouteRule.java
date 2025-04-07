@@ -3,7 +3,6 @@ package com.github.sqlx.rule;
 import com.github.sqlx.NodeAttribute;
 import com.github.sqlx.jdbc.datasource.DataSourceWrapper;
 import com.github.sqlx.jdbc.datasource.DatasourceManager;
-import com.github.sqlx.loadbalance.LoadBalance;
 import com.github.sqlx.sql.SqlAttribute;
 import com.github.sqlx.sql.parser.SqlParser;
 
