@@ -46,7 +46,7 @@ public class DefaultRouteGroup extends AbstractComparableRouteGroup<SqlAttribute
 
 
     @Override
-    public RouteInfo route(RoutingKey key) {
+    public final RouteInfo route(RoutingKey key) {
 
         RouteInfo routeInfo = new RouteInfo();
         NodeAttribute target = null;
