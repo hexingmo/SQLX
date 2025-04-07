@@ -3,7 +3,7 @@ package com.github.sqlx.rule.group;
 import com.github.sqlx.config.SqlXConfiguration;
 import com.github.sqlx.jdbc.transaction.Transaction;
 import com.github.sqlx.loadbalance.LoadBalance;
-import com.github.sqlx.rule.ForceTargetRouteRule;
+import com.github.sqlx.rule.ForceRouteRule;
 import com.github.sqlx.rule.NullSqlAttributeRouteRule;
 import com.github.sqlx.rule.ReadWriteSplittingRouteRule;
 import com.github.sqlx.rule.RouteWritableRule;
@@ -58,7 +58,7 @@ public class ClusterRoutingGroupBuilder {
     public DefaultRouteGroup build() {
         DefaultRouteGroup routingGroup = new DefaultRouteGroup(sqlParser);
         routingGroup.install(new TransactionRouteRule(0 , sqlParser ,configuration , transaction));
-        routingGroup.install(new ForceTargetRouteRule(10 , sqlParser , configuration));
+        routingGroup.install(new ForceRouteRule(10 , sqlParser , configuration));
         routingGroup.install(new ReadWriteSplittingRouteRule(20 , sqlParser ,  readLoadBalance , writeLoadBalance));
         routingGroup.install(new NullSqlAttributeRouteRule(30 , sqlParser ,  readLoadBalance , writeLoadBalance));
         routingGroup.install(new RouteWritableRule(40 , sqlParser ,  readLoadBalance , writeLoadBalance));

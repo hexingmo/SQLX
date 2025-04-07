@@ -54,8 +54,8 @@
         <assertj-core.version>3.23.1</assertj-core.version>
         <HikariCP.version>3.4.5</HikariCP.version>
         <jmh.version>1.36</jmh.version>
-        <mybatis-spring-boot-starter.version>2.3.0</mybatis-spring-boot-starter.version>
         <commons-dbcp2.version>2.12.0</commons-dbcp2.version>
+        <mockito.version>5.0.0</mockito.version>
         <maven-surefire-plugin.version>3.1.0</maven-surefire-plugin.version>
         <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
         <maven-javadoc-plugin.version>3.3.1</maven-javadoc-plugin.version>
@@ -206,6 +206,21 @@
             <version>${spring-boot.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-inline</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>

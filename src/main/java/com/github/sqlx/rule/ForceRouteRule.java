@@ -20,7 +20,6 @@ import com.github.sqlx.RoutingContext;
 import com.github.sqlx.NodeAttribute;
 import com.github.sqlx.config.SqlXConfiguration;
 import com.github.sqlx.integration.springboot.RouteAttribute;
-import com.github.sqlx.loadbalance.LoadBalance;
 import com.github.sqlx.sql.SqlAttribute;
 import com.github.sqlx.sql.parser.SqlParser;
 import com.github.sqlx.util.CollectionUtils;
@@ -36,13 +35,13 @@ import java.util.List;
  * @author He Xing Mo
  * @since 1.0
  *
- * @see RoutingContext#force(RouteAttribute) ()
+ * @see RoutingContext#force(RouteAttribute)
  */
-public class ForceTargetRouteRule extends AbstractRouteRule {
+public class ForceRouteRule extends AbstractRouteRule {
 
     private final SqlXConfiguration configuration;
 
-    public ForceTargetRouteRule(Integer priority, SqlParser sqlParser, SqlXConfiguration configuration) {
+    public ForceRouteRule(Integer priority, SqlParser sqlParser, SqlXConfiguration configuration) {
         super(priority, sqlParser);
         this.configuration = configuration;
     }

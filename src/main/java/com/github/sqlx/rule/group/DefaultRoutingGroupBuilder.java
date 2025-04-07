@@ -23,7 +23,7 @@ import com.github.sqlx.rule.DefaultDataSourceRouteRule;
 import com.github.sqlx.rule.SingleDatasourceRouteRule;
 import com.github.sqlx.rule.TransactionRouteRule;
 import com.github.sqlx.sql.parser.SqlParser;
-import com.github.sqlx.rule.ForceTargetRouteRule;
+import com.github.sqlx.rule.ForceRouteRule;
 import com.github.sqlx.rule.RoutingNameSqlHintRouteRule;
 
 /**
@@ -68,7 +68,7 @@ public class DefaultRoutingGroupBuilder {
         DefaultRouteGroup routingGroup = new DefaultRouteGroup(sqlParser);
         routingGroup.install(new SingleDatasourceRouteRule(0 , sqlParser , datasourceManager));
         routingGroup.install(new TransactionRouteRule(10 , sqlParser , configuration , transaction));
-        routingGroup.install(new ForceTargetRouteRule(20 , sqlParser , configuration));
+        routingGroup.install(new ForceRouteRule(20 , sqlParser , configuration));
         routingGroup.install(new RoutingNameSqlHintRouteRule(30 , sqlParser , configuration));
         routingGroup.install(new DefaultDataSourceRouteRule(40 , sqlParser , datasourceManager));
         return routingGroup;
