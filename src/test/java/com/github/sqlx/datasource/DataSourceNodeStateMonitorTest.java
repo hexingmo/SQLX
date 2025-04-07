@@ -1,7 +1,6 @@
 package com.github.sqlx.datasource;
 
 import com.github.sqlx.NodeState;
-import com.github.sqlx.NodeType;
 import com.github.sqlx.jdbc.datasource.DataSourceAttribute;
 import com.github.sqlx.jdbc.datasource.DataSourceNodeStateMonitor;
 import com.github.sqlx.jdbc.datasource.DataSourceWrapper;

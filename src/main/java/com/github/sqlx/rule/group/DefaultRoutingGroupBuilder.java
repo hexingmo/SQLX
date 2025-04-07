@@ -16,7 +16,6 @@
 package com.github.sqlx.rule.group;
 
 
-import com.github.sqlx.NodeAttribute;
 import com.github.sqlx.config.SqlXConfiguration;
 import com.github.sqlx.jdbc.datasource.DatasourceManager;
 import com.github.sqlx.jdbc.transaction.Transaction;
