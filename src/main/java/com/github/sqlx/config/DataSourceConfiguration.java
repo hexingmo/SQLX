@@ -18,7 +18,6 @@ package com.github.sqlx.config;
 
 import com.github.sqlx.NodeState;
 import com.github.sqlx.NodeAttribute;
-import com.github.sqlx.NodeType;
 import com.github.sqlx.jdbc.datasource.DataSourceAttribute;
 import com.github.sqlx.exception.ConfigurationException;
 import com.github.sqlx.util.JdbcUtils;

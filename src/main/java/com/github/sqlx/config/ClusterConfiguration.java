@@ -17,7 +17,6 @@
 package com.github.sqlx.config;
 
 import com.github.sqlx.NodeAttribute;
-import com.github.sqlx.NodeType;
 import com.github.sqlx.exception.ConfigurationException;
 import com.github.sqlx.exception.ManagementException;
 import com.github.sqlx.util.CollectionUtils;
@@ -27,8 +26,10 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.sql.Driver;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -54,7 +55,7 @@ public class ClusterConfiguration implements ConfigurationValidator {
      * A set of node identifiers, representing all the nodes in the cluster.
      */
     @Getter
-    private Set<String> nodes = new HashSet<>();;
+    private final Set<String> nodes = new HashSet<>();
 
     /**
      * A list of attributes for routing nodes, describing the characteristics and roles of each node.
