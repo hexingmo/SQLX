@@ -19,6 +19,7 @@ package com.github.sqlx.config;
 import com.github.sqlx.NodeAttribute;
 import com.github.sqlx.exception.ConfigurationException;
 import com.github.sqlx.exception.ManagementException;
+import com.github.sqlx.exception.SqlXRuntimeException;
 import com.github.sqlx.sql.parser.AbstractSqlParser;
 import com.github.sqlx.sql.parser.AnnotationSqlParser;
 import com.github.sqlx.sql.parser.DefaultAnnotationSqlHintParser;
@@ -178,6 +179,20 @@ public class SqlXConfiguration implements ConfigurationValidator {
                 }
             }
         }
+    }
+
+    public String getDefaultClusterName() {
+        if (CollectionUtils.isEmpty(clusters)) {
+            return null;
+        }
+        Optional<ClusterConfiguration> clusterConfiguration = this.clusters
+                .stream()
+                .filter(ClusterConfiguration::getDefaulted)
+                .findFirst();
+        if (!clusterConfiguration.isPresent()) {
+            throw new SqlXRuntimeException("No default cluster found");
+        }
+        return clusterConfiguration.get().getName();
     }
 
     private void validatePointcuts() {

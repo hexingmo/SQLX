@@ -152,7 +152,7 @@ public class StatManager implements StatManagerMBean {
 
     @Override
     public String getDefaultCluster() {
-        return sqlXConfiguration.getDefaultCluster();
+        return null;
     }
 
     @Override
