@@ -54,7 +54,7 @@ import com.github.sqlx.rule.group.ClusterRoutingGroupBuilder;
 import com.github.sqlx.rule.group.CompositeRouteGroup;
 import com.github.sqlx.rule.group.DefaultRouteGroup;
 
-import com.github.sqlx.rule.group.DefaultRoutingGroupBuilder;
+import com.github.sqlx.rule.group.NoneClusterRoutingGroupBuilder;
 import com.github.sqlx.rule.group.RouteGroup;
 import com.github.sqlx.sql.parser.SqlParser;
 import com.github.sqlx.util.StringUtils;
@@ -230,7 +230,7 @@ public class SqlXEnableAutoConfiguration {
         public CompositeRouteGroup routingGroup(SqlXProperties properties, SqlParser sqlParser, Transaction transaction, @Autowired(required = false) List<RouteGroup<?>> routingGroups, EventListener eventListener, DatasourceManager datasourceManager) {
 
             SqlXConfiguration routing = properties.getConfig();
-            DefaultRouteGroup drg = DefaultRoutingGroupBuilder.builder()
+            DefaultRouteGroup drg = NoneClusterRoutingGroupBuilder.builder()
                     .sqlXConfiguration(routing)
                     .sqlParser(sqlParser)
                     .transaction(transaction)
@@ -251,7 +251,7 @@ public class SqlXEnableAutoConfiguration {
         public SqlXDataSource sqlXDataSource(SqlXProperties properties ,StatManager statManager, ClusterManager clusterManager, DatasourceManager datasourceManager, EventListener eventListener , Transaction transaction) {
             registerMBean(statManager);
             SqlXConfiguration configuration = properties.getConfig();
-            DefaultRouteGroup drg = DefaultRoutingGroupBuilder.builder()
+            DefaultRouteGroup drg = NoneClusterRoutingGroupBuilder.builder()
                     .sqlXConfiguration(configuration)
                     .sqlParser(configuration.getSqlParserInstance())
                     .transaction(transaction)
