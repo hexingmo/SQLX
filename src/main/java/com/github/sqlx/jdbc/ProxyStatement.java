@@ -70,18 +70,32 @@ public class ProxyStatement extends AbstractStatementAdapter {
     private String cursorName;
 
 
-    public ProxyStatement(SqlXDataSource dataSource , Integer resultSetType, Integer resultSetConcurrency , Integer resultSetHoldability , EventListener eventListener) {
-        this(dataSource , eventListener);
+    public ProxyStatement(SqlXDataSource dataSource, Integer resultSetType, Integer resultSetConcurrency, Integer resultSetHoldability, EventListener eventListener) {
+        this(dataSource, eventListener);
         if (resultSetType != null) {
+            if (!isValidResultSetType(resultSetType)) {
+                throw new IllegalArgumentException("Invalid resultSetType: " + resultSetType);
+            }
             this.resultSetType = resultSetType;
         }
+
         if (resultSetConcurrency != null) {
+            if (!isValidResultSetConcurrency(resultSetConcurrency)) {
+                throw new IllegalArgumentException("Invalid resultSetConcurrency: " + resultSetConcurrency);
+            }
             this.resultSetConcurrency = resultSetConcurrency;
         }
+
         if (resultSetHoldability != null) {
+            if (!isValidResultSetHoldability(resultSetHoldability)) {
+                throw new IllegalArgumentException("Invalid resultSetHoldability: " + resultSetHoldability);
+            }
             this.resultSetHoldability = resultSetHoldability;
         }
     }
+
+
+
 
     public ProxyStatement(SqlXDataSource dataSource, EventListener eventListener) {
         this.dataSource = dataSource;
@@ -470,6 +484,7 @@ public class ProxyStatement extends AbstractStatementAdapter {
 
     @Override
     public Connection getConnection() throws SQLException {
+        // TODO 返回一个新的还是返回现有的 connection ？
         return dataSource.getConnection();
     }
 
@@ -606,6 +621,22 @@ public class ProxyStatement extends AbstractStatementAdapter {
             statementInfo.addException(e);
             eventListener.onAfterCloseStatement(statementInfo , e);
         }
+    }
+
+    private boolean isValidResultSetType(int resultSetType) {
+        return resultSetType == ResultSet.TYPE_FORWARD_ONLY ||
+                resultSetType == ResultSet.TYPE_SCROLL_INSENSITIVE ||
+                resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE;
+    }
+
+    private boolean isValidResultSetConcurrency(int resultSetConcurrency) {
+        return resultSetConcurrency == ResultSet.CONCUR_READ_ONLY ||
+                resultSetConcurrency == ResultSet.CONCUR_UPDATABLE;
+    }
+
+    private boolean isValidResultSetHoldability(int resultSetHoldability) {
+        return resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT ||
+                resultSetHoldability == ResultSet.CLOSE_CURSORS_AT_COMMIT;
     }
 
 }
