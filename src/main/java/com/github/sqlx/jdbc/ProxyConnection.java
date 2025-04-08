@@ -482,8 +482,7 @@ public class ProxyConnection extends AbstractConnectionAdapter {
             RouteInfo routeInfo = routedDataSource.getRouteInfo();
             this.connectionInfo.setCurrentRouteInfo(routeInfo);
             this.routeInfoList.add(routeInfo);
-            DataSource dataSource = routedDataSource.getDelegate();
-            this.physicalConnection = acquireConnection(dataSource);
+            this.physicalConnection = acquireConnection(routedDataSource);
             DatabaseMetaData metaData = physicalConnection.getMetaData();
             this.databaseMetaData.setDelegate(metaData);
         }

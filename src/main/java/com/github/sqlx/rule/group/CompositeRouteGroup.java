@@ -16,6 +16,7 @@
 
 package com.github.sqlx.rule.group;
 
+import com.github.sqlx.exception.SqlRouteException;
 import com.github.sqlx.exception.SqlXRuntimeException;
 import com.github.sqlx.jdbc.transaction.Transaction;
 import com.github.sqlx.listener.RouteInfo;
@@ -146,7 +147,7 @@ public class CompositeRouteGroup implements RouteGroup<RouteGroup<?>> {
             }
         }
         if (routeInfo == null) {
-            throw new SqlXRuntimeException(String.format("SQL [%s] Not routed to any available node, please check the health status of the nodes" , key.getSql()));
+            throw new SqlRouteException(String.format("SQL [%s] Not routed to any available node, please check the health status of the nodes" , key.getSql()));
         }
     }
 
