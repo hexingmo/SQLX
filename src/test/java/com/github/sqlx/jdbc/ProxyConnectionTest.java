@@ -18,6 +18,7 @@ import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -77,6 +78,16 @@ class ProxyConnectionTest {
         when(routedConnection.getConnection()).thenReturn(physicalConnection);
 //        when(proxyConnection.getConnection(anyString())).thenReturn(routedConnection);
 
+    }
+
+    @Test
+    void testCreateStatement() throws Exception {
+        Statement statement = proxyConnection.createStatement();
+        assertNotNull(statement);
+        assertInstanceOf(ProxyStatement.class , statement);
+        verify(sqlXDataSource, never()).getDataSource(anyString());
+        verify(eventListener, never()).onBeforeCreateStatement(any());
+        verify(eventListener, never()).onAfterCreateStatement(any(), any());
     }
 
     @Test
