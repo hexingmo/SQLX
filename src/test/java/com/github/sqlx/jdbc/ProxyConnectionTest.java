@@ -36,7 +36,7 @@ import static java.sql.Statement.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class ProxyConnectionTest {
+class ProxyConnectionTest {
 
     @Mock
     private SqlXDataSource sqlXDataSource;
@@ -46,6 +46,9 @@ public class ProxyConnectionTest {
 
     @Mock
     private RouteInfo routeInfo;
+
+    @Mock
+    private SqlAttribute sqlAttribute;
 
     @Mock
     private RoutedConnection routedConnection;
@@ -81,10 +84,11 @@ public class ProxyConnectionTest {
     private ProxyConnection proxyConnection;
 
     @BeforeEach
-    public void setUp() throws SQLException, NoSuchFieldException, IllegalAccessException {
+    void setUp() throws SQLException, NoSuchFieldException, IllegalAccessException {
         MockitoAnnotations.openMocks(this);
         when(sqlXDataSource.getDataSource(anyString())).thenReturn(routedDataSource);
         when(routedDataSource.getRouteInfo()).thenReturn(routeInfo);
+        when(routedDataSource.getRouteInfo().getSqlAttribute()).thenReturn(sqlAttribute);
         when(routedConnection.getConnection()).thenReturn(connection);
         when(routedConnection.getNativeSql()).thenReturn("SELECT * FROM table");
         try {
@@ -98,7 +102,7 @@ public class ProxyConnectionTest {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        proxyConnection = new ProxyConnection(mock(SqlXDataSource.class), eventListener);
+        proxyConnection = new ProxyConnection(sqlXDataSource, eventListener);
         Field field = ProxyConnection.class.getDeclaredField("physicalConnection");
         field.setAccessible(true);
         field.set(proxyConnection, physicalConnectionB); // Updated reference
@@ -110,7 +114,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void createStatement_ValidParameters_ReturnsProxyStatement() throws SQLException {
+    void createStatement_ValidParameters_ReturnsProxyStatement() throws SQLException {
         // 准备
         int resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
         int resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
@@ -125,7 +129,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void createStatement_InvalidResultSetType_ThrowsSQLException() {
+    void createStatement_InvalidResultSetType_ThrowsSQLException() {
         // 准备
         int invalidResultSetType = 999; // 无效的 ResultSet 类型
         int resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
@@ -139,7 +143,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void createStatement_InvalidResultSetConcurrency_ThrowsSQLException() {
+    void createStatement_InvalidResultSetConcurrency_ThrowsSQLException() {
         // 准备
         int resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
         int invalidResultSetConcurrency = 999; // 无效的 ResultSet 并发性
@@ -153,7 +157,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void createStatement_InvalidParameters_ThrowsSQLException() {
+    void createStatement_InvalidParameters_ThrowsSQLException() {
         int resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
         int resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
         int resultSetHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
@@ -170,7 +174,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void createStatement_ValidInputs_ReturnsProxyStatement() throws SQLException {
+    void createStatement_ValidInputs_ReturnsProxyStatement() throws SQLException {
         java.sql.Statement statement = proxyConnection.createStatement();
         assertNotNull(statement, "The created statement should not be null");
         
@@ -180,11 +184,12 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void prepareStatement_SuccessfulExecution_ReturnsPreparedStatement() throws SQLException {
+    void prepareStatement_SuccessfulExecution_ReturnsPreparedStatement() throws SQLException {
         String sql = "SELECT * FROM table";
         int resultSetType = 1;
         int resultSetConcurrency = 1;
 
+        when(routedDataSource.getRouteInfo().getSqlAttribute().getNativeSql()).thenReturn(sql);
         PreparedStatement result = proxyConnection.prepareStatement(sql, resultSetType, resultSetConcurrency);
 
         assertNotNull(result);
@@ -193,11 +198,12 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void prepareStatement_ThrowsSQLException_ThrowsSQLException() throws SQLException {
+    void prepareStatement_ThrowsSQLException_ThrowsSQLException() throws SQLException {
         String sql = "SELECT * FROM table";
         int resultSetType = 1;
         int resultSetConcurrency = 1;
 
+        when(routedDataSource.getRouteInfo().getSqlAttribute().getNativeSql()).thenReturn(sql);
         when(connection.prepareStatement(anyString(), anyInt(), anyInt())).thenThrow(SQLException.class);
 
         assertThrows(SQLException.class, () -> {
@@ -209,8 +215,10 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void prepareStatement_ValidSQL_ReturnsPreparedStatement() throws SQLException {
+    void prepareStatement_ValidSQL_ReturnsPreparedStatement() throws SQLException {
         String sql = "SELECT * FROM table";
+
+        when(routedDataSource.getRouteInfo().getSqlAttribute().getNativeSql()).thenReturn(sql);
         PreparedStatement result = proxyConnection.prepareStatement(sql);
 
         assertNotNull(result);
@@ -218,22 +226,22 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void prepareStatement_EmptySQL_ThrowsSQLException() {
+    void prepareStatement_EmptySQL_ThrowsSQLException() {
         assertThrows(SQLException.class, () -> proxyConnection.prepareStatement(""));
     }
 
     @Test
-    public void prepareStatement_ExceptionDuringPrepareStatement_ThrowsSQLException() throws SQLException {
+    void prepareStatement_ExceptionDuringPrepareStatement_ThrowsSQLException() throws SQLException {
         when(connection.prepareStatement(anyString())).thenThrow(SQLException.class);
 
         assertThrows(SQLException.class, () -> proxyConnection.prepareStatement("SELECT * FROM table"));
     }
 
     @Test
-    public void prepareStatement_SuccessfulExecution_ReturnsPreparedStatementWithAutoGeneratedKeys() throws SQLException {
+    void prepareStatement_SuccessfulExecution_ReturnsPreparedStatementWithAutoGeneratedKeys() throws SQLException {
         String sql = "SELECT * FROM table";
         int autoGeneratedKeys = 1;
-
+        when(routedDataSource.getRouteInfo().getSqlAttribute().getNativeSql()).thenReturn(sql);
         PreparedStatement result = proxyConnection.prepareStatement(sql, autoGeneratedKeys);
 
         assertNotNull(result);
@@ -242,10 +250,11 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void prepareStatement_SQLExceptionThrown_ThrowsSQLException() throws SQLException {
+    void prepareStatement_SQLExceptionThrown_ThrowsSQLException() throws SQLException {
         String sql = "SELECT * FROM table";
         int autoGeneratedKeys = 1;
 
+        when(routedDataSource.getRouteInfo().getSqlAttribute().getNativeSql()).thenReturn(sql);
         when(connection.prepareStatement(anyString(), anyInt())).thenThrow(SQLException.class);
 
         assertThrows(SQLException.class, () -> proxyConnection.prepareStatement(sql, autoGeneratedKeys));
@@ -254,10 +263,11 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void prepareStatement_SuccessfulExecution_ReturnsPreparedStatementWithColumnIndexes() throws SQLException {
+    void prepareStatement_SuccessfulExecution_ReturnsPreparedStatementWithColumnIndexes() throws SQLException {
         String sql = "SELECT * FROM table";
         int[] columnIndexes = {1, 2};
 
+        when(routedDataSource.getRouteInfo().getSqlAttribute().getNativeSql()).thenReturn(sql);
         PreparedStatement result = proxyConnection.prepareStatement(sql, columnIndexes);
 
         assertNotNull(result);
@@ -266,10 +276,11 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void prepareStatement_ConnectionException_ThrowsSQLExceptionWithColumnIndexes() throws SQLException {
+    void prepareStatement_ConnectionException_ThrowsSQLExceptionWithColumnIndexes() throws SQLException {
         String sql = "SELECT * FROM table";
         int[] columnIndexes = {1, 2};
 
+        when(routedDataSource.getRouteInfo().getSqlAttribute().getNativeSql()).thenReturn(sql);
         when(routedConnection.getConnection()).thenThrow(SQLException.class);
 
         assertThrows(SQLException.class, () -> {
@@ -281,10 +292,11 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void prepareStatement_PrepareStatementException_ThrowsSQLExceptionWithColumnIndexes() throws SQLException {
+    void prepareStatement_PrepareStatementException_ThrowsSQLExceptionWithColumnIndexes() throws SQLException {
         String sql = "SELECT * FROM table";
         int[] columnIndexes = {1, 2};
 
+        when(routedDataSource.getRouteInfo().getSqlAttribute().getNativeSql()).thenReturn(sql);
         when(connection.prepareStatement(anyString(), any(int[].class))).thenThrow(SQLException.class);
 
         assertThrows(SQLException.class, () -> {
@@ -296,12 +308,13 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void prepareStatement_ConnectionException_ThrowsSQLException() throws SQLException {
+    void prepareStatement_ConnectionException_ThrowsSQLException() throws SQLException {
         String sql = "SELECT * FROM table";
         int resultSetType = 1;
         int resultSetConcurrency = 2;
         int resultSetHoldability = 3;
 
+        when(routedDataSource.getRouteInfo().getSqlAttribute().getNativeSql()).thenReturn(sql);
         when(routedConnection.getConnection()).thenThrow(new SQLException("Connection error"));
 
         assertThrows(SQLException.class, () -> {
@@ -313,12 +326,13 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void prepareStatement_PreparedStatementException_ThrowsSQLException() throws SQLException {
+    void prepareStatement_PreparedStatementException_ThrowsSQLException() throws SQLException {
         String sql = "SELECT * FROM table";
         int resultSetType = 1;
         int resultSetConcurrency = 2;
         int resultSetHoldability = 3;
 
+        when(routedDataSource.getRouteInfo().getSqlAttribute().getNativeSql()).thenReturn(sql);
         when(connection.prepareStatement(anyString(), anyInt(), anyInt(), anyInt())).thenThrow(new SQLException("Prepare statement error"));
 
         assertThrows(SQLException.class, () -> {
@@ -330,10 +344,11 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void prepareStatement_ValidSQLAndColumnNames_ReturnsPreparedStatement() throws SQLException {
+    void prepareStatement_ValidSQLAndColumnNames_ReturnsPreparedStatement() throws SQLException {
         String sql = "SELECT * FROM table";
         String[] columnNames = {"column1", "column2"};
 
+        when(routedDataSource.getRouteInfo().getSqlAttribute().getNativeSql()).thenReturn(sql);
         PreparedStatement result = proxyConnection.prepareStatement(sql, columnNames);
 
         assertNotNull(result);
@@ -341,10 +356,11 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void prepareStatement_EmptySQL_ReturnsPreparedStatement() throws SQLException {
+    void prepareStatement_EmptySQL_ReturnsPreparedStatement() throws SQLException {
         String sql = "";
         String[] columnNames = {"column1", "column2"};
 
+        when(routedDataSource.getRouteInfo().getSqlAttribute().getNativeSql()).thenReturn(sql);
         PreparedStatement result = proxyConnection.prepareStatement(sql, columnNames);
 
         assertNotNull(result);
@@ -352,10 +368,11 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void prepareStatement_EmptyColumnNames_ReturnsPreparedStatement() throws SQLException {
+    void prepareStatement_EmptyColumnNames_ReturnsPreparedStatement() throws SQLException {
         String sql = "SELECT * FROM table";
         String[] columnNames = {};
 
+        when(routedDataSource.getRouteInfo().getSqlAttribute().getNativeSql()).thenReturn(sql);
         PreparedStatement result = proxyConnection.prepareStatement(sql, columnNames);
 
         assertNotNull(result);
@@ -363,7 +380,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void prepareCall_SuccessfulExecution_ReturnsCallableStatement() throws SQLException {
+    void prepareCall_SuccessfulExecution_ReturnsCallableStatement() throws SQLException {
         when(connection.prepareCall(anyString())).thenReturn(mock(CallableStatement.class));
         when(routedDataSource.getConnection()).thenReturn(connection);
 
@@ -375,7 +392,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void prepareCall_SQLExceptionDuringExecution_ThrowsSQLException() throws SQLException {
+    void prepareCall_SQLExceptionDuringExecution_ThrowsSQLException() throws SQLException {
         when(routedDataSource.getConnection()).thenThrow(SQLException.class);
 
         assertThrows(SQLException.class, () -> proxyConnection.prepareCall("testSql"));
@@ -384,7 +401,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void prepareCall_SuccessfulExecution_ReturnsCallableStatementWithParams() throws SQLException {
+    void prepareCall_SuccessfulExecution_ReturnsCallableStatementWithParams() throws SQLException {
         when(connection.prepareCall(anyString(), anyInt(), anyInt())).thenReturn(mock(CallableStatement.class));
         when(routedDataSource.getConnection()).thenReturn(connection);
 
@@ -396,7 +413,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void prepareCall_ExceptionDuringExecution_ThrowsSQLExceptionWithParams() throws SQLException {
+    void prepareCall_ExceptionDuringExecution_ThrowsSQLExceptionWithParams() throws SQLException {
         when(routedDataSource.getConnection()).thenThrow(SQLException.class);
 
         assertThrows(SQLException.class, () -> {
@@ -408,7 +425,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void prepareCall_ValidSQL_ReturnsCallableStatement_B() throws SQLException {
+    void prepareCall_ValidSQL_ReturnsCallableStatement_B() throws SQLException {
         String sql = "CALL my_procedure()";
         CallableStatement result = proxyConnection.prepareCall(sql, 1, 2, 3);
         assertNotNull(result);
@@ -417,7 +434,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void prepareCall_SQLException_ThrowsSQLException_B() throws SQLException {
+    void prepareCall_SQLException_ThrowsSQLException_B() throws SQLException {
         String sql = "CALL my_procedure()";
         when(connection.prepareCall(anyString(), anyInt(), anyInt(), anyInt())).thenThrow(SQLException.class);
 
@@ -430,7 +447,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void commit_PhysicalConnectionIsNull_DoesNothing() throws SQLException, NoSuchFieldException, IllegalAccessException {
+    void commit_PhysicalConnectionIsNull_DoesNothing() throws SQLException, NoSuchFieldException, IllegalAccessException {
         Field field = ProxyConnection.class.getDeclaredField("physicalConnection");
         field.setAccessible(true);
         field.set(proxyConnection, null);
@@ -439,7 +456,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void commit_SuccessfulCommit_RecordsTimestampsAndTriggersEvents() throws SQLException {
+    void commit_SuccessfulCommit_RecordsTimestampsAndTriggersEvents() throws SQLException {
         when(connectionInfo.getBeforeTimeToCommitMillis()).thenReturn(1000L);
         when(connectionInfo.getAfterTimeToCommitMillis()).thenReturn(2000L);
 
@@ -451,7 +468,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void commit_CommitFails_RecordsTimestampsAndTriggersEvents() throws SQLException {
+    void commit_CommitFails_RecordsTimestampsAndTriggersEvents() throws SQLException {
         SQLException sqlException = new SQLException("Commit failed");
         doThrow(sqlException).when(physicalConnectionB).commit(); // Updated reference
 
@@ -462,7 +479,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void rollback_PhysicalConnectionIsNull_DoesNothing() throws SQLException {
+    void rollback_PhysicalConnectionIsNull_DoesNothing() throws SQLException {
         doNothing().when(physicalConnectionB).rollback();
 
         proxyConnection.rollback();
@@ -472,7 +489,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void rollback_SuccessfulRollback_RecordsTimesAndNotifiesListener() throws SQLException {
+    void rollback_SuccessfulRollback_RecordsTimesAndNotifiesListener() throws SQLException {
         doNothing().when(physicalConnectionB2).rollback();
 
         proxyConnection.rollback();
@@ -486,7 +503,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void rollback_FailedRollback_RecordsTimesAndNotifiesListener() throws SQLException {
+    void rollback_FailedRollback_RecordsTimesAndNotifiesListener() throws SQLException {
         SQLException sqlException = new SQLException("Rollback failed");
         doThrow(sqlException).when(physicalConnectionB2).rollback();
 
@@ -501,7 +518,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void close_AlreadyClosedOrPhysicalConnectionIsNull_ReturnsImmediately() throws Exception {
+    void close_AlreadyClosedOrPhysicalConnectionIsNull_ReturnsImmediately() throws Exception {
         setPrivateField(proxyConnection, "closed", true);
         proxyConnection.close();
         verify(physicalConnectionB, never()).close();
@@ -513,7 +530,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void close_NormalClose_ClosesConnectionAndCallsEventListener() throws SQLException {
+    void close_NormalClose_ClosesConnectionAndCallsEventListener() throws SQLException {
         proxyConnection.close();
         verify(physicalConnectionB).close();
         verify(eventListener).onBeforeConnectionClose(any(ConnectionInfo.class));
@@ -521,7 +538,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void close_SQLExceptionDuringClose_CatchesExceptionAndCallsEventListener() throws SQLException {
+    void close_SQLExceptionDuringClose_CatchesExceptionAndCallsEventListener() throws SQLException {
         doThrow(new SQLException("Test exception")).when(physicalConnectionB).close();
 
         assertThrows(SQLException.class, proxyConnection::close);
@@ -531,7 +548,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void isClosed_WhenPhysicalConnectionIsClosed_ReturnsTrue() throws SQLException, NoSuchFieldException, IllegalAccessException {
+    void isClosed_WhenPhysicalConnectionIsClosed_ReturnsTrue() throws SQLException, NoSuchFieldException, IllegalAccessException {
         when(physicalConnectionB.isClosed()).thenReturn(true);
         setPrivateField(proxyConnection, "physicalConnection", physicalConnectionB);
 
@@ -539,7 +556,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void isClosed_WhenPhysicalConnectionIsNotClosed_ReturnsFalse() throws SQLException, NoSuchFieldException, IllegalAccessException {
+    void isClosed_WhenPhysicalConnectionIsNotClosed_ReturnsFalse() throws SQLException, NoSuchFieldException, IllegalAccessException {
         when(physicalConnectionB.isClosed()).thenReturn(false);
         setPrivateField(proxyConnection, "physicalConnection", physicalConnectionB);
 
@@ -547,7 +564,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void isClosed_WhenPhysicalConnectionIsNullAndClosedIsTrue_ReturnsTrue() throws NoSuchFieldException, IllegalAccessException, SQLException {
+    void isClosed_WhenPhysicalConnectionIsNullAndClosedIsTrue_ReturnsTrue() throws NoSuchFieldException, IllegalAccessException, SQLException {
         setPrivateField(proxyConnection, "physicalConnection", null);
         setPrivateField(proxyConnection, "closed", true);
 
@@ -555,7 +572,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void isClosed_WhenPhysicalConnectionIsNullAndClosedIsFalse_ReturnsFalse() throws NoSuchFieldException, IllegalAccessException, SQLException {
+    void isClosed_WhenPhysicalConnectionIsNullAndClosedIsFalse_ReturnsFalse() throws NoSuchFieldException, IllegalAccessException, SQLException {
         setPrivateField(proxyConnection, "physicalConnection", null);
         setPrivateField(proxyConnection, "closed", false);
 
@@ -563,7 +580,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void getMetaData_WhenPhysicalConnectionIsNotNull_ShouldReturnDatabaseMetaData() throws SQLException, NoSuchFieldException, IllegalAccessException {
+    void getMetaData_WhenPhysicalConnectionIsNotNull_ShouldReturnDatabaseMetaData() throws SQLException, NoSuchFieldException, IllegalAccessException {
         Field field = ProxyConnection.class.getDeclaredField("physicalConnection");
         field.setAccessible(true);
         field.set(proxyConnection, connection);
@@ -572,20 +589,20 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void getMetaData_WhenPhysicalConnectionIsNull_ShouldAcquireConnectionAndReturnDatabaseMetaData() throws SQLException {
+    void getMetaData_WhenPhysicalConnectionIsNull_ShouldAcquireConnectionAndReturnDatabaseMetaData() throws SQLException {
         DatabaseMetaData result = proxyConnection.getMetaData();
         assertNotNull(result);
         verify(dataSource, times(1)).getConnection();
     }
 
     @Test
-    public void getMetaData_WhenSQLExceptionThrown_ShouldThrowSQLException() throws SQLException {
+    void getMetaData_WhenSQLExceptionThrown_ShouldThrowSQLException() throws SQLException {
         when(dataSource.getConnection()).thenThrow(SQLException.class);
         assertThrows(SQLException.class, () -> proxyConnection.getMetaData());
     }
 
     @Test
-    public void isReadOnly_WhenPhysicalConnectionIsReadOnly_ReturnsTrue() throws Exception {
+    void isReadOnly_WhenPhysicalConnectionIsReadOnly_ReturnsTrue() throws Exception {
         when(physicalConnectionB.isReadOnly()).thenReturn(true);
         Field field = ProxyConnection.class.getDeclaredField("physicalConnection");
         field.setAccessible(true);
@@ -595,7 +612,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void isReadOnly_WhenPhysicalConnectionIsNotReadOnly_ReturnsFalse() throws Exception {
+    void isReadOnly_WhenPhysicalConnectionIsNotReadOnly_ReturnsFalse() throws Exception {
         when(physicalConnectionB.isReadOnly()).thenReturn(false);
         Field field = ProxyConnection.class.getDeclaredField("physicalConnection");
         field.setAccessible(true);
@@ -605,7 +622,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void isReadOnly_WhenPhysicalConnectionIsNullAndProxyIsReadOnly_ReturnsTrue() throws Exception {
+    void isReadOnly_WhenPhysicalConnectionIsNullAndProxyIsReadOnly_ReturnsTrue() throws Exception {
         Field field = ProxyConnection.class.getDeclaredField("readOnly");
         field.setAccessible(true);
         field.set(proxyConnection, true);
@@ -614,7 +631,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void isReadOnly_WhenPhysicalConnectionIsNullAndProxyIsNotReadOnly_ReturnsFalse() throws Exception {
+    void isReadOnly_WhenPhysicalConnectionIsNullAndProxyIsNotReadOnly_ReturnsFalse() throws Exception {
         Field field = ProxyConnection.class.getDeclaredField("readOnly");
         field.setAccessible(true);
         field.set(proxyConnection, false);
@@ -623,14 +640,14 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void getConnection_WhenPhysicalConnectionIsNull_ShouldReturnNewRoutedConnection() throws SQLException {
+    void getConnection_WhenPhysicalConnectionIsNull_ShouldReturnNewRoutedConnection() throws SQLException {
         RoutedConnection routedConnection = proxyConnection.getConnection("SELECT * FROM table");
         assertNotNull(routedConnection);
         verify(routedDataSource).getConnection();
     }
 
     @Test
-    public void getConnection_WhenPhysicalConnectionIsNotNull_ShouldReturnExistingRoutedConnection() throws SQLException, NoSuchFieldException, IllegalAccessException {
+    void getConnection_WhenPhysicalConnectionIsNotNull_ShouldReturnExistingRoutedConnection() throws SQLException, NoSuchFieldException, IllegalAccessException {
         Field field = ProxyConnection.class.getDeclaredField("physicalConnection");
         field.setAccessible(true);
         field.set(proxyConnection, connection);
@@ -640,7 +657,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void getConnection_WhenSQLExceptionOccurs_ShouldThrowSQLException() throws SQLException {
+    void getConnection_WhenSQLExceptionOccurs_ShouldThrowSQLException() throws SQLException {
         when(routedDataSource.getConnection()).thenThrow(SQLException.class);
         try {
             proxyConnection.getConnection("SELECT * FROM table");
@@ -651,7 +668,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void rollback_NullPhysicalConnection_DoesNothing() throws SQLException, NoSuchFieldException, IllegalAccessException {
+    void rollback_NullPhysicalConnection_DoesNothing() throws SQLException, NoSuchFieldException, IllegalAccessException {
         Field field = ProxyConnection.class.getDeclaredField("physicalConnection");
         field.setAccessible(true);
         field.set(proxyConnection, null);
@@ -660,7 +677,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void rollback_SuccessfulRollback_RecordsTimesAndCallsListener() throws SQLException {
+    void rollback_SuccessfulRollback_RecordsTimesAndCallsListener() throws SQLException {
         Savepoint savepoint = mock(Savepoint.class);
         doNothing().when(physicalConnectionB2).rollback(savepoint);
 
@@ -671,7 +688,7 @@ public class ProxyConnectionTest {
     }
 
     @Test
-    public void rollback_SQLExceptionOccurs_RecordsTimesAndCallsListener() throws SQLException {
+    void rollback_SQLExceptionOccurs_RecordsTimesAndCallsListener() throws SQLException {
         Savepoint savepoint = mock(Savepoint.class);
         SQLException sqlException = new SQLException("Test exception");
         doThrow(sqlException).when(physicalConnectionB2).rollback(savepoint);
