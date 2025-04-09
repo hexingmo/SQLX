@@ -57,8 +57,10 @@ public class ProxyPreparedStatement extends WrapperAdapter implements PreparedSt
     @Getter
     private final SqlXDataSource sqlXDataSource;
 
+    @Getter
     private final PreparedStatementInfo preparedStatementInfo;
 
+    @Getter
     private final PreparedStatement delegate;
 
     protected final EventListener eventListener;

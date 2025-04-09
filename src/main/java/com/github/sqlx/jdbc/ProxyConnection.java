@@ -123,6 +123,7 @@ public class ProxyConnection extends AbstractConnectionAdapter {
         Exception e = null;
         try {
             // Pay attention to the order of obtaining the connection first and then processing the PrepareStatement
+            // TODO getConnection 如果抛出异常会导致 onBeforePrepareStatement 不执行
             RoutedConnection routedConnection = getConnection(sql);
             preparedStatementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
             preparedStatementInfo.setSql(sql);
