@@ -57,11 +57,11 @@ public class ProxyStatement extends AbstractStatementAdapter {
 
     private Integer fetchSize;
 
-    private int resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
+    private Integer resultSetType;
 
-    private int resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
+    private Integer resultSetConcurrency;
 
-    private int resultSetHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
+    private Integer resultSetHoldability;
 
     private Boolean poolable;
 
@@ -551,8 +551,18 @@ public class ProxyStatement extends AbstractStatementAdapter {
         Statement actualStatement;
         SQLException e = null;
         try {
-            actualStatement = connection.createStatement();
+            if (resultSetType == null && resultSetConcurrency == null && resultSetHoldability == null) {
+                actualStatement = connection.createStatement();
+            } else if (resultSetType != null && resultSetConcurrency != null && resultSetHoldability == null) {
+                actualStatement = connection.createStatement(resultSetType , resultSetConcurrency);
+            } else if (resultSetType != null && resultSetConcurrency != null && resultSetHoldability != null) {
+                actualStatement = connection.createStatement(resultSetType , resultSetConcurrency , resultSetHoldability);
+            } else {
+                throw new SQLException("Invalid combination of resultSetType, resultSetConcurrency, and resultSetHoldability. All three must be either null or non-null.");
+            }
+
             statementInfo.setStatement(actualStatement);
+
             actualStatement = routedConnection.getConnection().createStatement(resultSetType , resultSetConcurrency , resultSetHoldability);
             this.currentStatement = actualStatement;
             this.currentStatementInfo = statementInfo;
