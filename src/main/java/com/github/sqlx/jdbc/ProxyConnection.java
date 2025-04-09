@@ -116,189 +116,32 @@ public class ProxyConnection extends AbstractConnectionAdapter {
 
     @Override
     public PreparedStatement prepareStatement(String sql) throws SQLException {
-
-        PreparedStatementInfo preparedStatementInfo = new PreparedStatementInfo();
-        connectionInfo.addStatementInfo(preparedStatementInfo);
-        preparedStatementInfo.setConnectionInfo(connectionInfo);
-        Exception e = null;
-        try {
-            // Pay attention to the order of obtaining the connection first and then processing the PrepareStatement
-            // TODO getConnection 如果抛出异常会导致 onBeforePrepareStatement 不执行
-            RoutedConnection routedConnection = getConnection(sql);
-            preparedStatementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
-            preparedStatementInfo.setSql(sql);
-            preparedStatementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
-            preparedStatementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onBeforePrepareStatement(preparedStatementInfo);
-            Connection connection = routedConnection.getConnection();
-            String nativeSql = routedConnection.getNativeSql();
-            PreparedStatement ps = connection.prepareStatement(nativeSql);
-            preparedStatementInfo.setNativeSql(nativeSql);
-            preparedStatementInfo.setStatement(ps);
-            return new ProxyPreparedStatement(this.sqlXDataSource, preparedStatementInfo , this.eventListener);
-        } catch (Exception ex) {
-            e = ex;
-            throw ex;
-        } finally {
-            preparedStatementInfo.addException(e);
-            preparedStatementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
-            preparedStatementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onAfterPrepareStatement(preparedStatementInfo , e);
-        }
+        return createPreparedStatement(sql);
     }
 
     @Override
     public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
-        PreparedStatementInfo preparedStatementInfo = new PreparedStatementInfo();
-        connectionInfo.addStatementInfo(preparedStatementInfo);
-        preparedStatementInfo.setConnectionInfo(connectionInfo);
-        SQLException e = null;
-        try {
-            RoutedConnection routedConnection = getConnection(sql);
-            preparedStatementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
-            preparedStatementInfo.setSql(sql);
-            preparedStatementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
-            preparedStatementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onBeforePrepareStatement(preparedStatementInfo);
-            Connection connection = routedConnection.getConnection();
-            String nativeSql = routedConnection.getNativeSql();
-            PreparedStatement ps = connection.prepareStatement(nativeSql, resultSetType, resultSetConcurrency);
-            preparedStatementInfo.setNativeSql(nativeSql);
-            preparedStatementInfo.setStatement(ps);
-            return new ProxyPreparedStatement(this.sqlXDataSource,preparedStatementInfo , this.eventListener);
-        } catch (SQLException ex) {
-            e = ex;
-            throw ex;
-        } finally {
-            preparedStatementInfo.addException(e);
-            preparedStatementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
-            preparedStatementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onAfterPrepareStatement(preparedStatementInfo , e);
-        }
+        return createPreparedStatement(sql, resultSetType, resultSetConcurrency);
     }
-
 
     @Override
     public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
-
-        PreparedStatementInfo preparedStatementInfo = new PreparedStatementInfo();
-        connectionInfo.addStatementInfo(preparedStatementInfo);
-        preparedStatementInfo.setConnectionInfo(connectionInfo);
-        SQLException e = null;
-        try {
-            RoutedConnection routedConnection = getConnection(sql);
-            preparedStatementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
-            preparedStatementInfo.setSql(sql);
-            preparedStatementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
-            preparedStatementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onBeforePrepareStatement(preparedStatementInfo);
-            Connection connection = routedConnection.getConnection();
-            String nativeSql = routedConnection.getNativeSql();
-            PreparedStatement ps = connection.prepareStatement(nativeSql, resultSetType, resultSetConcurrency, resultSetHoldability);
-            preparedStatementInfo.setNativeSql(nativeSql);
-            preparedStatementInfo.setStatement(ps);
-            return new ProxyPreparedStatement(this.sqlXDataSource,preparedStatementInfo , this.eventListener);
-        } catch (SQLException ex) {
-            e = ex;
-            throw ex;
-        } finally {
-            preparedStatementInfo.addException(e);
-            preparedStatementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
-            preparedStatementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onAfterPrepareStatement(preparedStatementInfo , e);
-        }
+        return createPreparedStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
     }
 
     @Override
     public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException {
-
-        PreparedStatementInfo preparedStatementInfo = new PreparedStatementInfo();
-        connectionInfo.addStatementInfo(preparedStatementInfo);
-        preparedStatementInfo.setConnectionInfo(connectionInfo);
-        SQLException e = null;
-        try {
-            RoutedConnection routedConnection = getConnection(sql);
-            preparedStatementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
-            preparedStatementInfo.setSql(sql);
-            preparedStatementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
-            preparedStatementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onBeforePrepareStatement(preparedStatementInfo);
-            Connection connection = routedConnection.getConnection();
-            String nativeSql = routedConnection.getNativeSql();
-            PreparedStatement ps = connection.prepareStatement(nativeSql, autoGeneratedKeys);
-            preparedStatementInfo.setNativeSql(nativeSql);
-            preparedStatementInfo.setStatement(ps);
-            return new ProxyPreparedStatement(this.sqlXDataSource,preparedStatementInfo , this.eventListener);
-        } catch (SQLException ex) {
-            e = ex;
-            throw ex;
-        } finally {
-            preparedStatementInfo.addException(e);
-            preparedStatementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
-            preparedStatementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onAfterPrepareStatement(preparedStatementInfo , e);
-        }
+        return createPreparedStatement(sql, autoGeneratedKeys);
     }
 
     @Override
     public PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException {
-        PreparedStatementInfo preparedStatementInfo = new PreparedStatementInfo();
-        connectionInfo.addStatementInfo(preparedStatementInfo);
-        preparedStatementInfo.setConnectionInfo(connectionInfo);
-        SQLException e = null;
-        try {
-            RoutedConnection routedConnection = getConnection(sql);
-            preparedStatementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
-            preparedStatementInfo.setSql(sql);
-            preparedStatementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
-            preparedStatementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onBeforePrepareStatement(preparedStatementInfo);
-            Connection connection = routedConnection.getConnection();
-            String nativeSql = routedConnection.getNativeSql();
-            PreparedStatement ps = connection.prepareStatement(nativeSql, columnIndexes);
-            preparedStatementInfo.setNativeSql(nativeSql);
-            preparedStatementInfo.setStatement(ps);
-            return new ProxyPreparedStatement(this.sqlXDataSource,preparedStatementInfo , this.eventListener);
-        } catch (SQLException ex) {
-            e = ex;
-            throw ex;
-        } finally {
-            preparedStatementInfo.addException(e);
-            preparedStatementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
-            preparedStatementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onAfterPrepareStatement(preparedStatementInfo , e);
-        }
+        return createPreparedStatement(sql, columnIndexes);
     }
 
     @Override
     public PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException {
-
-        PreparedStatementInfo preparedStatementInfo = new PreparedStatementInfo();
-        connectionInfo.addStatementInfo(preparedStatementInfo);
-        preparedStatementInfo.setConnectionInfo(connectionInfo);
-        SQLException e = null;
-        try {
-            RoutedConnection routedConnection = getConnection(sql);
-            preparedStatementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
-            preparedStatementInfo.setSql(sql);
-            preparedStatementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
-            preparedStatementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onBeforePrepareStatement(preparedStatementInfo);
-            Connection connection = routedConnection.getConnection();
-            String nativeSql = routedConnection.getNativeSql();
-            PreparedStatement ps = connection.prepareStatement(nativeSql, columnNames);
-            preparedStatementInfo.setNativeSql(nativeSql);
-            preparedStatementInfo.setStatement(ps);
-            return new ProxyPreparedStatement(this.sqlXDataSource,preparedStatementInfo , this.eventListener);
-        } catch (SQLException ex) {
-            e = ex;
-            throw ex;
-        } finally {
-            preparedStatementInfo.addException(e);
-            preparedStatementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
-            preparedStatementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onAfterPrepareStatement(preparedStatementInfo , e);
-        }
+        return createPreparedStatement(sql, columnNames);
     }
 
     @Override
@@ -755,6 +598,58 @@ public class ProxyConnection extends AbstractConnectionAdapter {
         }
         if (StringUtils.isNotBlank(catalog)) {
             this.physicalConnection.setCatalog(catalog);
+        }
+    }
+
+    private PreparedStatement createPreparedStatementWithArgs(Connection connection, String nativeSql, Object... args) throws SQLException {
+        if (args.length == 0) {
+            return connection.prepareStatement(nativeSql);
+        } else if (args.length == 2 && args[0] instanceof Integer && args[1] instanceof Integer) {
+            // PreparedStatement.prepareStatement(String sql, int resultSetType, int resultSetConcurrency)
+            return connection.prepareStatement(nativeSql, (Integer) args[0], (Integer) args[1]);
+        } else if (args.length == 3 && args[0] instanceof Integer && args[1] instanceof Integer && args[2] instanceof Integer) {
+            // PreparedStatement.prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability)
+            return connection.prepareStatement(nativeSql, (Integer) args[0], (Integer) args[1], (Integer) args[2]);
+        } else if (args.length == 1 && args[0] instanceof Integer) {
+            // PreparedStatement.prepareStatement(String sql, int autoGeneratedKeys)
+            return connection.prepareStatement(nativeSql, (Integer) args[0]);
+        } else if (args.length == 1 && args[0] instanceof int[]) {
+            // PreparedStatement.prepareStatement(String sql, int[] columnIndexes)
+            return connection.prepareStatement(nativeSql, (int[]) args[0]);
+        } else if (args.length == 1 && args[0] instanceof String[]) {
+            // PreparedStatement.prepareStatement(String sql, String[] columnNames)
+            return connection.prepareStatement(nativeSql, (String[]) args[0]);
+        } else {
+            throw new SQLException("Unsupported arguments for prepareStatement");
+        }
+    }
+
+    private PreparedStatement createPreparedStatement(String sql, Object... args) throws SQLException {
+        PreparedStatementInfo preparedStatementInfo = new PreparedStatementInfo();
+        connectionInfo.addStatementInfo(preparedStatementInfo);
+        preparedStatementInfo.setConnectionInfo(connectionInfo);
+        Exception e = null;
+        try {
+            RoutedConnection routedConnection = getConnection(sql);
+            preparedStatementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
+            preparedStatementInfo.setSql(sql);
+            preparedStatementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
+            preparedStatementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
+            eventListener.onBeforePrepareStatement(preparedStatementInfo);
+            Connection connection = routedConnection.getConnection();
+            String nativeSql = routedConnection.getNativeSql();
+            PreparedStatement ps = createPreparedStatementWithArgs(connection, nativeSql, args);
+            preparedStatementInfo.setNativeSql(nativeSql);
+            preparedStatementInfo.setStatement(ps);
+            return new ProxyPreparedStatement(this.sqlXDataSource, preparedStatementInfo, this.eventListener);
+        } catch (Exception ex) {
+            e = ex;
+            throw ex;
+        } finally {
+            preparedStatementInfo.addException(e);
+            preparedStatementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
+            preparedStatementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
+            eventListener.onAfterPrepareStatement(preparedStatementInfo, e);
         }
     }
 }
