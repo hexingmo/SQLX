@@ -17,6 +17,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -78,6 +79,26 @@ class ProxyConnectionTest {
         when(routedConnection.getConnection()).thenReturn(physicalConnection);
 //        when(proxyConnection.getConnection(anyString())).thenReturn(routedConnection);
 
+    }
+
+    @Test
+    void testCreateStatement_With_ResultSetType_ResultSetConcurrency_ResultSetHoldability() throws Exception {
+        Statement statement = proxyConnection.createStatement(ResultSet.TYPE_FORWARD_ONLY , ResultSet.CONCUR_READ_ONLY , ResultSet.CLOSE_CURSORS_AT_COMMIT);
+        assertNotNull(statement);
+        assertInstanceOf(ProxyStatement.class , statement);
+        verify(sqlXDataSource, never()).getDataSource(anyString());
+        verify(eventListener, never()).onBeforeCreateStatement(any());
+        verify(eventListener, never()).onAfterCreateStatement(any(), any());
+    }
+
+    @Test
+    void testCreateStatement_With_ResultSetType_ResultSetConcurrency() throws Exception {
+        Statement statement = proxyConnection.createStatement(ResultSet.TYPE_FORWARD_ONLY , ResultSet.CONCUR_READ_ONLY);
+        assertNotNull(statement);
+        assertInstanceOf(ProxyStatement.class , statement);
+        verify(sqlXDataSource, never()).getDataSource(anyString());
+        verify(eventListener, never()).onBeforeCreateStatement(any());
+        verify(eventListener, never()).onAfterCreateStatement(any(), any());
     }
 
     @Test

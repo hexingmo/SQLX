@@ -26,7 +26,22 @@ import com.github.sqlx.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.sql.DataSource;
-import java.sql.*;
+import java.sql.Array;
+import java.sql.Blob;
+import java.sql.CallableStatement;
+import java.sql.Clob;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.NClob;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLClientInfoException;
+import java.sql.SQLException;
+import java.sql.SQLWarning;
+import java.sql.SQLXML;
+import java.sql.Savepoint;
+import java.sql.Statement;
+import java.sql.Struct;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,7 +65,7 @@ public class ProxyConnection extends AbstractConnectionAdapter {
 
     private volatile boolean readOnly = false;
 
-    private volatile int isolation = TRANSACTION_READ_COMMITTED;
+    private volatile int isolation = Connection.TRANSACTION_READ_COMMITTED;
 
     private volatile String schema;
 
@@ -66,7 +81,7 @@ public class ProxyConnection extends AbstractConnectionAdapter {
 
     private Properties clientInfo;
 
-    private DatabaseMetaDataWrapper databaseMetaData;
+    private final DatabaseMetaDataWrapper databaseMetaData;
 
     private final SqlXDataSource sqlXDataSource;
 
@@ -91,7 +106,7 @@ public class ProxyConnection extends AbstractConnectionAdapter {
 
     @Override
     public Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException {
-        return new ProxyStatement(sqlXDataSource, null , resultSetConcurrency , ResultSet.CLOSE_CURSORS_AT_COMMIT , eventListener);
+        return new ProxyStatement(sqlXDataSource, resultSetType , resultSetConcurrency , null , eventListener);
     }
 
     @Override

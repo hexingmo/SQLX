@@ -35,6 +35,12 @@ import java.util.Objects;
  */
 public class ProxyStatement extends AbstractStatementAdapter {
 
+    private static final int DEFAULT_RESULT_SET_TYPE = ResultSet.TYPE_FORWARD_ONLY;
+
+    private static final int DEFAULT_RESULT_SET_CONCURRENCY = ResultSet.CONCUR_READ_ONLY;
+
+    private static final int DEFAULT_RESULT_SET_HOLDABILITY = ResultSet.CLOSE_CURSORS_AT_COMMIT;
+
     private final List<StatementInfo> statementInfoList = new ArrayList<>();
 
     private final SqlXDataSource dataSource;
@@ -461,12 +467,24 @@ public class ProxyStatement extends AbstractStatementAdapter {
 
     @Override
     public int getResultSetConcurrency() throws SQLException {
-        return Objects.nonNull(currentStatement) ? currentStatement.getResultSetConcurrency() : resultSetConcurrency;
+        if (Objects.nonNull(currentStatement)) {
+            return currentStatement.getResultSetConcurrency();
+        }
+        if (Objects.nonNull(resultSetType)) {
+            return resultSetConcurrency;
+        }
+        return DEFAULT_RESULT_SET_CONCURRENCY;
     }
 
     @Override
     public synchronized int getResultSetType() throws SQLException {
-        return Objects.nonNull(currentStatement) ? currentStatement.getResultSetType() : resultSetType;
+        if (Objects.nonNull(currentStatement)) {
+            return currentStatement.getResultSetType();
+        }
+        if (Objects.nonNull(resultSetType)) {
+            return resultSetType;
+        }
+        return DEFAULT_RESULT_SET_TYPE;
     }
 
     public synchronized void setResultSetType(int resultSetType) {
@@ -491,7 +509,13 @@ public class ProxyStatement extends AbstractStatementAdapter {
 
     @Override
     public int getResultSetHoldability() throws SQLException {
-        return Objects.nonNull(currentStatement) ? currentStatement.getResultSetHoldability() : resultSetHoldability;
+        if (Objects.nonNull(currentStatement)) {
+            return currentStatement.getResultSetHoldability();
+        }
+        if (Objects.nonNull(resultSetHoldability)) {
+            return resultSetHoldability;
+        }
+        return DEFAULT_RESULT_SET_HOLDABILITY;
     }
 
     @Override
