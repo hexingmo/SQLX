@@ -250,6 +250,138 @@ class ProxyConnectionTest {
     }
 
     @Test
+    void createPreparedStatementWithArgs_ThrowsSQLException() throws Exception {
+        String sql = "SELECT * FROM table";
+        Method method = proxyConnection.getClass().getDeclaredMethod("createPreparedStatementWithArgs", Connection.class, String.class, Object[].class);
+        method.setAccessible(true);
+
+        assertThrows(SQLException.class, () -> {
+            try {
+                method.invoke(proxyConnection, physicalConnection, sql, new Object[]{1 , "test" , 3 , "test"});
+            } catch (InvocationTargetException e) {
+                throw e.getCause();
+            }
+        });
+    }
+
+    @Test
+    void prepareStatement_ResultSetType_ResultSetConcurrency_ResultSetHoldability() throws Exception {
+        String sql = "SELECT * FROM table";
+        PreparedStatement preparedStatement = mock(PreparedStatement.class);
+        when(physicalConnection.prepareStatement(anyString() , anyInt() , anyInt() , anyInt())).thenReturn(preparedStatement);
+        when(sqlAttribute.getNativeSql()).thenReturn(sql);
+
+        PreparedStatement ps = proxyConnection.prepareStatement(sql , ResultSet.TYPE_FORWARD_ONLY , ResultSet.CONCUR_READ_ONLY , ResultSet.CLOSE_CURSORS_AT_COMMIT);
+
+        assertNotNull(ps);
+        assertInstanceOf(ProxyPreparedStatement.class , ps);
+        assertNotNull(((ProxyPreparedStatement) ps).getDelegate());
+        assertNotNull(((ProxyPreparedStatement) ps).getPreparedStatementInfo());
+        assertTrue(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getBeforeTimeToCreateStatementNs() > 0);
+        assertTrue(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getBeforeTimeToCreateStatementMillis() > 0);
+        assertEquals(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getNativeSql() , sql);
+        assertEquals(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getStatement() , preparedStatement);
+
+        verify(physicalConnection , times(1)).prepareStatement(sql , ResultSet.TYPE_FORWARD_ONLY , ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT);
+        verify(eventListener, times(1)).onBeforePrepareStatement(any());
+        verify(eventListener, times(1)).onAfterPrepareStatement(any() , any());
+    }
+
+    @Test
+    void prepareStatement_ResultSetType_ResultSetConcurrency() throws Exception {
+        String sql = "SELECT * FROM table";
+        PreparedStatement preparedStatement = mock(PreparedStatement.class);
+        when(physicalConnection.prepareStatement(anyString() , anyInt() , anyInt())).thenReturn(preparedStatement);
+        when(sqlAttribute.getNativeSql()).thenReturn(sql);
+
+        PreparedStatement ps = proxyConnection.prepareStatement(sql , ResultSet.TYPE_FORWARD_ONLY , ResultSet.CONCUR_READ_ONLY);
+
+        assertNotNull(ps);
+        assertInstanceOf(ProxyPreparedStatement.class , ps);
+        assertNotNull(((ProxyPreparedStatement) ps).getDelegate());
+        assertNotNull(((ProxyPreparedStatement) ps).getPreparedStatementInfo());
+        assertTrue(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getBeforeTimeToCreateStatementNs() > 0);
+        assertTrue(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getBeforeTimeToCreateStatementMillis() > 0);
+        assertEquals(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getNativeSql() , sql);
+        assertEquals(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getStatement() , preparedStatement);
+
+        verify(physicalConnection , times(1)).prepareStatement(sql , ResultSet.TYPE_FORWARD_ONLY , ResultSet.CONCUR_READ_ONLY);
+        verify(eventListener, times(1)).onBeforePrepareStatement(any());
+        verify(eventListener, times(1)).onAfterPrepareStatement(any() , any());
+    }
+
+    @Test
+    void prepareStatement_ColumnNames() throws Exception {
+        String sql = "SELECT * FROM table";
+        String[] columnNames = {"c1" , "c2", "c3"};
+        PreparedStatement preparedStatement = mock(PreparedStatement.class);
+        when(physicalConnection.prepareStatement(sql , columnNames)).thenReturn(preparedStatement);
+        when(sqlAttribute.getNativeSql()).thenReturn(sql);
+
+        PreparedStatement ps = proxyConnection.prepareStatement(sql , columnNames);
+
+        assertNotNull(ps);
+        assertInstanceOf(ProxyPreparedStatement.class , ps);
+        assertNotNull(((ProxyPreparedStatement) ps).getDelegate());
+        assertNotNull(((ProxyPreparedStatement) ps).getPreparedStatementInfo());
+        assertTrue(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getBeforeTimeToCreateStatementNs() > 0);
+        assertTrue(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getBeforeTimeToCreateStatementMillis() > 0);
+        assertEquals(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getNativeSql() , sql);
+        assertEquals(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getStatement() , preparedStatement);
+
+        verify(physicalConnection , times(1)).prepareStatement(sql , columnNames);
+        verify(eventListener, times(1)).onBeforePrepareStatement(any());
+        verify(eventListener, times(1)).onAfterPrepareStatement(any() , any());
+    }
+
+    @Test
+    void prepareStatement_ColumnIndexes() throws Exception {
+        String sql = "SELECT * FROM table";
+        int[] columnIndexes = {0 , 1, 2};
+        PreparedStatement preparedStatement = mock(PreparedStatement.class);
+        when(physicalConnection.prepareStatement(sql , columnIndexes)).thenReturn(preparedStatement);
+        when(sqlAttribute.getNativeSql()).thenReturn(sql);
+
+        PreparedStatement ps = proxyConnection.prepareStatement(sql , columnIndexes);
+
+        assertNotNull(ps);
+        assertInstanceOf(ProxyPreparedStatement.class , ps);
+        assertNotNull(((ProxyPreparedStatement) ps).getDelegate());
+        assertNotNull(((ProxyPreparedStatement) ps).getPreparedStatementInfo());
+        assertTrue(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getBeforeTimeToCreateStatementNs() > 0);
+        assertTrue(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getBeforeTimeToCreateStatementMillis() > 0);
+        assertEquals(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getNativeSql() , sql);
+        assertEquals(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getStatement() , preparedStatement);
+
+        verify(physicalConnection , times(1)).prepareStatement(sql , columnIndexes);
+        verify(eventListener, times(1)).onBeforePrepareStatement(any());
+        verify(eventListener, times(1)).onAfterPrepareStatement(any() , any());
+    }
+
+    @Test
+    void prepareStatement_AutoGeneratedKeys() throws Exception {
+        String sql = "SELECT * FROM table";
+        PreparedStatement preparedStatement = mock(PreparedStatement.class);
+        when(physicalConnection.prepareStatement(sql , Statement.RETURN_GENERATED_KEYS)).thenReturn(preparedStatement);
+        when(sqlAttribute.getNativeSql()).thenReturn(sql);
+
+        PreparedStatement ps = proxyConnection.prepareStatement(sql , Statement.RETURN_GENERATED_KEYS);
+
+        assertNotNull(ps);
+        assertInstanceOf(ProxyPreparedStatement.class , ps);
+        assertNotNull(((ProxyPreparedStatement) ps).getDelegate());
+        assertNotNull(((ProxyPreparedStatement) ps).getPreparedStatementInfo());
+        assertTrue(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getBeforeTimeToCreateStatementNs() > 0);
+        assertTrue(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getBeforeTimeToCreateStatementMillis() > 0);
+        assertEquals(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getNativeSql() , sql);
+        assertEquals(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getStatement() , preparedStatement);
+
+        verify(physicalConnection , times(1)).prepareStatement(sql , Statement.RETURN_GENERATED_KEYS);
+        verify(eventListener, times(1)).onBeforePrepareStatement(any());
+        verify(eventListener, times(1)).onAfterPrepareStatement(any() , any());
+    }
+
+    @Test
     void testPrepareStatement() throws Exception {
 
         String sql = "SELECT * FROM table";
@@ -268,6 +400,7 @@ class ProxyConnectionTest {
         assertEquals(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getNativeSql() , sql);
         assertEquals(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getStatement() , preparedStatement);
 
+        verify(physicalConnection , times(1)).prepareStatement(anyString());
         verify(eventListener, times(1)).onBeforePrepareStatement(any());
         verify(eventListener, times(1)).onAfterPrepareStatement(any() , any());
     }
