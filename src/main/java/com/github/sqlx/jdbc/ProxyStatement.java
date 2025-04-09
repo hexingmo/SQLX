@@ -73,23 +73,14 @@ public class ProxyStatement extends AbstractStatementAdapter {
     public ProxyStatement(SqlXDataSource dataSource, Integer resultSetType, Integer resultSetConcurrency, Integer resultSetHoldability, EventListener eventListener) {
         this(dataSource, eventListener);
         if (resultSetType != null) {
-            if (!isValidResultSetType(resultSetType)) {
-                throw new IllegalArgumentException("Invalid resultSetType: " + resultSetType);
-            }
             this.resultSetType = resultSetType;
         }
 
         if (resultSetConcurrency != null) {
-            if (!isValidResultSetConcurrency(resultSetConcurrency)) {
-                throw new IllegalArgumentException("Invalid resultSetConcurrency: " + resultSetConcurrency);
-            }
             this.resultSetConcurrency = resultSetConcurrency;
         }
 
         if (resultSetHoldability != null) {
-            if (!isValidResultSetHoldability(resultSetHoldability)) {
-                throw new IllegalArgumentException("Invalid resultSetHoldability: " + resultSetHoldability);
-            }
             this.resultSetHoldability = resultSetHoldability;
         }
     }

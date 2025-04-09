@@ -86,29 +86,17 @@ public class ProxyConnection extends AbstractConnectionAdapter {
 
     @Override
     public Statement createStatement() throws SQLException {
-        try {
-            return new ProxyStatement(sqlXDataSource, ResultSet.TYPE_SCROLL_INSENSITIVE , ResultSet.CONCUR_READ_ONLY , ResultSet.CLOSE_CURSORS_AT_COMMIT , eventListener);
-        } catch (Exception e) {
-            throw new SQLException(e);
-        }
+        return new ProxyStatement(sqlXDataSource, null , null , null , eventListener);
     }
 
     @Override
     public Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException {
-        try {
-            return new ProxyStatement(sqlXDataSource, ResultSet.TYPE_SCROLL_INSENSITIVE , resultSetConcurrency , ResultSet.CLOSE_CURSORS_AT_COMMIT , eventListener);
-        } catch (Exception e) {
-            throw new SQLException(e);
-        }
+        return new ProxyStatement(sqlXDataSource, null , resultSetConcurrency , ResultSet.CLOSE_CURSORS_AT_COMMIT , eventListener);
     }
 
     @Override
     public Statement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
-        try {
-            return new ProxyStatement(sqlXDataSource, resultSetType , resultSetConcurrency , resultSetHoldability , eventListener);
-        } catch (Exception e) {
-            throw new SQLException(e);
-        }
+        return new ProxyStatement(sqlXDataSource, resultSetType , resultSetConcurrency , resultSetHoldability , eventListener);
     }
 
     @Override
