@@ -638,7 +638,9 @@ public class ProxyConnection extends AbstractConnectionAdapter {
         if (MapUtils.isNotEmpty(typeMap)) {
             this.physicalConnection.setTypeMap(typeMap);
         }
-        this.physicalConnection.setNetworkTimeout(executor , networkTimeout);
+        if (this.executor != null && this.networkTimeout != null) {
+            this.physicalConnection.setNetworkTimeout(executor , networkTimeout);
+        }
     }
 
     /**

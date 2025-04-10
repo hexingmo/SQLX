@@ -16,13 +16,19 @@ import javax.sql.DataSource;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.Array;
+import java.sql.Blob;
 import java.sql.CallableStatement;
+import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.NClob;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLXML;
 import java.sql.Statement;
+import java.sql.Struct;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -609,6 +615,96 @@ class ProxyConnectionTest {
         assertTrue(connectionInfo.getAfterTimeToGetConnectionMillis() > 0);
         verify(eventListener, times(1)).onBeforeGetConnection(connectionInfo);
         verify(eventListener, times(1)).onAfterGetConnection(connectionInfo , sqlException);
+    }
+
+    @Test
+    void testCreateClob_WhenPhysicalConnectionIsNull_ShouldThrowSQLException() throws Exception {
+        setPrivateField(proxyConnection, "physicalConnection", null);
+        assertThrows(SQLException.class, () -> proxyConnection.createClob());
+    }
+
+    @Test
+    void testCreateClob_WhenPhysicalConnectionIsNotNull_ShouldReturnClob() throws Exception {
+        Clob clob = mock(Clob.class);
+        when(physicalConnection.createClob()).thenReturn(clob);
+        Clob result = proxyConnection.createClob();
+        assertNotNull(result);
+        assertEquals(clob, result);
+    }
+
+    @Test
+    void testCreateBlob_WhenPhysicalConnectionIsNull_ShouldThrowSQLException() throws Exception {
+        setPrivateField(proxyConnection, "physicalConnection", null);
+        assertThrows(SQLException.class, () -> proxyConnection.createBlob());
+    }
+
+    @Test
+    void testCreateBlob_WhenPhysicalConnectionIsNotNull_ShouldReturnBlob() throws Exception {
+        Blob blob = mock(Blob.class);
+        when(physicalConnection.createBlob()).thenReturn(blob);
+        Blob result = proxyConnection.createBlob();
+        assertNotNull(result);
+        assertEquals(blob, result);
+    }
+
+    @Test
+    void testCreateNClob_WhenPhysicalConnectionIsNull_ShouldThrowSQLException() throws Exception {
+        setPrivateField(proxyConnection, "physicalConnection", null);
+        assertThrows(SQLException.class, () -> proxyConnection.createNClob());
+    }
+
+    @Test
+    void testCreateNClob_WhenPhysicalConnectionIsNotNull_ShouldReturnNClob() throws Exception {
+        NClob nclob = mock(NClob.class);
+        when(physicalConnection.createNClob()).thenReturn(nclob);
+        NClob result = proxyConnection.createNClob();
+        assertNotNull(result);
+        assertEquals(nclob, result);
+    }
+
+    @Test
+    void testCreateSQLXML_WhenPhysicalConnectionIsNull_ShouldThrowSQLException() throws Exception {
+        setPrivateField(proxyConnection, "physicalConnection", null);
+        assertThrows(SQLException.class, () -> proxyConnection.createSQLXML());
+    }
+
+    @Test
+    void testCreateSQLXML_WhenPhysicalConnectionIsNotNull_ShouldReturnSQLXML() throws Exception {
+        SQLXML sqlxml = mock(SQLXML.class);
+        when(physicalConnection.createSQLXML()).thenReturn(sqlxml);
+        SQLXML result = proxyConnection.createSQLXML();
+        assertNotNull(result);
+        assertEquals(sqlxml, result);
+    }
+
+    @Test
+    void testCreateArrayOf_WhenPhysicalConnectionIsNull_ShouldThrowSQLException() throws Exception {
+        setPrivateField(proxyConnection, "physicalConnection", null);
+        assertThrows(SQLException.class, () -> proxyConnection.createArrayOf("typeName", new Object[]{}));
+    }
+
+    @Test
+    void testCreateArrayOf_WhenPhysicalConnectionIsNotNull_ShouldReturnArray() throws Exception {
+        Array array = mock(Array.class);
+        when(physicalConnection.createArrayOf(anyString(), any())).thenReturn(array);
+        Array result = proxyConnection.createArrayOf("typeName", new Object[]{});
+        assertNotNull(result);
+        assertEquals(array, result);
+    }
+
+    @Test
+    void testCreateStruct_WhenPhysicalConnectionIsNull_ShouldThrowSQLException() throws Exception {
+        setPrivateField(proxyConnection, "physicalConnection", null);
+        assertThrows(SQLException.class, () -> proxyConnection.createStruct("typeName", new Object[]{}));
+    }
+
+    @Test
+    void testCreateStruct_WhenPhysicalConnectionIsNotNull_ShouldReturnStruct() throws Exception {
+        Struct struct = mock(Struct.class);
+        when(physicalConnection.createStruct(anyString(), any())).thenReturn(struct);
+        Struct result = proxyConnection.createStruct("typeName", new Object[]{});
+        assertNotNull(result);
+        assertEquals(struct, result);
     }
 
     private void setPrivateField(Object obj, String fieldName, Object value) throws NoSuchFieldException, IllegalAccessException {
