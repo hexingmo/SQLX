@@ -16,6 +16,8 @@
 
 package com.github.sqlx.integration.springboot;
 
+import com.github.sqlx.banner.Banner;
+import com.github.sqlx.banner.BlocksBanner;
 import com.github.sqlx.banner.IvritFontBanner;
 import com.github.sqlx.config.SqlXConfiguration;
 import com.google.gson.annotations.Expose;
@@ -41,7 +43,7 @@ public class SqlXProperties implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         if (config.isEnabled()) {
-            IvritFontBanner banner = new IvritFontBanner();
+            Banner banner = new BlocksBanner();
             banner.printBanner(log::info);
             config.init();
             config.validate();

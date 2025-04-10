@@ -16,7 +16,6 @@
 package com.github.sqlx.metrics;
 
 import com.github.sqlx.NodeState;
-import com.github.sqlx.NodeType;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -31,8 +30,6 @@ import java.util.List;
 public class DatasourceDashboardMetrics {
 
     private String dataSource;
-
-    private NodeType nodeType;
 
     private NodeState nodeState;
 

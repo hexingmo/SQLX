@@ -35,6 +35,12 @@ import java.util.Objects;
  */
 public class ProxyStatement extends AbstractStatementAdapter {
 
+    private static final int DEFAULT_RESULT_SET_TYPE = ResultSet.TYPE_FORWARD_ONLY;
+
+    private static final int DEFAULT_RESULT_SET_CONCURRENCY = ResultSet.CONCUR_READ_ONLY;
+
+    private static final int DEFAULT_RESULT_SET_HOLDABILITY = ResultSet.CLOSE_CURSORS_AT_COMMIT;
+
     private final List<StatementInfo> statementInfoList = new ArrayList<>();
 
     private final SqlXDataSource dataSource;
@@ -57,11 +63,11 @@ public class ProxyStatement extends AbstractStatementAdapter {
 
     private Integer fetchSize;
 
-    private int resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
+    private Integer resultSetType;
 
-    private int resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
+    private Integer resultSetConcurrency;
 
-    private int resultSetHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
+    private Integer resultSetHoldability;
 
     private Boolean poolable;
 
@@ -70,18 +76,23 @@ public class ProxyStatement extends AbstractStatementAdapter {
     private String cursorName;
 
 
-    public ProxyStatement(SqlXDataSource dataSource , Integer resultSetType, Integer resultSetConcurrency , Integer resultSetHoldability , EventListener eventListener) {
-        this(dataSource , eventListener);
+    public ProxyStatement(SqlXDataSource dataSource, Integer resultSetType, Integer resultSetConcurrency, Integer resultSetHoldability, EventListener eventListener) {
+        this(dataSource, eventListener);
         if (resultSetType != null) {
             this.resultSetType = resultSetType;
         }
+
         if (resultSetConcurrency != null) {
             this.resultSetConcurrency = resultSetConcurrency;
         }
+
         if (resultSetHoldability != null) {
             this.resultSetHoldability = resultSetHoldability;
         }
     }
+
+
+
 
     public ProxyStatement(SqlXDataSource dataSource, EventListener eventListener) {
         this.dataSource = dataSource;
@@ -456,12 +467,24 @@ public class ProxyStatement extends AbstractStatementAdapter {
 
     @Override
     public int getResultSetConcurrency() throws SQLException {
-        return Objects.nonNull(currentStatement) ? currentStatement.getResultSetConcurrency() : resultSetConcurrency;
+        if (Objects.nonNull(currentStatement)) {
+            return currentStatement.getResultSetConcurrency();
+        }
+        if (Objects.nonNull(resultSetType)) {
+            return resultSetConcurrency;
+        }
+        return DEFAULT_RESULT_SET_CONCURRENCY;
     }
 
     @Override
     public synchronized int getResultSetType() throws SQLException {
-        return Objects.nonNull(currentStatement) ? currentStatement.getResultSetType() : resultSetType;
+        if (Objects.nonNull(currentStatement)) {
+            return currentStatement.getResultSetType();
+        }
+        if (Objects.nonNull(resultSetType)) {
+            return resultSetType;
+        }
+        return DEFAULT_RESULT_SET_TYPE;
     }
 
     public synchronized void setResultSetType(int resultSetType) {
@@ -470,6 +493,7 @@ public class ProxyStatement extends AbstractStatementAdapter {
 
     @Override
     public Connection getConnection() throws SQLException {
+        // TODO 返回一个新的还是返回现有的 connection ？
         return dataSource.getConnection();
     }
 
@@ -485,7 +509,13 @@ public class ProxyStatement extends AbstractStatementAdapter {
 
     @Override
     public int getResultSetHoldability() throws SQLException {
-        return Objects.nonNull(currentStatement) ? currentStatement.getResultSetHoldability() : resultSetHoldability;
+        if (Objects.nonNull(currentStatement)) {
+            return currentStatement.getResultSetHoldability();
+        }
+        if (Objects.nonNull(resultSetHoldability)) {
+            return resultSetHoldability;
+        }
+        return DEFAULT_RESULT_SET_HOLDABILITY;
     }
 
     @Override
@@ -545,8 +575,18 @@ public class ProxyStatement extends AbstractStatementAdapter {
         Statement actualStatement;
         SQLException e = null;
         try {
-            actualStatement = connection.createStatement();
+            if (resultSetType == null && resultSetConcurrency == null && resultSetHoldability == null) {
+                actualStatement = connection.createStatement();
+            } else if (resultSetType != null && resultSetConcurrency != null && resultSetHoldability == null) {
+                actualStatement = connection.createStatement(resultSetType , resultSetConcurrency);
+            } else if (resultSetType != null && resultSetConcurrency != null && resultSetHoldability != null) {
+                actualStatement = connection.createStatement(resultSetType , resultSetConcurrency , resultSetHoldability);
+            } else {
+                throw new SQLException("Invalid combination of resultSetType, resultSetConcurrency, and resultSetHoldability. All three must be either null or non-null.");
+            }
+
             statementInfo.setStatement(actualStatement);
+
             actualStatement = routedConnection.getConnection().createStatement(resultSetType , resultSetConcurrency , resultSetHoldability);
             this.currentStatement = actualStatement;
             this.currentStatementInfo = statementInfo;
@@ -606,6 +646,22 @@ public class ProxyStatement extends AbstractStatementAdapter {
             statementInfo.addException(e);
             eventListener.onAfterCloseStatement(statementInfo , e);
         }
+    }
+
+    private boolean isValidResultSetType(int resultSetType) {
+        return resultSetType == ResultSet.TYPE_FORWARD_ONLY ||
+                resultSetType == ResultSet.TYPE_SCROLL_INSENSITIVE ||
+                resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE;
+    }
+
+    private boolean isValidResultSetConcurrency(int resultSetConcurrency) {
+        return resultSetConcurrency == ResultSet.CONCUR_READ_ONLY ||
+                resultSetConcurrency == ResultSet.CONCUR_UPDATABLE;
+    }
+
+    private boolean isValidResultSetHoldability(int resultSetHoldability) {
+        return resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT ||
+                resultSetHoldability == ResultSet.CLOSE_CURSORS_AT_COMMIT;
     }
 
 }

@@ -18,10 +18,10 @@ package com.github.sqlx.jdbc.datasource;
 
 import com.github.sqlx.NodeState;
 import com.github.sqlx.NodeAttribute;
-import com.github.sqlx.NodeType;
 import com.github.sqlx.config.SqlXConfiguration;
 import com.github.sqlx.exception.ManagementException;
 import com.github.sqlx.exception.NoSuchDataSourceException;
+import com.github.sqlx.exception.SqlXRuntimeException;
 import com.github.sqlx.util.MapUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,10 +44,10 @@ public class DatasourceManager {
 
     private final Map<String , DataSourceWrapper> dataSources = new ConcurrentHashMap<>();
 
-    private final SqlXConfiguration sqlXConfiguration;
+    private final SqlXConfiguration configuration;
 
-    public DatasourceManager(SqlXConfiguration sqlXConfiguration) {
-        this.sqlXConfiguration = sqlXConfiguration;
+    public DatasourceManager(SqlXConfiguration configuration) {
+        this.configuration = configuration;
         registerShutdownHook();
     }
 
@@ -66,7 +66,7 @@ public class DatasourceManager {
         if (!containsDataSource(name)) {
             throw new ManagementException("No such datasource: " + name);
         }
-        boolean removed = sqlXConfiguration.removeDataSourceConfiguration(name);
+        boolean removed = configuration.removeDataSourceConfiguration(name);
         if (removed) {
             DataSourceWrapper dataSourceWrapper = dataSources.remove(name);
             if (dataSourceWrapper != null) {
@@ -87,19 +87,14 @@ public class DatasourceManager {
         return Collections.unmodifiableList(new ArrayList<>(dataSources.values()));
     }
 
-    public Optional<DataSourceWrapper> getDefaultDataSource() {
-        return dataSources.values().stream().filter(DataSourceWrapper::getDefaulted).findAny();
+    public DataSourceWrapper getDefaultDataSource() {
+        Optional<DataSourceWrapper> optional = dataSources.values().stream().filter(DataSourceWrapper::getDefaulted).findFirst();
+        if (!optional.isPresent()) {
+            throw new SqlXRuntimeException("No default datasource found");
+        }
+        return optional.get();
     }
 
-    public synchronized List<DataSourceWrapper> getDataSourceList(NodeType type) {
-        List<DataSourceWrapper> dataSourceWrappers = new ArrayList<>();
-        dataSources.forEach((k , v) -> {
-            if (Objects.equals(v.getNodeAttribute().getNodeType() , type)) {
-                dataSourceWrappers.add(v);
-            }
-        });
-        return dataSourceWrappers;
-    }
 
     public synchronized List<DataSourceWrapper> getDataSourceList(NodeState state) {
         List<DataSourceWrapper> dataSourceWrappers = new ArrayList<>();
@@ -111,25 +106,6 @@ public class DatasourceManager {
         return dataSourceWrappers;
     }
 
-    public synchronized List<DataSourceWrapper> getReadableDataSource() {
-        List<DataSourceWrapper> dataSourceWrappers = new ArrayList<>();
-        dataSources.forEach((k , v) -> {
-            if (v.getNodeAttribute().getNodeType().canRead()) {
-                dataSourceWrappers.add(v);
-            }
-        });
-        return dataSourceWrappers;
-    }
-
-    public synchronized List<DataSourceWrapper> getWritableDataSource() {
-        List<DataSourceWrapper> dataSourceWrappers = new ArrayList<>();
-        dataSources.forEach((k , v) -> {
-            if (v.getNodeAttribute().getNodeType().canWrite()) {
-                dataSourceWrappers.add(v);
-            }
-        });
-        return dataSourceWrappers;
-    }
 
     public boolean containsDataSource(String nodeName) {
         return dataSources.containsKey(nodeName);

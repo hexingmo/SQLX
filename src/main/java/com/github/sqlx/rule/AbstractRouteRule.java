@@ -35,16 +35,19 @@ public abstract class AbstractRouteRule implements SqlAttributeRouteRule {
 
     protected final SqlParser sqlParser;
 
-    protected final LoadBalance<NodeAttribute> readLoadBalance;
+    protected LoadBalance readLoadBalance;
 
-    protected final LoadBalance<NodeAttribute> writeLoadBalance;
+    protected LoadBalance writeLoadBalance;
 
-
-    protected AbstractRouteRule(Integer priority , SqlParser sqlParser , LoadBalance<NodeAttribute> readLoadBalance , LoadBalance<NodeAttribute> writeLoadBalance) {
-        this.priority = priority;
-        this.sqlParser = sqlParser;
+    protected AbstractRouteRule(Integer priority , SqlParser sqlParser , LoadBalance readLoadBalance , LoadBalance writeLoadBalance) {
+        this(priority , sqlParser);
         this.readLoadBalance = readLoadBalance;
         this.writeLoadBalance = writeLoadBalance;
+    }
+
+    protected AbstractRouteRule(Integer priority, SqlParser sqlParser) {
+        this.priority = priority;
+        this.sqlParser = sqlParser;
     }
 
     @Override

@@ -477,7 +477,6 @@ public class V1HttpHandler {
                 DataSourceConfiguration dataSourceConfiguration = sqlXConfiguration.getDataSourceConfByName(metrics.getDataSource());
                 if (Objects.nonNull(dataSourceConfiguration)) {
                     NodeAttribute nodeAttribute = dataSourceConfiguration.getNodeAttribute();
-                    metrics.setNodeType(nodeAttribute.getNodeType());
                     metrics.setNodeState(nodeAttribute.getNodeState());
                 }
             }

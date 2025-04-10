@@ -52,31 +52,35 @@ public class MockSqlExecutor {
 //        } , 1 ,13, TimeUnit.MILLISECONDS);
 
 
-//        EXECUTOR.scheduleAtFixedRate(() -> {
-//
-//            transactionTemplate.executeWithoutResult(status -> {
-//                Map<String, Object> result1 = jdbcTemplate.queryForObject("select * from employee where id = ?" , new Object[] {1} ,new ColumnMapRowMapper());
-//                log.info("result1 {}" , result1);
-//
-//                Map<String, Object> result2 = jdbcTemplate.queryForObject("select * from area where id = ?" , new Object[] {1} ,new ColumnMapRowMapper());
-//                log.info("result2 {}" , result2);
-//
-//                int row = jdbcTemplate.update("insert into orders (id , order_no , pay_no) values (? , ? , ?)", ps -> {
-//                    ps.setLong(1 , new Random().nextLong());
-//                    ps.setString(2 , "order-1");
-//                    ps.setString(3 , "pay-1");
-//                });
-//                log.info("inserted row {}" , row);
-//            });
-//
-//
-//        } , 1 ,13, TimeUnit.MILLISECONDS);
-
         EXECUTOR.scheduleAtFixedRate(() -> {
-            String sql = "/*!nodeName=read_0;*/ select * from employee where id = ?";
-            Map<String, Object> result = jdbcTemplate.queryForObject(sql , new Object[] {1} ,new ColumnMapRowMapper());
-            log.info("result {}" , result);
-        } , 1 ,1, TimeUnit.MILLISECONDS);
+
+            try {
+                transactionTemplate.executeWithoutResult(status -> {
+                    Map<String, Object> result1 = jdbcTemplate.queryForObject("select * from employee where id = ?" , new Object[] {1} ,new ColumnMapRowMapper());
+                    log.info("result1 {}" , result1);
+
+                    Map<String, Object> result2 = jdbcTemplate.queryForObject("select * from area where id = ?" , new Object[] {1} ,new ColumnMapRowMapper());
+                    log.info("result2 {}" , result2);
+
+                    int row = jdbcTemplate.update("insert into orders (id , order_no , pay_no) values (? , ? , ?)", ps -> {
+                        ps.setLong(1 , new Random().nextLong());
+                        ps.setString(2 , "order-1");
+                        ps.setString(3 , "pay-1");
+                    });
+                    log.info("inserted row {}" , row);
+                });
+            } catch (Exception e) {
+
+            }
+
+
+        } , 1 ,13, TimeUnit.MILLISECONDS);
+
+//        EXECUTOR.scheduleAtFixedRate(() -> {
+//            String sql = "/*!nodeName=read_0;*/ select * from employee where id = ?";
+//            Map<String, Object> result = jdbcTemplate.queryForObject(sql , new Object[] {1} ,new ColumnMapRowMapper());
+//            log.info("result {}" , result);
+//        } , 1 ,1, TimeUnit.MILLISECONDS);
 
         //EXECUTOR.scheduleAtFixedRate(() -> {
         //    try {
@@ -99,7 +103,7 @@ public class MockSqlExecutor {
         //    Map<String, Object> result = jdbcTemplate.queryForObject(sql , new Object[] {1} ,new ColumnMapRowMapper());
         //    log.info("result {}" , result);
         //} , 1 ,1, TimeUnit.MILLISECONDS);
-//
+
 //        EXECUTOR.scheduleAtFixedRate(() -> {
 //            String sql = "insert into employee (id , name , department_id) values (? , ? , ?)";
 //            int row = jdbcTemplate.update(sql, ps -> {

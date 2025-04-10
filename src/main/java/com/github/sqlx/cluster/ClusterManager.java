@@ -17,15 +17,18 @@ package com.github.sqlx.cluster;
 
 
 import com.github.sqlx.NodeAttribute;
+import com.github.sqlx.config.ClusterConfiguration;
 import com.github.sqlx.config.DataSourceConfiguration;
 import com.github.sqlx.config.SqlXConfiguration;
 import com.github.sqlx.exception.ManagementException;
+import com.github.sqlx.exception.SqlXRuntimeException;
 import com.github.sqlx.util.CollectionUtils;
 import com.github.sqlx.util.MapUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -44,16 +47,10 @@ public class ClusterManager {
      */
     private final Map<String , Cluster> clusters = new ConcurrentHashMap<>();
 
-    /**
-     * The name of the default cluster.
-     */
-    private final String defaultCluster;
-
     private final SqlXConfiguration sqlXConfiguration;
 
     public ClusterManager(SqlXConfiguration sqlXConfiguration) {
         this.sqlXConfiguration = sqlXConfiguration;
-        this.defaultCluster = sqlXConfiguration.getDefaultCluster();
     }
 
     /**
@@ -62,7 +59,7 @@ public class ClusterManager {
      * @return the default cluster
      */
     public Cluster getDefaultCluster() {
-        return clusters.get(defaultCluster);
+        return clusters.get(sqlXConfiguration.getDefaultClusterName());
     }
 
 

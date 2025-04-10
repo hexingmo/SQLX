@@ -1,6 +1,5 @@
 package com.github.sqlx.sql.parser;
 
-import com.github.sqlx.config.SqlXConfiguration;
 import com.github.sqlx.sql.SqlAttribute;
 import com.github.sqlx.sql.SqlType;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Slf4j
 public class JSqlParserTest {
 
-    static SqlParser sqlParser = new JSqlParser(new SqlXConfiguration());
+    static SqlParser sqlParser = new JSqlParser();
 
     @BeforeAll
     static void init() {

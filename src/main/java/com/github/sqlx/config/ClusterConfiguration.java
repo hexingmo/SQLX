@@ -17,17 +17,18 @@
 package com.github.sqlx.config;
 
 import com.github.sqlx.NodeAttribute;
-import com.github.sqlx.NodeType;
 import com.github.sqlx.exception.ConfigurationException;
 import com.github.sqlx.exception.ManagementException;
+import com.github.sqlx.util.CollectionUtils;
+import com.github.sqlx.util.StringUtils;
 import com.google.gson.annotations.Expose;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -40,30 +41,77 @@ import java.util.stream.Collectors;
  * @since 1.0
  */
 @ConfigurationProperties(prefix = "sqlx.config.clusters")
-@Getter
-@Setter
-public class ClusterConfiguration extends LoadBalanceConfiguration implements ConfigurationValidator {
+public class ClusterConfiguration implements ConfigurationValidator {
 
     /**
      * The name of the cluster, used to identify the cluster.
      */
     @Expose
+    @Getter
+    @Setter
     private String name;
 
     /**
      * A set of node identifiers, representing all the nodes in the cluster.
      */
-    @Expose
-    private Set<String> nodes;
+    @Getter
+    private final Set<String> nodes = new HashSet<>();
 
     /**
      * A list of attributes for routing nodes, describing the characteristics and roles of each node.
      */
+    @Getter
+    @Setter
     private Set<NodeAttribute> nodeAttributes;
 
     @Expose
+    @Getter
+    @Setter
     private Boolean defaulted = false;
 
+    @Expose
+    @Getter
+    private Set<String> writableNodes = new HashSet<>();
+
+    @Expose
+    @Getter
+    private Set<String> readableNodes = new HashSet<>();
+
+    @Expose
+    @Getter
+    @Setter
+    private String writeLoadBalanceClass;
+
+    @Expose
+    @Getter
+    @Setter
+    private String readLoadBalanceClass;
+
+    public void setWritableNodes(Set<String> writableNodes) {
+        if (CollectionUtils.isNotEmpty(writableNodes)) {
+            this.writableNodes.addAll(writableNodes);
+            this.nodes.addAll(writableNodes);
+        }
+    }
+
+    public void setReadableNodes(Set<String> readableNodes) {
+        if (CollectionUtils.isNotEmpty(readableNodes)) {
+            this.readableNodes.addAll(readableNodes);
+            this.nodes.addAll(readableNodes);
+        }
+    }
+
+    public Set<NodeAttribute> getWritableRoutingNodeAttributes() {
+        return nodeAttributes.stream()
+                .filter(nodeAttribute -> this.writableNodes.contains(nodeAttribute.getName()))
+                .collect(Collectors.toSet());
+    }
+
+    public Set<NodeAttribute> getReadableRoutingNodeAttributes() {
+        return nodeAttributes.stream()
+                .filter(nodeAttribute -> this.readableNodes.contains(nodeAttribute.getName()))
+                .collect(Collectors.toSet());
+    }
 
     /**
      * Validates the cluster configuration to ensure it meets the rules.
@@ -74,18 +122,6 @@ public class ClusterConfiguration extends LoadBalanceConfiguration implements Co
      */
     @Override
     public void validate() {
-        // Check if there is at least one writable node in the cluster
-        Optional<NodeAttribute> anyCanWrite = nodeAttributes.stream().filter(n -> n.getNodeType().canWrite()).findAny();
-        if (!anyCanWrite.isPresent()) {
-            throw new ConfigurationException(String.format("At least one writable node is included in %s cluster" , name));
-        }
-
-        // Check if there are any independent nodes, which are not allowed in the cluster
-        Optional<NodeAttribute> anyIndependent = nodeAttributes.stream().filter(n -> Objects.equals(NodeType.INDEPENDENT, n.getNodeType())).findAny();
-        if (anyIndependent.isPresent()) {
-            throw new ConfigurationException("Independent nodes are not allowed in the cluster");
-        }
-
         // Check if all nodes in the cluster have the same database type
         Set<String> databaseTypes = nodeAttributes.stream()
                 .map(NodeAttribute::getDatabaseType)
@@ -95,19 +131,32 @@ public class ClusterConfiguration extends LoadBalanceConfiguration implements Co
             String differentTypes = String.join(", ", databaseTypes);
             throw new ConfigurationException(String.format("All nodes in the cluster must have the same database type. Found different types: %s", differentTypes));
         }
+
+        if (StringUtils.isNotBlank(this.writeLoadBalanceClass)) {
+            try {
+                Class.forName(this.writeLoadBalanceClass);
+            } catch (ClassNotFoundException e) {
+                throw new ConfigurationException(String.format("writeLoadBalanceClass [%s] Class Not Found" , this.writeLoadBalanceClass));
+            }
+        }
+
+        if (StringUtils.isNotBlank(this.readLoadBalanceClass)) {
+            try {
+                Class.forName(this.readLoadBalanceClass);
+            } catch (ClassNotFoundException e) {
+                throw new ConfigurationException(String.format("readLoadBalanceClass [%s] Class Not Found" , this.readLoadBalanceClass));
+            }
+        }
+
+        if (CollectionUtils.isEmpty(this.writableNodes)) {
+            throw new ConfigurationException(String.format("At least one writable node is required in the [%s] cluster." , name));
+        }
+
+        if (CollectionUtils.isEmpty(this.readableNodes)) {
+            throw new ConfigurationException(String.format("At least one readable node is required in the [%s] cluster." , name));
+        }
     }
 
-
-    /**
-     * Returns the list of routing node attributes.
-     * This method is used to get the list of node attributes for routing decisions.
-     *
-     * @return The list of routing node attributes.
-     */
-    @Override
-    protected synchronized Set<NodeAttribute> getRoutingNodeAttribute() {
-        return nodeAttributes;
-    }
 
     /**
      * Removes the routing node attribute with the specified name.
@@ -154,13 +203,12 @@ public class ClusterConfiguration extends LoadBalanceConfiguration implements Co
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof ClusterConfiguration)) return false;
-        if (!super.equals(o)) return false;
         ClusterConfiguration that = (ClusterConfiguration) o;
-        return Objects.equals(getName(), that.getName());
+        return Objects.equals(this.name, that.getName());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), getName());
+        return Objects.hash(this.name);
     }
 }

@@ -21,18 +21,35 @@ import com.github.sqlx.jdbc.datasource.SqlXDataSource;
 import com.github.sqlx.jdbc.datasource.RoutedDataSource;
 import com.github.sqlx.listener.RouteInfo;
 import com.github.sqlx.listener.EventListener;
+import com.github.sqlx.util.MapUtils;
 import com.github.sqlx.util.RoutingUtils;
 import com.github.sqlx.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.sql.DataSource;
-import java.sql.*;
+import java.sql.Array;
+import java.sql.Blob;
+import java.sql.CallableStatement;
+import java.sql.Clob;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.NClob;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLClientInfoException;
+import java.sql.SQLException;
+import java.sql.SQLWarning;
+import java.sql.SQLXML;
+import java.sql.Savepoint;
+import java.sql.Statement;
+import java.sql.Struct;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.concurrent.Executor;
 
 /**
  * @author He Xing Mo
@@ -46,19 +63,23 @@ public class ProxyConnection extends AbstractConnectionAdapter {
 
     private volatile boolean autoCommit = true;
 
-    private volatile boolean closed = false;
-
     private volatile boolean readOnly = false;
 
-    private volatile int isolation = TRANSACTION_READ_COMMITTED;
+    private volatile Integer isolation;
 
     private volatile String schema;
 
-    private volatile int holdability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
+    private volatile Integer holdability;
 
     private String catalog;
 
+    private Executor executor;
+
+    private Integer networkTimeout;
+
     private final Map<String , String> clientInfoMap = new HashMap<>();
+
+    private Map<String, Class<?>> typeMap = new HashMap<>();
 
     private final List<RouteInfo> routeInfoList = new ArrayList<>();
 
@@ -66,11 +87,21 @@ public class ProxyConnection extends AbstractConnectionAdapter {
 
     private Properties clientInfo;
 
-    private DatabaseMetaDataWrapper databaseMetaData;
+    private String username;
+
+    private String password;
+
+    private final DatabaseMetaDataWrapper databaseMetaData;
 
     private final SqlXDataSource sqlXDataSource;
 
     private EventListener eventListener;
+
+    public ProxyConnection(SqlXDataSource sqlXDataSource, EventListener eventListener , String username , String password) {
+        this(sqlXDataSource , eventListener);
+        this.username = username;
+        this.password = password;
+    }
 
     public ProxyConnection(SqlXDataSource sqlXDataSource, EventListener eventListener) {
         this(sqlXDataSource);
@@ -86,12 +117,12 @@ public class ProxyConnection extends AbstractConnectionAdapter {
 
     @Override
     public Statement createStatement() throws SQLException {
-        return new ProxyStatement(sqlXDataSource, ResultSet.TYPE_SCROLL_INSENSITIVE , ResultSet.CONCUR_READ_ONLY , ResultSet.CLOSE_CURSORS_AT_COMMIT , eventListener);
+        return new ProxyStatement(sqlXDataSource, null , null , null , eventListener);
     }
 
     @Override
     public Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException {
-        return new ProxyStatement(sqlXDataSource, ResultSet.TYPE_SCROLL_INSENSITIVE , resultSetConcurrency , ResultSet.CLOSE_CURSORS_AT_COMMIT , eventListener);
+        return new ProxyStatement(sqlXDataSource, resultSetType , resultSetConcurrency , null , eventListener);
     }
 
     @Override
@@ -101,282 +132,49 @@ public class ProxyConnection extends AbstractConnectionAdapter {
 
     @Override
     public PreparedStatement prepareStatement(String sql) throws SQLException {
-
-        PreparedStatementInfo preparedStatementInfo = new PreparedStatementInfo();
-        connectionInfo.addStatementInfo(preparedStatementInfo);
-        preparedStatementInfo.setConnectionInfo(connectionInfo);
-        Exception e = null;
-        try {
-            // Pay attention to the order of obtaining the connection first and then processing the PrepareStatement
-            RoutedConnection routedConnection = getConnection(sql);
-            preparedStatementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
-            preparedStatementInfo.setSql(sql);
-            preparedStatementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
-            preparedStatementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onBeforePrepareStatement(preparedStatementInfo);
-            Connection connection = routedConnection.getConnection();
-            String nativeSql = routedConnection.getNativeSql();
-            PreparedStatement ps = connection.prepareStatement(nativeSql);
-            preparedStatementInfo.setNativeSql(nativeSql);
-            preparedStatementInfo.setStatement(ps);
-            return new ProxyPreparedStatement(this.sqlXDataSource, preparedStatementInfo , this.eventListener);
-        } catch (Exception ex) {
-            e = ex;
-            throw ex;
-        } finally {
-            preparedStatementInfo.addException(e);
-            preparedStatementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
-            preparedStatementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onAfterPrepareStatement(preparedStatementInfo , e);
-        }
+        return createPreparedStatement(sql);
     }
 
     @Override
     public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
-        PreparedStatementInfo preparedStatementInfo = new PreparedStatementInfo();
-        connectionInfo.addStatementInfo(preparedStatementInfo);
-        preparedStatementInfo.setConnectionInfo(connectionInfo);
-        SQLException e = null;
-        try {
-            RoutedConnection routedConnection = getConnection(sql);
-            preparedStatementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
-            preparedStatementInfo.setSql(sql);
-            preparedStatementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
-            preparedStatementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onBeforePrepareStatement(preparedStatementInfo);
-            Connection connection = routedConnection.getConnection();
-            String nativeSql = routedConnection.getNativeSql();
-            PreparedStatement ps = connection.prepareStatement(nativeSql, resultSetType, resultSetConcurrency);
-            preparedStatementInfo.setNativeSql(nativeSql);
-            preparedStatementInfo.setStatement(ps);
-            return new ProxyPreparedStatement(this.sqlXDataSource,preparedStatementInfo , this.eventListener);
-        } catch (SQLException ex) {
-            e = ex;
-            throw ex;
-        } finally {
-            preparedStatementInfo.addException(e);
-            preparedStatementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
-            preparedStatementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onAfterPrepareStatement(preparedStatementInfo , e);
-        }
+        return createPreparedStatement(sql, resultSetType, resultSetConcurrency);
     }
-
 
     @Override
     public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
-
-        PreparedStatementInfo preparedStatementInfo = new PreparedStatementInfo();
-        connectionInfo.addStatementInfo(preparedStatementInfo);
-        preparedStatementInfo.setConnectionInfo(connectionInfo);
-        SQLException e = null;
-        try {
-            RoutedConnection routedConnection = getConnection(sql);
-            preparedStatementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
-            preparedStatementInfo.setSql(sql);
-            preparedStatementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
-            preparedStatementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onBeforePrepareStatement(preparedStatementInfo);
-            Connection connection = routedConnection.getConnection();
-            String nativeSql = routedConnection.getNativeSql();
-            PreparedStatement ps = connection.prepareStatement(nativeSql, resultSetType, resultSetConcurrency, resultSetHoldability);
-            preparedStatementInfo.setNativeSql(nativeSql);
-            preparedStatementInfo.setStatement(ps);
-            return new ProxyPreparedStatement(this.sqlXDataSource,preparedStatementInfo , this.eventListener);
-        } catch (SQLException ex) {
-            e = ex;
-            throw ex;
-        } finally {
-            preparedStatementInfo.addException(e);
-            preparedStatementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
-            preparedStatementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onAfterPrepareStatement(preparedStatementInfo , e);
-        }
+        return createPreparedStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
     }
 
     @Override
     public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException {
-
-        PreparedStatementInfo preparedStatementInfo = new PreparedStatementInfo();
-        connectionInfo.addStatementInfo(preparedStatementInfo);
-        preparedStatementInfo.setConnectionInfo(connectionInfo);
-        SQLException e = null;
-        try {
-            RoutedConnection routedConnection = getConnection(sql);
-            preparedStatementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
-            preparedStatementInfo.setSql(sql);
-            preparedStatementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
-            preparedStatementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onBeforePrepareStatement(preparedStatementInfo);
-            Connection connection = routedConnection.getConnection();
-            String nativeSql = routedConnection.getNativeSql();
-            PreparedStatement ps = connection.prepareStatement(nativeSql, autoGeneratedKeys);
-            preparedStatementInfo.setNativeSql(nativeSql);
-            preparedStatementInfo.setStatement(ps);
-            return new ProxyPreparedStatement(this.sqlXDataSource,preparedStatementInfo , this.eventListener);
-        } catch (SQLException ex) {
-            e = ex;
-            throw ex;
-        } finally {
-            preparedStatementInfo.addException(e);
-            preparedStatementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
-            preparedStatementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onAfterPrepareStatement(preparedStatementInfo , e);
-        }
+        return createPreparedStatement(sql, autoGeneratedKeys);
     }
 
+    @SuppressWarnings("all")
     @Override
     public PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException {
-        PreparedStatementInfo preparedStatementInfo = new PreparedStatementInfo();
-        connectionInfo.addStatementInfo(preparedStatementInfo);
-        preparedStatementInfo.setConnectionInfo(connectionInfo);
-        SQLException e = null;
-        try {
-            RoutedConnection routedConnection = getConnection(sql);
-            preparedStatementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
-            preparedStatementInfo.setSql(sql);
-            preparedStatementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
-            preparedStatementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onBeforePrepareStatement(preparedStatementInfo);
-            Connection connection = routedConnection.getConnection();
-            String nativeSql = routedConnection.getNativeSql();
-            PreparedStatement ps = connection.prepareStatement(nativeSql, columnIndexes);
-            preparedStatementInfo.setNativeSql(nativeSql);
-            preparedStatementInfo.setStatement(ps);
-            return new ProxyPreparedStatement(this.sqlXDataSource,preparedStatementInfo , this.eventListener);
-        } catch (SQLException ex) {
-            e = ex;
-            throw ex;
-        } finally {
-            preparedStatementInfo.addException(e);
-            preparedStatementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
-            preparedStatementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onAfterPrepareStatement(preparedStatementInfo , e);
-        }
+        return createPreparedStatement(sql, new Object[]{columnIndexes});
     }
 
+    @SuppressWarnings("all")
     @Override
     public PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException {
-
-        PreparedStatementInfo preparedStatementInfo = new PreparedStatementInfo();
-        connectionInfo.addStatementInfo(preparedStatementInfo);
-        preparedStatementInfo.setConnectionInfo(connectionInfo);
-        SQLException e = null;
-        try {
-            RoutedConnection routedConnection = getConnection(sql);
-            preparedStatementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
-            preparedStatementInfo.setSql(sql);
-            preparedStatementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
-            preparedStatementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onBeforePrepareStatement(preparedStatementInfo);
-            Connection connection = routedConnection.getConnection();
-            String nativeSql = routedConnection.getNativeSql();
-            PreparedStatement ps = connection.prepareStatement(nativeSql, columnNames);
-            preparedStatementInfo.setNativeSql(nativeSql);
-            preparedStatementInfo.setStatement(ps);
-            return new ProxyPreparedStatement(this.sqlXDataSource,preparedStatementInfo , this.eventListener);
-        } catch (SQLException ex) {
-            e = ex;
-            throw ex;
-        } finally {
-            preparedStatementInfo.addException(e);
-            preparedStatementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
-            preparedStatementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onAfterPrepareStatement(preparedStatementInfo , e);
-        }
+        return createPreparedStatement(sql, new Object[]{columnNames});
     }
 
     @Override
     public CallableStatement prepareCall(String sql) throws SQLException {
-        CallableStatementInfo statementInfo = new CallableStatementInfo();
-        connectionInfo.addStatementInfo(statementInfo);
-        statementInfo.setConnectionInfo(connectionInfo);
-        SQLException e = null;
-        try {
-            RoutedConnection routedConnection = getConnection(sql);
-            statementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
-            statementInfo.setSql(sql);
-            statementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
-            statementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onBeforeCallableStatement(statementInfo);
-            Connection connection = routedConnection.getConnection();
-            String nativeSql = routedConnection.getNativeSql();
-            CallableStatement callableStatement = connection.prepareCall(nativeSql);
-            statementInfo.setNativeSql(nativeSql);
-            statementInfo.setStatement(callableStatement);
-            statementInfo.setCallableStatement(callableStatement);
-            return new ProxyCallableStatement(this.sqlXDataSource,statementInfo , callableStatement , this.eventListener);
-        } catch (SQLException ex) {
-            e = ex;
-            throw ex;
-        } finally {
-            statementInfo.addException(e);
-            statementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
-            statementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onAfterCallStatement(statementInfo , e);
-        }
+        return prepareCallableStatement(sql);
     }
 
     @Override
     public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
-        CallableStatementInfo statementInfo = new CallableStatementInfo();
-        connectionInfo.addStatementInfo(statementInfo);
-        statementInfo.setConnectionInfo(connectionInfo);
-        SQLException e = null;
-        try {
-            RoutedConnection routedConnection = getConnection(sql);
-            statementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
-            statementInfo.setSql(sql);
-            statementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
-            statementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onBeforeCallableStatement(statementInfo);
-            Connection connection = routedConnection.getConnection();
-            String nativeSql = routedConnection.getNativeSql();
-            CallableStatement callableStatement = connection.prepareCall(nativeSql, resultSetType, resultSetConcurrency);
-            statementInfo.setNativeSql(nativeSql);
-            statementInfo.setStatement(callableStatement);
-            statementInfo.setCallableStatement(callableStatement);
-            return new ProxyCallableStatement(this.sqlXDataSource,statementInfo , callableStatement , this.eventListener);
-        } catch (SQLException ex) {
-            e = ex;
-            throw ex;
-        } finally {
-            statementInfo.addException(e);
-            statementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
-            statementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onAfterCallStatement(statementInfo , e);
-        }
+        return prepareCallableStatement(sql, resultSetType, resultSetConcurrency);
     }
 
     @Override
     public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
-
-        CallableStatementInfo statementInfo = new CallableStatementInfo();
-        connectionInfo.addStatementInfo(statementInfo);
-        statementInfo.setConnectionInfo(connectionInfo);
-        SQLException e = null;
-        try {
-            RoutedConnection routedConnection = getConnection(sql);
-            statementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
-            statementInfo.setSql(sql);
-            statementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
-            statementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onBeforeCallableStatement(statementInfo);
-            Connection connection = routedConnection.getConnection();
-            String nativeSql = routedConnection.getNativeSql();
-            CallableStatement callableStatement = connection.prepareCall(nativeSql, resultSetType, resultSetConcurrency, resultSetHoldability);
-            statementInfo.setNativeSql(nativeSql);
-            statementInfo.setStatement(callableStatement);
-            statementInfo.setCallableStatement(callableStatement);
-            return new ProxyCallableStatement(this.sqlXDataSource,statementInfo , callableStatement , this.eventListener);
-        } catch (SQLException ex) {
-            e = ex;
-            throw ex;
-        } finally {
-            statementInfo.addException(e);
-            statementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
-            statementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
-            eventListener.onAfterCallStatement(statementInfo , e);
-        }
+        return prepareCallableStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
     }
 
     @Override
@@ -404,9 +202,41 @@ public class ProxyConnection extends AbstractConnectionAdapter {
     }
 
     @Override
+    public Map<String,Class<?>> getTypeMap() throws SQLException {
+        return this.typeMap;
+    }
+
+    @Override
+    public void setTypeMap(Map<String,Class<?>> typeMap) throws SQLException {
+        this.typeMap = typeMap;
+        if (Objects.nonNull(physicalConnection)) {
+            physicalConnection.setTypeMap(typeMap);
+        }
+    }
+
+    @Override
+    public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
+        this.executor = executor;
+        this.networkTimeout = milliseconds;
+    }
+
+
+    @Override
+    public int getNetworkTimeout() throws SQLException {
+        if (Objects.nonNull(physicalConnection)) {
+            return physicalConnection.getNetworkTimeout();
+        }
+        if (Objects.nonNull(networkTimeout)) {
+            return networkTimeout;
+        }
+        return 0;
+    }
+
+
+    @Override
     public void commit() throws SQLException {
         if (Objects.isNull(physicalConnection)) {
-            return;
+            throw new SQLException("Physical connection is not initialized. Unable to commit.");
         }
         SQLException e = null;
         try {
@@ -427,7 +257,7 @@ public class ProxyConnection extends AbstractConnectionAdapter {
     @Override
     public void rollback() throws SQLException {
         if (Objects.isNull(physicalConnection)) {
-            return;
+            throw new SQLException("Physical connection is not initialized. Unable to rollback.");
         }
         SQLException e = null;
         try {
@@ -447,10 +277,9 @@ public class ProxyConnection extends AbstractConnectionAdapter {
 
     @Override
     public synchronized void close() throws SQLException {
-        if (closed || physicalConnection == null) {
-            return;
+        if (physicalConnection == null) {
+            throw new SQLException("Physical connection is not initialized. Unable to close.");
         }
-        this.closed = true;
         SQLException e = null;
         try {
             connectionInfo.setBeforeTimeToCloseConnectionNs(System.nanoTime());
@@ -468,7 +297,10 @@ public class ProxyConnection extends AbstractConnectionAdapter {
 
     @Override
     public boolean isClosed() throws SQLException {
-        return Objects.nonNull(physicalConnection) ? physicalConnection.isClosed() : this.closed;
+        if (Objects.nonNull(physicalConnection)) {
+            return physicalConnection.isClosed();
+        }
+        return false;
     }
 
     @Override
@@ -482,8 +314,7 @@ public class ProxyConnection extends AbstractConnectionAdapter {
             RouteInfo routeInfo = routedDataSource.getRouteInfo();
             this.connectionInfo.setCurrentRouteInfo(routeInfo);
             this.routeInfoList.add(routeInfo);
-            DataSource dataSource = routedDataSource.getDelegate();
-            this.physicalConnection = acquireConnection(dataSource);
+            this.physicalConnection = acquireConnection(routedDataSource);
             DatabaseMetaData metaData = physicalConnection.getMetaData();
             this.databaseMetaData.setDelegate(metaData);
         }
@@ -513,7 +344,13 @@ public class ProxyConnection extends AbstractConnectionAdapter {
 
     @Override
     public synchronized int getTransactionIsolation() throws SQLException {
-        return Objects.nonNull(physicalConnection) ? physicalConnection.getTransactionIsolation() : this.isolation;
+        if (Objects.nonNull(physicalConnection)) {
+            return physicalConnection.getTransactionIsolation();
+        }
+        if (Objects.nonNull(isolation)) {
+            return isolation;
+        }
+        return Connection.TRANSACTION_READ_COMMITTED;
     }
 
 
@@ -561,38 +398,59 @@ public class ProxyConnection extends AbstractConnectionAdapter {
 
     @Override
     public Clob createClob() throws SQLException {
-        return Objects.nonNull(physicalConnection) ? physicalConnection.createClob() : null;
+        if (Objects.nonNull(physicalConnection)) {
+            return physicalConnection.createClob();
+        }
+        throw new SQLException("Physical connection is not initialized. Unable to create Clob.");
     }
 
     @Override
     public Blob createBlob() throws SQLException {
-        return Objects.nonNull(physicalConnection) ? physicalConnection.createBlob() : null;
+        if (Objects.nonNull(physicalConnection)) {
+            return physicalConnection.createBlob();
+        }
+        throw new SQLException("Physical connection is not initialized. Unable to create Blob.");
     }
 
     @Override
     public synchronized NClob createNClob() throws SQLException {
-        return Objects.nonNull(physicalConnection) ? physicalConnection.createNClob() : null;
+        if (Objects.nonNull(physicalConnection)) {
+            return physicalConnection.createNClob();
+        }
+        throw new SQLException("Physical connection is not initialized. Unable to create NClob.");
     }
 
     @Override
     public SQLXML createSQLXML() throws SQLException {
-        return Objects.nonNull(physicalConnection) ? physicalConnection.createSQLXML() : null;
+        if (Objects.nonNull(physicalConnection)) {
+            return physicalConnection.createSQLXML();
+        }
+        throw new SQLException("Physical connection is not initialized. Unable to create SQLXML.");
     }
 
 
     @Override
     public Array createArrayOf(String typeName, Object[] elements) throws SQLException {
-        return Objects.nonNull(physicalConnection) ? physicalConnection.createArrayOf(typeName , elements) : null;
+        if (Objects.nonNull(physicalConnection)) {
+            return physicalConnection.createArrayOf(typeName , elements);
+        }
+        throw new SQLException("Physical connection is not initialized. Unable to create ArrayOf.");
     }
 
     @Override
     public Struct createStruct(String typeName, Object[] attributes) throws SQLException {
-        return Objects.nonNull(physicalConnection) ? physicalConnection.createStruct(typeName , attributes) : null;
+        if (Objects.nonNull(physicalConnection)) {
+            return physicalConnection.createStruct(typeName , attributes);
+        }
+        throw new SQLException("Physical connection is not initialized. Unable to create Struct.");
     }
 
     @Override
     public boolean isValid(int timeout) throws SQLException {
-        return Objects.nonNull(physicalConnection) ? physicalConnection.isValid(timeout) : true;
+        if (Objects.nonNull(physicalConnection)) {
+            return physicalConnection.isValid(timeout);
+        }
+        return true;
     }
 
     @Override
@@ -618,7 +476,7 @@ public class ProxyConnection extends AbstractConnectionAdapter {
 
     @Override
     public synchronized Properties getClientInfo() throws SQLException {
-        return Objects.nonNull(physicalConnection) ? physicalConnection.getClientInfo() : null;
+        return Objects.nonNull(physicalConnection) ? physicalConnection.getClientInfo() : new Properties();
     }
 
 
@@ -645,7 +503,13 @@ public class ProxyConnection extends AbstractConnectionAdapter {
 
     @Override
     public synchronized int getHoldability() throws SQLException {
-        return this.holdability;
+        if (Objects.nonNull(physicalConnection)) {
+            return physicalConnection.getHoldability();
+        }
+        if (Objects.nonNull(holdability)) {
+            return holdability;
+        }
+        return ResultSet.CLOSE_CURSORS_AT_COMMIT;
     }
 
     @Override
@@ -673,10 +537,20 @@ public class ProxyConnection extends AbstractConnectionAdapter {
         }
     }
 
-    public List<RouteInfo> getRoutingInfoList() {
-        return routeInfoList;
-    }
-
+    /**
+     * Retrieves a routed connection based on the provided SQL statement.
+     * This method performs several key operations:
+     * 1. Obtains the appropriate RoutedDataSource based on the provided SQL.
+     * 2. Checks if a physical connection already exists.
+     * 3. If a physical connection exists, it updates the route information, transaction details, and adds the route info to the list.
+     * 4. If no physical connection exists, it retrieves the route information, updates the connection details, and acquires a new physical connection.
+     * 5. Sets the default database for the physical connection using the route information.
+     * 6. Returns a new RoutedConnection object containing the routed data source and the physical connection.
+     *
+     * @param sql the SQL statement used to determine the appropriate data source and route information
+     * @return a RoutedConnection object containing the routed data source and the physical connection
+     * @throws SQLException if a database access error occurs or the data source is invalid
+     */
     public synchronized RoutedConnection getConnection(String sql) throws SQLException {
         RoutedDataSource routedDataSource = sqlXDataSource.getDataSource(sql);
         if (Objects.nonNull(physicalConnection)) {
@@ -703,6 +577,21 @@ public class ProxyConnection extends AbstractConnectionAdapter {
         return this.physicalConnection;
     }
 
+    /**
+     * Acquires a database connection from the provided DataSource.
+     * This method performs several key operations:
+     * 1. Records the start time for connection acquisition.
+     * 2. Notifies the event listener before attempting to get a connection.
+     * 3. Attempts to obtain a connection from the DataSource.
+     * 4. Sets the delegate of the databaseMetaData to the metadata of the acquired connection.
+     * 5. Sets various connection properties such as auto-commit, read-only, transaction isolation, schema, holdability, client info, and catalog.
+     * 6. Records the end time for connection acquisition.
+     * 7. Notifies the event listener after attempting to get a connection, including any exceptions that occurred.
+     *
+     * @param dataSource the DataSource from which to acquire the connection
+     * @return the acquired Connection object
+     * @throws SQLException if a database access error occurs or the DataSource is invalid
+     */
     private synchronized Connection acquireConnection(DataSource dataSource) throws SQLException {
 
         SQLException e = null;
@@ -710,7 +599,11 @@ public class ProxyConnection extends AbstractConnectionAdapter {
             connectionInfo.setBeforeTimeToGetConnectionNs(System.nanoTime());
             connectionInfo.setBeforeTimeToGetConnectionMillis(System.currentTimeMillis());
             eventListener.onBeforeGetConnection(connectionInfo);
-            this.physicalConnection = dataSource.getConnection();
+            if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)) {
+                this.physicalConnection = dataSource.getConnection(username , password);
+            } else {
+                this.physicalConnection = dataSource.getConnection();
+            }
             this.databaseMetaData.setDelegate(this.physicalConnection.getMetaData());
             connectionPropertiesSet();
             return this.physicalConnection;
@@ -727,11 +620,15 @@ public class ProxyConnection extends AbstractConnectionAdapter {
     private void connectionPropertiesSet() throws SQLException {
         this.physicalConnection.setAutoCommit(this.autoCommit);
         this.physicalConnection.setReadOnly(this.readOnly);
-        this.physicalConnection.setTransactionIsolation(this.isolation);
         if (this.schema != null) {
             this.physicalConnection.setSchema(this.schema);
         }
-        this.physicalConnection.setHoldability(holdability);
+        if (holdability != null) {
+            this.physicalConnection.setHoldability(holdability);
+        }
+        if (isolation != null) {
+            this.physicalConnection.setTransactionIsolation(isolation);
+        }
         if (this.clientInfo != null) {
             this.physicalConnection.setClientInfo(clientInfo);
         }
@@ -740,6 +637,170 @@ public class ProxyConnection extends AbstractConnectionAdapter {
         }
         if (StringUtils.isNotBlank(catalog)) {
             this.physicalConnection.setCatalog(catalog);
+        }
+        if (MapUtils.isNotEmpty(typeMap)) {
+            this.physicalConnection.setTypeMap(typeMap);
+        }
+        if (this.executor != null && this.networkTimeout != null) {
+            this.physicalConnection.setNetworkTimeout(executor , networkTimeout);
+        }
+    }
+
+    /**
+     * Creates a PreparedStatement with the given SQL and arguments.
+     * This method retrieves a routed connection based on the provided SQL,
+     * sets up necessary information for event listeners, and prepares the statement
+     * with the provided arguments. It handles different types of arguments to
+     * accommodate various PreparedStatement creation methods.
+     *
+     * @param sql  the SQL statement to be pre-compiled
+     * @param args the arguments for the PreparedStatement
+     * @return a new default PreparedStatement object containing the pre-compiled SQL statement
+     * @throws SQLException if a database access error occurs or this method is called on a closed connection
+     */
+    private PreparedStatement createPreparedStatement(String sql, Object... args) throws SQLException {
+        PreparedStatementInfo preparedStatementInfo = new PreparedStatementInfo();
+        connectionInfo.addStatementInfo(preparedStatementInfo);
+        preparedStatementInfo.setConnectionInfo(connectionInfo);
+        Exception e = null;
+        try {
+            preparedStatementInfo.setSql(sql);
+            preparedStatementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
+            preparedStatementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
+            RoutedConnection routedConnection = getConnection(sql);
+            preparedStatementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
+            eventListener.onBeforePrepareStatement(preparedStatementInfo);
+            Connection connection = routedConnection.getConnection();
+            String nativeSql = routedConnection.getNativeSql();
+            PreparedStatement ps = createPreparedStatementWithArgs(connection, nativeSql, args);
+            preparedStatementInfo.setNativeSql(nativeSql);
+            preparedStatementInfo.setStatement(ps);
+            return new ProxyPreparedStatement(this.sqlXDataSource, preparedStatementInfo, this.eventListener);
+        } catch (Exception ex) {
+            e = ex;
+            throw ex;
+        } finally {
+            preparedStatementInfo.addException(e);
+            preparedStatementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
+            preparedStatementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
+            eventListener.onAfterPrepareStatement(preparedStatementInfo, e);
+        }
+    }
+
+    /**
+     * Creates a PreparedStatement with the given connection, SQL, and arguments.
+     * This method handles different types of arguments to accommodate various
+     * PreparedStatement creation methods, such as specifying result set type and concurrency,
+     * auto-generated keys, column indexes, and column names.
+     *
+     * @param connection the connection to the database
+     * @param nativeSql  the SQL statement to be pre-compiled
+     * @param args       the arguments for the PreparedStatement
+     * @return a new default PreparedStatement object containing the pre-compiled SQL statement
+     * @throws SQLException if a database access error occurs or this method is called on a closed connection
+     */
+    @SuppressWarnings("all")
+    private PreparedStatement createPreparedStatementWithArgs(Connection connection, String nativeSql, Object... args) throws SQLException {
+        if (args.length == 0) {
+            return connection.prepareStatement(nativeSql);
+        } else if (args.length == 2 && args[0] instanceof Integer && args[1] instanceof Integer) {
+            // PreparedStatement.prepareStatement(String sql, int resultSetType, int resultSetConcurrency)
+            int resultSetType = (int) args[0];
+            int resultSetConcurrency = (int) args[1];
+            return connection.prepareStatement(nativeSql, resultSetType, resultSetConcurrency);
+        } else if (args.length == 3 && args[0] instanceof Integer && args[1] instanceof Integer && args[2] instanceof Integer) {
+            // PreparedStatement.prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability)
+            int resultSetType = (int) args[0];
+            int resultSetConcurrency = (int) args[1];
+            int resultSetHoldability = (int) args[2];
+            return connection.prepareStatement(nativeSql, resultSetType, resultSetConcurrency, resultSetHoldability);
+        } else if (args.length == 1 && args[0] instanceof Integer) {
+            // PreparedStatement.prepareStatement(String sql, int autoGeneratedKeys)
+            int autoGeneratedKeys = (int) args[0];
+            return connection.prepareStatement(nativeSql, autoGeneratedKeys);
+        } else if (args.length == 1 && args[0] instanceof int[]) {
+            // PreparedStatement.prepareStatement(String sql, int[] columnIndexes)
+            int[] columnIndexes = (int[]) args[0];
+            return connection.prepareStatement(nativeSql, columnIndexes);
+        } else if (args.length == 1 && args[0] instanceof String[]) {
+            // PreparedStatement.prepareStatement(String sql, String[] columnNames)
+            String[] columnNames = (String[]) args[0];
+            return connection.prepareStatement(nativeSql, columnNames);
+        } else {
+            throw new SQLException("Unsupported arguments for prepareStatement");
+        }
+    }
+
+    /**
+     * Prepares a CallableStatement with the given SQL and arguments.
+     * This method retrieves a routed connection based on the provided SQL,
+     * sets up necessary information for event listeners, and prepares the callable statement
+     * with the provided arguments. It handles different types of arguments to
+     * accommodate various CallableStatement creation methods.
+     *
+     * @param sql  the SQL statement to be pre-compiled
+     * @param args the arguments for the CallableStatement
+     * @return a new default CallableStatement object containing the pre-compiled SQL statement
+     * @throws SQLException if a database access error occurs or this method is called on a closed connection
+     */
+    private CallableStatement prepareCallableStatement(String sql, Object... args) throws SQLException {
+        CallableStatementInfo statementInfo = new CallableStatementInfo();
+        connectionInfo.addStatementInfo(statementInfo);
+        statementInfo.setConnectionInfo(connectionInfo);
+        SQLException e = null;
+        try {
+            RoutedConnection routedConnection = getConnection(sql);
+            statementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
+            statementInfo.setSql(sql);
+            statementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
+            statementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
+            eventListener.onBeforeCallableStatement(statementInfo);
+            Connection connection = routedConnection.getConnection();
+            String nativeSql = routedConnection.getNativeSql();
+            CallableStatement callableStatement = createCallableStatementWithArgs(connection, nativeSql, args);
+            statementInfo.setNativeSql(nativeSql);
+            statementInfo.setStatement(callableStatement);
+            statementInfo.setCallableStatement(callableStatement);
+            return new ProxyCallableStatement(this.sqlXDataSource, statementInfo, callableStatement, this.eventListener);
+        } catch (SQLException ex) {
+            e = ex;
+            throw ex;
+        } finally {
+            statementInfo.addException(e);
+            statementInfo.setAfterTimeToCreateStatementNs(System.nanoTime());
+            statementInfo.setAfterTimeToCreateStatementMillis(System.currentTimeMillis());
+            eventListener.onAfterCallStatement(statementInfo, e);
+        }
+    }
+
+    /**
+     * Creates a CallableStatement with the given connection, SQL, and arguments.
+     * This method handles different types of arguments to accommodate various
+     * CallableStatement creation methods, such as specifying result set type and concurrency,
+     * and result set holdability.
+     *
+     * @param connection the connection to the database
+     * @param nativeSql  the SQL statement to be pre-compiled
+     * @param args       the arguments for the CallableStatement
+     * @return a new default CallableStatement object containing the pre-compiled SQL statement
+     * @throws SQLException if a database access error occurs or this method is called on a closed connection
+     */
+    private CallableStatement createCallableStatementWithArgs(Connection connection, String nativeSql, Object... args) throws SQLException {
+        if (args.length == 0) {
+            return connection.prepareCall(nativeSql);
+        } else if (args.length == 2 && args[0] instanceof Integer && args[1] instanceof Integer) {
+            // CallableStatement.prepareCall(String sql, int resultSetType, int resultSetConcurrency)
+            int resultSetType = (int) args[0];
+            int resultSetConcurrency = (int) args[1];
+            return connection.prepareCall(nativeSql, resultSetType, resultSetConcurrency);
+        } else if (args.length == 3 && args[0] instanceof Integer && args[1] instanceof Integer && args[2] instanceof Integer) {
+            // CallableStatement.prepareCall(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability)
+            int resultSetType = (int) args[0];
+            int resultSetConcurrency = (int) args[1];
+            int resultSetHoldability = (int) args[2];
+            return connection.prepareCall(nativeSql, resultSetType, resultSetConcurrency, resultSetHoldability);
+        } else {
+            throw new SQLException("Unsupported arguments for prepareCall");
         }
     }
 }

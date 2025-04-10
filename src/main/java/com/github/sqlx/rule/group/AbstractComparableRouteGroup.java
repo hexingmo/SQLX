@@ -69,7 +69,6 @@ public abstract class AbstractComparableRouteGroup<T extends RouteRule> implemen
 
     private boolean isEnableRule(T rule) {
 
-        // TODO Configuration of routing rules is temporarily not supported
         return true;
     }
 }

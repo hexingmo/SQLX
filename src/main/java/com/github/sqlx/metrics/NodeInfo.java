@@ -16,7 +16,6 @@
 package com.github.sqlx.metrics;
 
 import com.github.sqlx.NodeState;
-import com.github.sqlx.NodeType;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -29,8 +28,6 @@ import lombok.experimental.Accessors;
 public class NodeInfo {
 
     private String url;
-
-    private NodeType nodeType;
 
     private NodeState nodeState;
 

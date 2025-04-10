@@ -30,11 +30,9 @@ import com.github.sqlx.jdbc.datasource.DataSourceWrapper;
 import com.github.sqlx.jdbc.datasource.DatasourceManager;
 import com.github.sqlx.jdbc.transaction.Transaction;
 import com.github.sqlx.listener.EventListener;
-import com.github.sqlx.loadbalance.ReadLoadBalanceType;
-import com.github.sqlx.loadbalance.WriteLoadBalanceType;
 import com.github.sqlx.rule.group.CompositeRouteGroup;
 import com.github.sqlx.rule.group.DefaultRouteGroup;
-import com.github.sqlx.rule.group.DefaultRoutingGroupBuilder;
+import com.github.sqlx.rule.group.NoneClusterRoutingGroupBuilder;
 import com.github.sqlx.rule.group.RouteGroup;
 import com.github.sqlx.util.CollectionUtils;
 import com.github.sqlx.util.JsonUtils;
@@ -114,9 +112,6 @@ public class StatManager implements StatManagerMBean {
     @Override
     public void removeNodeInCluster(String clusterName, String nodeName) {
         log.info("Attempting to remove node: {} from cluster: {}", nodeName, clusterName);
-        if (Boolean.FALSE.equals(sqlXConfiguration.getClusterEnable())) {
-            throw new ManagementException("Cluster mode is not enabled. Please check if the cluster mode is enabled in the configuration.");
-        }
         if (clusterManager == null) {
             throw new ManagementException("clusterManager is null. Please check if the cluster mode is enabled in the configuration. Cannot perform the operation to remove a node from the cluster.");
         }
@@ -126,9 +121,6 @@ public class StatManager implements StatManagerMBean {
     @Override
     public void addNodeInCluster(String clusterName, String nodeName) {
         log.info("Attempting to add node: {} to cluster: {}", nodeName, clusterName);
-        if (Boolean.FALSE.equals(sqlXConfiguration.getClusterEnable())) {
-            throw new ManagementException("Cluster mode is not enabled. Please check if the cluster mode is enabled in the configuration.");
-        }
         if (clusterManager == null) {
             throw new ManagementException("clusterManager is null. Please check if the cluster mode is enabled in the configuration. Cannot perform the operation to remove a node from the cluster.");
         }
@@ -141,18 +133,6 @@ public class StatManager implements StatManagerMBean {
     @Override
     public String getVersion() {
         return Version.getVersion();
-    }
-
-    @Override
-    public String getReadLoadBalanceType() {
-        ReadLoadBalanceType type = sqlXConfiguration.getReadLoadBalanceType();
-        return type != null ? type.name() : "N/A";
-    }
-
-    @Override
-    public String getWriteLoadBalanceType() {
-        WriteLoadBalanceType type = sqlXConfiguration.getWriteLoadBalanceType();
-        return type != null ? type.name() : "N/A";
     }
 
     @Override
@@ -171,13 +151,8 @@ public class StatManager implements StatManagerMBean {
     }
 
     @Override
-    public boolean getClusterEnable() {
-        return sqlXConfiguration.getClusterEnable();
-    }
-
-    @Override
     public String getDefaultCluster() {
-        return sqlXConfiguration.getDefaultCluster();
+        return null;
     }
 
     @Override
@@ -235,9 +210,6 @@ public class StatManager implements StatManagerMBean {
 
     @Override
     public synchronized void addCluster(String clusterConfJson) {
-        if (Boolean.FALSE.equals(sqlXConfiguration.getClusterEnable())) {
-            throw new ManagementException("Cluster mode is not enabled. Please check if the cluster mode is enabled in the configuration. Cannot perform the operation to add a cluster.");
-        }
         if (StringUtils.isBlank(clusterConfJson)) {
             throw new ManagementException("clusterConfJson cannot be empty");
         }
@@ -252,12 +224,11 @@ public class StatManager implements StatManagerMBean {
         cluster.setNodes(configuration.getNodeAttributes());
         CompositeRouteGroup compositeRoutingGroup = new CompositeRouteGroup(eventListener , transaction);
         compositeRoutingGroup.installFirst(routingGroups);
-        DefaultRouteGroup defaultRoutingGroup = DefaultRoutingGroupBuilder.builder()
+        DefaultRouteGroup defaultRoutingGroup = NoneClusterRoutingGroupBuilder.builder()
                 .sqlXConfiguration(sqlXConfiguration)
                 .sqlParser(sqlXConfiguration.getSqlParserInstance())
                 .transaction(transaction)
-                .readLoadBalance(configuration.getReadLoadBalance())
-                .writeLoadBalance(configuration.getWriteLoadBalance())
+                // TODO
                 .datasourceManager(datasourceManager)
                 .build();
         compositeRoutingGroup.installLast(defaultRoutingGroup);
@@ -280,7 +251,6 @@ public class StatManager implements StatManagerMBean {
         map.put("Url" , dsConf.getJdbcUrl());
         map.put("Username" , dsConf.getUsername());
         map.put("Weight" , dsConf.getWeight());
-        map.put("Type" , dsConf.getType().name());
         map.put("HeartbeatSql" , dsConf.getHeartbeatSql());
         map.put("HeartbeatInterval" , dsConf.getHeartbeatInterval());
         map.put("DestroyMethod" , dsConf.getDestroyMethod());
@@ -291,19 +261,14 @@ public class StatManager implements StatManagerMBean {
     private CompositeDataSupport getClusterCompositeData(ClusterConfiguration conf) throws JMException {
         Map<String, Object> map = new HashMap<>();
         map.put("Name" , conf.getName());
-
-        ReadLoadBalanceType readType = conf.getReadLoadBalanceType();
-        WriteLoadBalanceType writeType = conf.getWriteLoadBalanceType();
-        map.put("ReadLoadBalanceType" , readType != null ? readType.name() : "N/A");
-        map.put("WriteLoadBalanceType" , writeType != null ? writeType.name() : "N/A");
-        map.put("ReadLoadBalanceClass" , conf.getReadLoadBalance().getClass().getName());
-        map.put("WriteLoadBalanceClass" , conf.getWriteLoadBalance().getClass().getName());
+        map.put("ReadLoadBalanceClass" , conf.getReadLoadBalanceClass());
+        map.put("WriteLoadBalanceClass" , conf.getWriteLoadBalanceClass());
 
 
         Set<NodeAttribute> nodes = conf.getNodeAttributes();
         List<String> nodesStr = new ArrayList<>();
         for (NodeAttribute node : nodes) {
-            String nodeStr = "Name:" + node.getName() + " ,Type: " + node.getNodeType().name() + " ,State: " + node.getNodeState().name() + " ,Weight: " + node.getWeight();
+            String nodeStr = "Name:" + node.getName() + " ,State: " + node.getNodeState().name() + " ,Weight: " + node.getWeight();
             nodesStr.add(nodeStr);
         }
         map.put("Nodes" , nodesStr.toArray(new String[0]));

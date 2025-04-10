@@ -16,13 +16,14 @@
 
 package com.github.sqlx.sql.parser;
 
-import com.github.sqlx.config.SqlXConfiguration;
+import com.github.sqlx.exception.SqlParseException;
 import com.github.sqlx.sql.DefaultSqlAttribute;
 import com.github.sqlx.sql.SqlAttribute;
 import com.github.sqlx.sql.SqlAttributeBuilder;
 import com.github.sqlx.sql.SqlType;
 import com.github.sqlx.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
+import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.Model;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
@@ -61,7 +62,7 @@ import java.util.Set;
  */
 
 @Slf4j
-public class JSqlParser extends AbstractSqlParser {
+public class JSqlParser implements SqlParser {
 
     private static final Set<Class<? extends Statement>> READ_STATEMENTS = Collections.synchronizedSet(new HashSet<>());
 
@@ -75,17 +76,18 @@ public class JSqlParser extends AbstractSqlParser {
         registerReadStatement(ShowTablesStatement.class);
     }
 
-    public JSqlParser(SqlXConfiguration routingConf) {
-        super(routingConf);
-    }
-
     private static void registerReadStatement(Class<? extends Statement> type) {
         READ_STATEMENTS.add(type);
     }
 
     @Override
-    protected SqlAttribute internalParse(String sql) throws Exception {
-        Statement statement = CCJSqlParserUtil.parse(sql);
+    public SqlAttribute parse(String sql) {
+        Statement statement;
+        try {
+            statement = CCJSqlParserUtil.parse(sql);
+        } catch (JSQLParserException e) {
+            throw new SqlParseException(e);
+        }
         SqlAttributeVisitor visitor = new SqlAttributeVisitor();
         return visitor.build(statement).setSql(sql);
     }

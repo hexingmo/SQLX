@@ -18,7 +18,6 @@ package com.github.sqlx.config;
 
 import com.github.sqlx.NodeState;
 import com.github.sqlx.NodeAttribute;
-import com.github.sqlx.NodeType;
 import com.github.sqlx.jdbc.datasource.DataSourceAttribute;
 import com.github.sqlx.exception.ConfigurationException;
 import com.github.sqlx.util.JdbcUtils;
@@ -53,11 +52,6 @@ public class DataSourceConfiguration implements ConfigurationValidator {
     @Expose
     private Boolean defaulted = false;
 
-    /**
-     * The type of the routing node
-     */
-    @Expose
-    private NodeType type;
 
     /**
      * The fully qualified class name of the data source
@@ -114,7 +108,7 @@ public class DataSourceConfiguration implements ConfigurationValidator {
      * Native data source property configuration
      */
     @Expose
-    private Map<String , String> props;
+    private Map<String , String> props = new HashMap<>();
 
     /**
      * Gets the routing node attribute instance
@@ -124,7 +118,7 @@ public class DataSourceConfiguration implements ConfigurationValidator {
      */
     public synchronized NodeAttribute getNodeAttribute() {
         if (nodeAttribute == null) {
-            nodeAttribute = new DataSourceAttribute(getJdbcUrl() , type, NodeState.UNKNOWN ,name, weight , heartbeatSql , heartbeatInterval , destroyMethod);
+            nodeAttribute = new DataSourceAttribute(getJdbcUrl() , NodeState.UNKNOWN ,name, weight , heartbeatSql , heartbeatInterval , destroyMethod);
         }
         return nodeAttribute;
     }
@@ -136,10 +130,11 @@ public class DataSourceConfiguration implements ConfigurationValidator {
      * @param value property value
      */
     public void addProperty(String key, String value) {
-        if (Objects.isNull(props)) {
-            this.props = new HashMap<>(5);
-        }
         this.props.put(key, value);
+    }
+
+    public String removeProperty(String key) {
+        return this.props.remove(key);
     }
 
 
@@ -186,9 +181,6 @@ public class DataSourceConfiguration implements ConfigurationValidator {
         if (StringUtils.isBlank(name)) {
             throw new ConfigurationException("dataSources [name] attr must not be empty");
         }
-        if (Objects.isNull(type)) {
-            throw new ConfigurationException("dataSources [type] attr must not be null");
-        }
         if (StringUtils.isBlank(dataSourceClass)) {
             throw new ConfigurationException("dataSources [dataSourceClass] attr must not be null");
         }
@@ -198,8 +190,13 @@ public class DataSourceConfiguration implements ConfigurationValidator {
         } catch (ClassNotFoundException e) {
             throw new ConfigurationException(String.format("%s Class Not Found" , dataSourceClass));
         }
-        if (StringUtils.isBlank(destroyMethod)) {
-            throw new ConfigurationException("dataSources [destroyMethod] attr must not be null");
+
+        if (StringUtils.isNotBlank(destroyMethod)) {
+            try {
+                dsClass.getDeclaredMethod(destroyMethod);
+            } catch (NoSuchMethodException e) {
+                throw new ConfigurationException(String.format("Destroy Method [%s] does not exist in %s" , destroyMethod , dataSourceClass));
+            }
         }
 
         if (StringUtils.isNotBlank(initMethod)) {
@@ -208,12 +205,6 @@ public class DataSourceConfiguration implements ConfigurationValidator {
             } catch (NoSuchMethodException e) {
                 throw new ConfigurationException(String.format("Init Method [%s] does not exist in %s" , initMethod , dataSourceClass));
             }
-        }
-
-        try {
-            dsClass.getDeclaredMethod(destroyMethod);
-        } catch (NoSuchMethodException e) {
-            throw new ConfigurationException(String.format("Destroy Method [%s] does not exist in %s" , destroyMethod , dataSourceClass));
         }
 
         if (MapUtils.isEmpty(props)) {
@@ -242,5 +233,18 @@ public class DataSourceConfiguration implements ConfigurationValidator {
         if (!succeed) {
             throw new ConfigurationException(String.format("test connection failed , driver class : %s , url : %s , username : %s , password : **" , getDriverClass() , getJdbcUrl() , getUsername()));
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof DataSourceConfiguration)) return false;
+        DataSourceConfiguration that = (DataSourceConfiguration) o;
+        return Objects.equals(this.name, that.getName());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.name);
     }
 }

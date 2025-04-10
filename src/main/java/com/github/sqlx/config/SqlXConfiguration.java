@@ -19,6 +19,7 @@ package com.github.sqlx.config;
 import com.github.sqlx.NodeAttribute;
 import com.github.sqlx.exception.ConfigurationException;
 import com.github.sqlx.exception.ManagementException;
+import com.github.sqlx.exception.SqlXRuntimeException;
 import com.github.sqlx.sql.parser.*;
 import com.github.sqlx.util.CollectionUtils;
 import com.github.sqlx.util.StringUtils;
@@ -29,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.joor.Reflect;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -48,7 +50,7 @@ import java.util.stream.Collectors;
 @Setter
 @Slf4j
 @ConfigurationProperties(prefix = "sqlx.config")
-public class SqlXConfiguration extends LoadBalanceConfiguration implements ConfigurationValidator {
+public class SqlXConfiguration implements ConfigurationValidator {
 
     @Expose
     private boolean enabled = true;
@@ -59,22 +61,16 @@ public class SqlXConfiguration extends LoadBalanceConfiguration implements Confi
     @Expose
     private SqlParsingFailBehavior sqlParsingFailBehavior = SqlParsingFailBehavior.WARNING;
 
-    @Expose
-    private String defaultCluster;
-
-    @Expose
-    private Boolean clusterEnable = false;
-
     private SqlParser sqlParserInstance;
 
     @Expose
-    private List<DataSourceConfiguration> dataSources;
+    private List<DataSourceConfiguration> dataSources = new ArrayList<>();
 
     @Expose
-    private List<ClusterConfiguration> clusters;
+    private List<ClusterConfiguration> clusters = new ArrayList<>();
 
     @Expose
-    private List<PointcutConfiguration> pointcuts;
+    private List<PointcutConfiguration> pointcuts = new ArrayList<>();
 
     @Expose
     private MetricsConfiguration metrics;
@@ -83,16 +79,12 @@ public class SqlXConfiguration extends LoadBalanceConfiguration implements Confi
         if (Objects.isNull(this.sqlParserInstance)) {
             SqlParser sqlParser;
             if (StringUtils.isNotBlank(this.sqlParserClass)) {
-                if (AbstractSqlParser.class.isAssignableFrom(Reflect.onClass(this.sqlParserClass).type())) {
-                    sqlParser = Reflect.onClass(this.sqlParserClass).create(this).get();
-                } else {
-                    sqlParser = Reflect.onClass(this.sqlParserClass).create().get();
-                }
+                sqlParser = Reflect.onClass(this.sqlParserClass).create().get();
             } else {
                 log.warn("sqlParserClass is empty , default use {}" , JSqlParser.class.getName());
-                sqlParser = new JSqlParser(this);
+                sqlParser = new JSqlParser();
             }
-            this.sqlParserInstance = new AnnotationSqlParser(sqlParser , new DefaultAnnotationSqlHintParser());
+            this.sqlParserInstance = new AnnotationSqlParser(new FailBehaviorSqlParser(sqlParser, this.sqlParsingFailBehavior) , new DefaultAnnotationSqlHintParser());
         }
         return this.sqlParserInstance;
     }
@@ -106,26 +98,16 @@ public class SqlXConfiguration extends LoadBalanceConfiguration implements Confi
         return optional.orElse(null);
     }
 
-    public NodeAttribute getRoutingNodeAttribute(final String name) {
+    public NodeAttribute getNodeAttribute(final String name) {
         DataSourceConfiguration dsConf = getDataSourceConfByName(name);
         return dsConf != null ? dsConf.getNodeAttribute() : null;
     }
 
-    public Set<NodeAttribute> getRoutingNodeAttributes(final Collection<String> names) {
+    public Set<NodeAttribute> getNodeAttributes(final Collection<String> names) {
         return dataSources.stream()
                 .map(DataSourceConfiguration::getNodeAttribute)
                 .filter(routingNodeAttribute -> names.contains(routingNodeAttribute.getName()))
                 .collect(Collectors.toSet());
-    }
-
-    @Override
-    protected Set<NodeAttribute> getRoutingNodeAttribute() {
-        Set<NodeAttribute> attributes = new HashSet<>();
-        for (DataSourceConfiguration dataSourceConf : dataSources) {
-            NodeAttribute attribute = dataSourceConf.getNodeAttribute();
-            attributes.add(attribute);
-        }
-        return attributes;
     }
 
     @Override
@@ -143,18 +125,6 @@ public class SqlXConfiguration extends LoadBalanceConfiguration implements Confi
         Collection<String> dataSourceNameSubtract = CollectionUtils.subtract(dataSourceNames, new HashSet<>(dataSourceNames));
         if (CollectionUtils.isNotEmpty(dataSourceNameSubtract)) {
             throw new ConfigurationException(String.format("dataSources name duplicate %s" , dataSourceNameSubtract));
-        }
-
-        if (Boolean.FALSE.equals(clusterEnable)) {
-            List<String> defaultedDataSourceNames = dataSources.stream()
-                    .filter(DataSourceConfiguration::getDefaulted)
-                    .map(DataSourceConfiguration::getName)
-                    .collect(Collectors.toList());
-            if (CollectionUtils.isEmpty(defaultedDataSourceNames)) {
-                throw new ConfigurationException("When clusterEnable is false, it is must to configure defaulted dataSource");
-            } else if (defaultedDataSourceNames.size() > 1) {
-                throw new ConfigurationException("When clusterEnable is false, it is must to configure only one defaulted dataSource");
-            }
         }
 
         validateCluster();
@@ -203,6 +173,20 @@ public class SqlXConfiguration extends LoadBalanceConfiguration implements Confi
         }
     }
 
+    public String getDefaultClusterName() {
+        if (CollectionUtils.isEmpty(clusters)) {
+            return null;
+        }
+        Optional<ClusterConfiguration> clusterConfiguration = this.clusters
+                .stream()
+                .filter(ClusterConfiguration::getDefaulted)
+                .findFirst();
+        if (!clusterConfiguration.isPresent()) {
+            throw new SqlXRuntimeException("No default cluster found");
+        }
+        return clusterConfiguration.get().getName();
+    }
+
     private void validatePointcuts() {
         if (CollectionUtils.isEmpty(pointcuts)) {
             return;
@@ -229,28 +213,28 @@ public class SqlXConfiguration extends LoadBalanceConfiguration implements Confi
     }
 
     private void validateCluster() {
-        if (Boolean.TRUE.equals(clusterEnable) && CollectionUtils.isEmpty(clusters)) {
-            throw new ConfigurationException("clusterEnable is true, it is must to configure clusters");
-        }
-        if (Boolean.FALSE.equals(clusterEnable)) {
-            return;
-        }
         List<String> clusterNames = clusters.stream().map(ClusterConfiguration::getName).collect(Collectors.toList());
         Collection<String> clusterNameSubtract = CollectionUtils.subtract(clusterNames, new HashSet<>(clusterNames));
         if (CollectionUtils.isNotEmpty(clusterNameSubtract)) {
             throw new ConfigurationException(String.format("cluster name duplicate %s" , clusterNameSubtract));
         }
-        if (CollectionUtils.isNotEmpty(clusters) && StringUtils.isBlank(defaultCluster)) {
-            throw new ConfigurationException("When there are multiple clusters, a default cluster must be specified");
-        }
-        if (StringUtils.isNotBlank(defaultCluster)) {
-            Optional<ClusterConfiguration> optional = clusters.stream().filter(c -> c.getName().equals(defaultCluster)).findFirst();
-            if (!optional.isPresent()) {
-                throw new ConfigurationException(String.format("The default cluster %s does not exist" , defaultCluster));
-            }
-            optional.get().setDefaulted(true);
-        }
+
+
         if (CollectionUtils.isNotEmpty(clusters)) {
+            if (clusters.size() > 1) {
+                // Check if there is at least one defaulted cluster
+                boolean hasDefaultedCluster = clusters.stream().anyMatch(ClusterConfiguration::getDefaulted);
+                if (!hasDefaultedCluster) {
+                    throw new ConfigurationException("When there are multiple clusters, at least one cluster must be set as defaulted");
+                }
+            }
+
+            // Set the default cluster if there is only one cluster
+            if (clusters.size() == 1) {
+                ClusterConfiguration singleCluster = clusters.get(0);
+                singleCluster.setDefaulted(true);
+            }
+
             for (ClusterConfiguration cluster : clusters) {
                 cluster.validate();
             }
@@ -258,23 +242,11 @@ public class SqlXConfiguration extends LoadBalanceConfiguration implements Confi
     }
 
     public void init() {
-        initLoadBalance();
         if (CollectionUtils.isNotEmpty(clusters)) {
             for (ClusterConfiguration cluster : clusters) {
-                cluster.setNodeAttributes(getRoutingNodeAttributes(cluster.getNodes()));
-                cluster.initLoadBalance();
+                cluster.setNodeAttributes(getNodeAttributes(cluster.getNodes()));
             }
         }
-        if (CollectionUtils.isNotEmpty(clusters) && clusters.size() == 1) {
-            this.defaultCluster = clusters.get(0).getName();
-        }
-    }
-
-    public List<NodeAttribute> getWritableRoutingNodeAttributes() {
-        return dataSources.stream()
-                .map(DataSourceConfiguration::getNodeAttribute)
-                .filter(nodeAttribute -> nodeAttribute.getNodeType().canWrite())
-                .collect(Collectors.toList());
     }
 
     /**
@@ -291,7 +263,6 @@ public class SqlXConfiguration extends LoadBalanceConfiguration implements Confi
         Iterator<DataSourceConfiguration> iterator = dataSources.iterator();
         while (iterator.hasNext()) {
             DataSourceConfiguration dsConf = iterator.next();
-            NodeAttribute rna = dsConf.getNodeAttribute();
             if (dsConf.getName().equals(name)) {
                 iterator.remove();
                 try {
@@ -301,7 +272,6 @@ public class SqlXConfiguration extends LoadBalanceConfiguration implements Confi
                     throw new ManagementException(e);
                 }
                 removed = true;
-                super.removeLoadBalanceOption(rna);
             }
         }
         return removed;
@@ -322,7 +292,6 @@ public class SqlXConfiguration extends LoadBalanceConfiguration implements Confi
             if (conf.getName().equals(clusterName) && conf.getNodes().contains(nodeName)) {
                 NodeAttribute rna = conf.removeNode(nodeName);
                 if (rna != null) {
-                    conf.removeLoadBalanceOption(rna);
                     PointcutConfiguration pointcutConfiguration = pointcuts.stream().filter(pointcut -> StringUtils.equals(pointcut.getCluster(), clusterName)).findFirst().orElse(null);
                     if (pointcutConfiguration != null) {
                         pointcutConfiguration.removeNode(nodeName);
@@ -347,11 +316,9 @@ public class SqlXConfiguration extends LoadBalanceConfiguration implements Confi
         NodeAttribute node = dsConf.getNodeAttribute();
         try {
             clusterConf.addNode(node);
-            clusterConf.addLoadBalanceOption(node);
             validate();
         } catch (Exception e) {
             clusterConf.removeNode(node);
-            clusterConf.removeLoadBalanceOption(node);
             throw e;
         }
         return true;
@@ -415,15 +382,12 @@ public class SqlXConfiguration extends LoadBalanceConfiguration implements Confi
         dataSources.add(dataSourceConf);
         log.info("DataSourceConfiguration added to dataSources: {}", dataSourceConf);
 
-        NodeAttribute rna = dataSourceConf.getNodeAttribute();
         try {
-            addLoadBalanceOption(rna);
             validate();
         } catch (Exception e) {
             log.error("Error occurred while adding DataSourceConfiguration: {}", e.getMessage());
             dataSources.remove(dataSourceConf);
             log.info("DataSourceConfiguration removed from dataSources due to error: {}", dataSourceConf);
-            removeLoadBalanceOption(rna);
             throw new ManagementException(e);
         }
     }
@@ -440,7 +404,6 @@ public class SqlXConfiguration extends LoadBalanceConfiguration implements Confi
             nodeAttributes.add(dsConf.getNodeAttribute());
         }
         configuration.setNodeAttributes(nodeAttributes);
-        configuration.initLoadBalance();
         configuration.validate();
         clusters.add(configuration);
         try {
