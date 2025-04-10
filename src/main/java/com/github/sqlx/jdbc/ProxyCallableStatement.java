@@ -18,6 +18,7 @@ package com.github.sqlx.jdbc;
 
 import com.github.sqlx.jdbc.datasource.SqlXDataSource;
 import com.github.sqlx.listener.EventListener;
+import lombok.Getter;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -35,6 +36,7 @@ public class ProxyCallableStatement extends ProxyPreparedStatement implements Ca
 
     private final CallableStatement delegate;
 
+    @Getter
     private final CallableStatementInfo callableStatementInfo;
 
     public ProxyCallableStatement(SqlXDataSource sqlXDataSource, CallableStatementInfo callableStatementInfo, CallableStatement callableStatement , EventListener eventListener) {

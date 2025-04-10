@@ -16,6 +16,7 @@ import javax.sql.DataSource;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -358,6 +359,75 @@ class ProxyConnectionTest {
         verify(physicalConnection , times(1)).prepareStatement(anyString());
         verify(eventListener, times(1)).onBeforePrepareStatement(any());
         verify(eventListener, times(1)).onAfterPrepareStatement(any() , any());
+    }
+
+    @Test
+    void prepareCall_SuccessfulExecution_ReturnsCallableStatement() throws SQLException {
+        String sql = "CALL stored_procedure()";
+        CallableStatement callableStatement = mock(CallableStatement.class);
+        when(sqlAttribute.getNativeSql()).thenReturn(sql);
+        when(physicalConnection.prepareCall(anyString())).thenReturn(callableStatement);
+
+        CallableStatement cs = proxyConnection.prepareCall(sql);
+
+        assertNotNull(cs);
+        assertTrue(cs instanceof ProxyCallableStatement);
+        ProxyCallableStatement proxyCallableStatement = (ProxyCallableStatement) cs;
+        assertNotNull(proxyCallableStatement.getDelegate());
+        assertNotNull(proxyCallableStatement.getCallableStatementInfo());
+        assertTrue(proxyCallableStatement.getCallableStatementInfo().getBeforeTimeToCreateStatementNs() > 0);
+        assertTrue(proxyCallableStatement.getCallableStatementInfo().getBeforeTimeToCreateStatementMillis() > 0);
+        assertEquals(proxyCallableStatement.getCallableStatementInfo().getNativeSql(), sql);
+        assertEquals(proxyCallableStatement.getCallableStatementInfo().getStatement(), callableStatement);
+
+        verify(eventListener, times(1)).onBeforeCallableStatement(any());
+        verify(eventListener, times(1)).onAfterCallStatement(any(), any());
+    }
+
+    @Test
+    void prepareCall_WithResultSetTypeAndConcurrency_SuccessfulExecution_ReturnsCallableStatement() throws SQLException {
+        String sql = "CALL stored_procedure()";
+        CallableStatement callableStatement = mock(CallableStatement.class);
+        when(sqlAttribute.getNativeSql()).thenReturn(sql);
+        when(physicalConnection.prepareCall(anyString(), anyInt(), anyInt())).thenReturn(callableStatement);
+
+        CallableStatement cs = proxyConnection.prepareCall(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+
+        assertNotNull(cs);
+        assertTrue(cs instanceof ProxyCallableStatement);
+        ProxyCallableStatement proxyCallableStatement = (ProxyCallableStatement) cs;
+        assertNotNull(proxyCallableStatement.getDelegate());
+        assertNotNull(proxyCallableStatement.getCallableStatementInfo());
+        assertTrue(proxyCallableStatement.getCallableStatementInfo().getBeforeTimeToCreateStatementNs() > 0);
+        assertTrue(proxyCallableStatement.getCallableStatementInfo().getBeforeTimeToCreateStatementMillis() > 0);
+        assertEquals(proxyCallableStatement.getCallableStatementInfo().getNativeSql(), sql);
+        assertEquals(proxyCallableStatement.getCallableStatementInfo().getStatement(), callableStatement);
+
+        verify(eventListener, times(1)).onBeforeCallableStatement(any());
+        verify(eventListener, times(1)).onAfterCallStatement(any(), any());
+    }
+
+    @Test
+    void prepareCall_WithResultSetTypeConcurrencyAndHoldability_SuccessfulExecution_ReturnsCallableStatement() throws SQLException {
+        String sql = "CALL stored_procedure()";
+        CallableStatement callableStatement = mock(CallableStatement.class);
+        when(sqlAttribute.getNativeSql()).thenReturn(sql);
+        when(physicalConnection.prepareCall(anyString(), anyInt(), anyInt(), anyInt())).thenReturn(callableStatement);
+
+        CallableStatement cs = proxyConnection.prepareCall(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT);
+
+        assertNotNull(cs);
+        assertTrue(cs instanceof ProxyCallableStatement);
+        ProxyCallableStatement proxyCallableStatement = (ProxyCallableStatement) cs;
+        assertNotNull(proxyCallableStatement.getDelegate());
+        assertNotNull(proxyCallableStatement.getCallableStatementInfo());
+        assertTrue(proxyCallableStatement.getCallableStatementInfo().getBeforeTimeToCreateStatementNs() > 0);
+        assertTrue(proxyCallableStatement.getCallableStatementInfo().getBeforeTimeToCreateStatementMillis() > 0);
+        assertEquals(proxyCallableStatement.getCallableStatementInfo().getNativeSql(), sql);
+        assertEquals(proxyCallableStatement.getCallableStatementInfo().getStatement(), callableStatement);
+
+        verify(eventListener, times(1)).onBeforeCallableStatement(any());
+        verify(eventListener, times(1)).onAfterCallStatement(any(), any());
     }
 
     @Test
