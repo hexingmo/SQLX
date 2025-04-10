@@ -33,7 +33,7 @@ public abstract class AbstractStorageReleaser implements StorageReleaser {
 
     protected final MetricsConfiguration metricsConfiguration;
 
-    public AbstractStorageReleaser(MetricsConfiguration metricsConfiguration) {
+    protected AbstractStorageReleaser(MetricsConfiguration metricsConfiguration) {
         this.metricsConfiguration = metricsConfiguration;
     }
 
