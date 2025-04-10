@@ -707,6 +707,58 @@ class ProxyConnectionTest {
         assertEquals(struct, result);
     }
 
+    @Test
+    void testCommit_WhenPhysicalConnectionIsNull_ShouldThrowSQLException() throws Exception {
+        setPrivateField(proxyConnection, "physicalConnection", null);
+        assertThrows(SQLException.class, () -> proxyConnection.commit());
+        verify(physicalConnection, never()).commit();
+        verify(eventListener, never()).onBeforeCommit(any());
+        verify(eventListener, never()).onAfterCommit(any(), isNull());
+    }
+    
+    @Test
+    void testCommit_WhenPhysicalConnectionIsNotNull_ShouldCommit() throws Exception {
+        proxyConnection.commit();
+        verify(physicalConnection, times(1)).commit();
+        verify(eventListener, times(1)).onBeforeCommit(any());
+        verify(eventListener, times(1)).onAfterCommit(any(), isNull());
+    }
+    
+    @Test
+    void testCommit_WhenSQLExceptionOccurs_ShouldThrowSQLException() throws Exception {
+        doThrow(new SQLException("Commit error")).when(physicalConnection).commit();
+        assertThrows(SQLException.class, () -> proxyConnection.commit());
+        verify(physicalConnection, times(1)).commit();
+        verify(eventListener, times(1)).onBeforeCommit(any());
+        verify(eventListener, times(1)).onAfterCommit(any(), any());
+    }
+    
+    @Test
+    void testRollback_WhenPhysicalConnectionIsNull_ShouldThrowSQLException() throws Exception {
+        setPrivateField(proxyConnection, "physicalConnection", null);
+        assertThrows(SQLException.class, () -> proxyConnection.rollback());
+        verify(physicalConnection, never()).rollback();
+        verify(eventListener, never()).onBeforeRollback(any());
+        verify(eventListener, never()).onAfterRollback(any(), any());
+    }
+    
+    @Test
+    void testRollback_WhenPhysicalConnectionIsNotNull_ShouldRollback() throws SQLException {
+        proxyConnection.rollback();
+        verify(physicalConnection, times(1)).rollback();
+        verify(eventListener, times(1)).onBeforeRollback(any());
+        verify(eventListener, times(1)).onAfterRollback(any(), isNull());
+    }
+    
+    @Test
+    void testRollback_WhenSQLExceptionOccurs_ShouldThrowSQLException() throws SQLException {
+        doThrow(new SQLException("Rollback error")).when(physicalConnection).rollback();
+        assertThrows(SQLException.class, () -> proxyConnection.rollback());
+        verify(physicalConnection, times(1)).rollback();
+        verify(eventListener, times(1)).onBeforeRollback(any());
+        verify(eventListener, times(1)).onAfterRollback(any(), any(SQLException.class));
+    }
+
     private void setPrivateField(Object obj, String fieldName, Object value) throws NoSuchFieldException, IllegalAccessException {
         Field field = obj.getClass().getDeclaredField(fieldName);
         field.setAccessible(true);

@@ -236,7 +236,7 @@ public class ProxyConnection extends AbstractConnectionAdapter {
     @Override
     public void commit() throws SQLException {
         if (Objects.isNull(physicalConnection)) {
-            return;
+            throw new SQLException("Physical connection is not initialized. Unable to commit.");
         }
         SQLException e = null;
         try {
@@ -257,7 +257,7 @@ public class ProxyConnection extends AbstractConnectionAdapter {
     @Override
     public void rollback() throws SQLException {
         if (Objects.isNull(physicalConnection)) {
-            return;
+            throw new SQLException("Physical connection is not initialized. Unable to rollback.");
         }
         SQLException e = null;
         try {
@@ -278,7 +278,7 @@ public class ProxyConnection extends AbstractConnectionAdapter {
     @Override
     public synchronized void close() throws SQLException {
         if (physicalConnection == null) {
-            return;
+            throw new SQLException("Physical connection is not initialized. Unable to close.");
         }
         SQLException e = null;
         try {
@@ -297,7 +297,10 @@ public class ProxyConnection extends AbstractConnectionAdapter {
 
     @Override
     public boolean isClosed() throws SQLException {
-        return Objects.nonNull(physicalConnection) && physicalConnection.isClosed();
+        if (Objects.nonNull(physicalConnection)) {
+            return physicalConnection.isClosed();
+        }
+        return false;
     }
 
     @Override
