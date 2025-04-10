@@ -27,6 +27,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLXML;
+import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Struct;
 
@@ -757,6 +758,82 @@ class ProxyConnectionTest {
         verify(physicalConnection, times(1)).rollback();
         verify(eventListener, times(1)).onBeforeRollback(any());
         verify(eventListener, times(1)).onAfterRollback(any(), any(SQLException.class));
+    }
+
+    @Test
+    void testSetSavepoint_WhenPhysicalConnectionIsNull_ShouldThrowSQLException() throws Exception {
+        setPrivateField(proxyConnection, "physicalConnection", null);
+        assertThrows(SQLException.class, () -> proxyConnection.setSavepoint("savepointName"));
+        verify(physicalConnection, never()).setSavepoint(anyString());
+    }
+
+    @Test
+    void testSetSavepoint_WhenPhysicalConnectionIsNotNull_ShouldSetSavepoint() throws SQLException {
+        Savepoint savepoint = mock(Savepoint.class);
+        when(physicalConnection.setSavepoint("savepointName")).thenReturn(savepoint);
+        Savepoint result = proxyConnection.setSavepoint("savepointName");
+        assertNotNull(result);
+        assertEquals(savepoint, result);
+        verify(physicalConnection, times(1)).setSavepoint("savepointName");
+    }
+
+    @Test
+    void testSetSavepoint_WhenSQLExceptionOccurs_ShouldThrowSQLException() throws SQLException {
+        doThrow(new SQLException("Set savepoint error")).when(physicalConnection).setSavepoint("savepointName");
+        assertThrows(SQLException.class, () -> proxyConnection.setSavepoint("savepointName"));
+        verify(physicalConnection, times(1)).setSavepoint("savepointName");
+    }
+
+    @Test
+    void testRollbackSavepoint_WhenPhysicalConnectionIsNull_ShouldThrowSQLException() throws Exception {
+        setPrivateField(proxyConnection, "physicalConnection", null);
+        Savepoint savepoint = mock(Savepoint.class);
+        assertThrows(SQLException.class, () -> proxyConnection.rollback(savepoint));
+        verify(physicalConnection, never()).rollback(savepoint);
+        verify(eventListener, never()).onBeforeSavepointRollback(any(), any());
+        verify(eventListener, never()).onAfterSavepointRollback(any(), any(), any());
+    }
+
+    @Test
+    void testRollbackSavepoint_WhenPhysicalConnectionIsNotNull_ShouldRollbackSavepoint() throws SQLException {
+        Savepoint savepoint = mock(Savepoint.class);
+        proxyConnection.rollback(savepoint);
+        verify(physicalConnection, times(1)).rollback(savepoint);
+        verify(eventListener, times(1)).onBeforeSavepointRollback(any(), any());
+        verify(eventListener, times(1)).onAfterSavepointRollback(any(), any(), isNull());
+    }
+
+    @Test
+    void testRollbackSavepoint_WhenSQLExceptionOccurs_ShouldThrowSQLException() throws SQLException {
+        Savepoint savepoint = mock(Savepoint.class);
+        doThrow(new SQLException("Rollback savepoint error")).when(physicalConnection).rollback(savepoint);
+        assertThrows(SQLException.class, () -> proxyConnection.rollback(savepoint));
+        verify(physicalConnection, times(1)).rollback(savepoint);
+        verify(eventListener, times(1)).onBeforeSavepointRollback(any(), any());
+        verify(eventListener, times(1)).onAfterSavepointRollback(any(), any(), any());
+    }
+
+    @Test
+    void testReleaseSavepoint_WhenPhysicalConnectionIsNull_ShouldThrowSQLException() throws Exception {
+        setPrivateField(proxyConnection, "physicalConnection", null);
+        Savepoint savepoint = mock(Savepoint.class);
+        assertThrows(SQLException.class, () -> proxyConnection.releaseSavepoint(savepoint));
+        verify(physicalConnection, never()).releaseSavepoint(savepoint);
+    }
+
+    @Test
+    void testReleaseSavepoint_WhenPhysicalConnectionIsNotNull_ShouldReleaseSavepoint() throws SQLException {
+        Savepoint savepoint = mock(Savepoint.class);
+        proxyConnection.releaseSavepoint(savepoint);
+        verify(physicalConnection, times(1)).releaseSavepoint(savepoint);
+    }
+
+    @Test
+    void testReleaseSavepoint_WhenSQLExceptionOccurs_ShouldThrowSQLException() throws SQLException {
+        Savepoint savepoint = mock(Savepoint.class);
+        doThrow(new SQLException("Release savepoint error")).when(physicalConnection).releaseSavepoint(savepoint);
+        assertThrows(SQLException.class, () -> proxyConnection.releaseSavepoint(savepoint));
+        verify(physicalConnection, times(1)).releaseSavepoint(savepoint);
     }
 
     private void setPrivateField(Object obj, String fieldName, Object value) throws NoSuchFieldException, IllegalAccessException {
