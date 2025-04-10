@@ -360,18 +360,24 @@ public class ProxyConnection extends AbstractConnectionAdapter {
 
     @Override
     public Savepoint setSavepoint() throws SQLException {
-        return Objects.nonNull(physicalConnection) ? physicalConnection.setSavepoint() : null;
+        if (Objects.isNull(physicalConnection)) {
+            throw new SQLException("Physical connection is not initialized. Unable to setSavepoint.");
+        }
+        return physicalConnection.setSavepoint();
     }
 
     @Override
     public Savepoint setSavepoint(String name) throws SQLException {
-        return Objects.nonNull(physicalConnection) ? physicalConnection.setSavepoint(name) : null;
+        if (Objects.isNull(physicalConnection)) {
+            throw new SQLException("Physical connection is not initialized. Unable to setSavepoint.");
+        }
+        return physicalConnection.setSavepoint(name);
     }
 
     @Override
     public void rollback(Savepoint savepoint) throws SQLException {
         if (Objects.isNull(physicalConnection)) {
-            return;
+            throw new SQLException("Physical connection is not initialized. Unable to rollback.");
         }
         SQLException e = null;
         try {
@@ -391,58 +397,59 @@ public class ProxyConnection extends AbstractConnectionAdapter {
 
     @Override
     public void releaseSavepoint(Savepoint savepoint) throws SQLException {
-        if (Objects.nonNull(physicalConnection)) {
-            physicalConnection.releaseSavepoint(savepoint);
+        if (Objects.isNull(physicalConnection)) {
+            throw new SQLException("Physical connection is not initialized. Unable to release Savepoint.");
         }
+        physicalConnection.releaseSavepoint(savepoint);
     }
 
     @Override
     public Clob createClob() throws SQLException {
-        if (Objects.nonNull(physicalConnection)) {
-            return physicalConnection.createClob();
+        if (Objects.isNull(physicalConnection)) {
+            throw new SQLException("Physical connection is not initialized. Unable to create Clob.");
         }
-        throw new SQLException("Physical connection is not initialized. Unable to create Clob.");
+        return physicalConnection.createClob();
     }
 
     @Override
     public Blob createBlob() throws SQLException {
-        if (Objects.nonNull(physicalConnection)) {
-            return physicalConnection.createBlob();
+        if (Objects.isNull(physicalConnection)) {
+            throw new SQLException("Physical connection is not initialized. Unable to create Blob.");
         }
-        throw new SQLException("Physical connection is not initialized. Unable to create Blob.");
+        return physicalConnection.createBlob();
     }
 
     @Override
     public synchronized NClob createNClob() throws SQLException {
-        if (Objects.nonNull(physicalConnection)) {
-            return physicalConnection.createNClob();
+        if (Objects.isNull(physicalConnection)) {
+            throw new SQLException("Physical connection is not initialized. Unable to create NClob.");
         }
-        throw new SQLException("Physical connection is not initialized. Unable to create NClob.");
+        return physicalConnection.createNClob();
     }
 
     @Override
     public SQLXML createSQLXML() throws SQLException {
-        if (Objects.nonNull(physicalConnection)) {
-            return physicalConnection.createSQLXML();
+        if (Objects.isNull(physicalConnection)) {
+            throw new SQLException("Physical connection is not initialized. Unable to create SQLXML.");
         }
-        throw new SQLException("Physical connection is not initialized. Unable to create SQLXML.");
+        return physicalConnection.createSQLXML();
     }
 
 
     @Override
     public Array createArrayOf(String typeName, Object[] elements) throws SQLException {
-        if (Objects.nonNull(physicalConnection)) {
-            return physicalConnection.createArrayOf(typeName , elements);
+        if (Objects.isNull(physicalConnection)) {
+            throw new SQLException("Physical connection is not initialized. Unable to create ArrayOf.");
         }
-        throw new SQLException("Physical connection is not initialized. Unable to create ArrayOf.");
+        return physicalConnection.createArrayOf(typeName , elements);
     }
 
     @Override
     public Struct createStruct(String typeName, Object[] attributes) throws SQLException {
-        if (Objects.nonNull(physicalConnection)) {
-            return physicalConnection.createStruct(typeName , attributes);
+        if (Objects.isNull(physicalConnection)) {
+            throw new SQLException("Physical connection is not initialized. Unable to create Struct.");
         }
-        throw new SQLException("Physical connection is not initialized. Unable to create Struct.");
+        return physicalConnection.createStruct(typeName , attributes);
     }
 
     @Override
