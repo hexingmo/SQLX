@@ -31,8 +31,7 @@ import static org.mockito.Mockito.*;
 /**
  * Tests for {@link ProxyConnection}.
  *
- * Author: He Xing Mo
- * Version: 1.0
+ * @author : He Xing Mo
  */
 class ProxyConnectionTest {
 
@@ -179,20 +178,26 @@ class ProxyConnectionTest {
     }
 
     @Test
-    void testPrepareStatement_ExceptionDuringConnection() throws Exception {
+    void testPrepareStatement_ExceptionDuringGetConnection() throws Exception {
+        setPrivateField(proxyConnection , "physicalConnection", null);
         String sql = "SELECT * FROM table";
-        when(proxyConnection.getConnection(sql)).thenThrow(new SQLException("Connection error"));
+        when(routedConnection.getNativeSql()).thenReturn(sql);
+        when(routedDataSource.getConnection()).thenThrow(new SQLException("Connection error"));
 
         assertThrows(SQLException.class, () -> proxyConnection.prepareStatement(sql));
 
-        verify(eventListener, times(1)).onBeforePrepareStatement(any());
+        verify(eventListener, times(1)).onBeforeGetConnection(any());
+        verify(eventListener, times(1)).onAfterGetConnection(any() , any());
+
+        verify(eventListener, never()).onBeforePrepareStatement(any());
         verify(eventListener, times(1)).onAfterPrepareStatement(any(), any());
     }
 
     @Test
     void testPrepareStatement_ExceptionDuringPreparedStatement() throws Exception {
         String sql = "SELECT * FROM table";
-        when(physicalConnection.prepareStatement(anyString())).thenThrow(new SQLException("Prepare error"));
+        when(routedConnection.getNativeSql()).thenReturn(sql);
+        when(physicalConnection.prepareStatement(any())).thenThrow(new SQLException("Prepare error"));
 
         assertThrows(SQLException.class, () -> proxyConnection.prepareStatement(sql));
 

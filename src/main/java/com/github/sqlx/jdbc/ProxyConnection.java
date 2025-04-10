@@ -565,11 +565,11 @@ public class ProxyConnection extends AbstractConnectionAdapter {
         preparedStatementInfo.setConnectionInfo(connectionInfo);
         Exception e = null;
         try {
-            RoutedConnection routedConnection = getConnection(sql);
-            preparedStatementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
             preparedStatementInfo.setSql(sql);
             preparedStatementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
             preparedStatementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
+            RoutedConnection routedConnection = getConnection(sql);
+            preparedStatementInfo.setRouteInfo(routedConnection.getRoutedDataSource().getRouteInfo());
             eventListener.onBeforePrepareStatement(preparedStatementInfo);
             Connection connection = routedConnection.getConnection();
             String nativeSql = routedConnection.getNativeSql();
