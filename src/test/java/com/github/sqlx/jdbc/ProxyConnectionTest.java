@@ -471,6 +471,64 @@ class ProxyConnectionTest {
         verify(eventListener, never()).onBeforeCreateStatement(any());
         verify(eventListener, never()).onAfterCreateStatement(any(), any());
     }
+    @Test
+    void testIsValid_WhenPhysicalConnectionIsNull_ShouldReturnTrue() throws Exception {
+        setPrivateField(proxyConnection, "physicalConnection", null);
+        assertTrue(proxyConnection.isValid(10));
+        verify(physicalConnection, never()).isValid(anyInt());
+    }
+    
+    @Test
+    void testIsValid_WhenPhysicalConnectionIsNotNull_ShouldReturnPhysicalConnectionIsValid() throws Exception {
+        when(physicalConnection.isValid(10)).thenReturn(true);
+        assertTrue(proxyConnection.isValid(10));
+        verify(physicalConnection, times(1)).isValid(10);
+    
+        when(physicalConnection.isValid(10)).thenReturn(false);
+        assertFalse(proxyConnection.isValid(10));
+        verify(physicalConnection, times(2)).isValid(10);
+    }
+
+    @Test
+    void testIsClosed_WhenPhysicalConnectionIsNull_ShouldReturnFalse() throws Exception {
+        setPrivateField(proxyConnection, "physicalConnection", null);
+        assertFalse(proxyConnection.isClosed());
+    }
+
+    @Test
+    void testIsClosed_WhenPhysicalConnectionIsNotNull_ShouldReturnPhysicalConnectionIsClosed() throws Exception {
+        when(physicalConnection.isClosed()).thenReturn(true);
+        assertTrue(proxyConnection.isClosed());
+
+        when(physicalConnection.isClosed()).thenReturn(false);
+        assertFalse(proxyConnection.isClosed());
+    }
+
+    @Test
+    void testClose_WhenPhysicalConnectionIsNull_ShouldThrowSQLException() throws Exception {
+        setPrivateField(proxyConnection, "physicalConnection", null);
+        assertThrows(SQLException.class, () -> proxyConnection.close());
+        verify(physicalConnection, never()).close();
+        verify(eventListener, never()).onBeforeConnectionClose(any());
+        verify(eventListener, never()).onAfterConnectionClose(any(), any());
+    }
+
+    @Test
+    void testClose_WhenPhysicalConnectionIsNotNull_ShouldCloseConnection() throws SQLException {
+        proxyConnection.close();
+        verify(physicalConnection, times(1)).close();
+        verify(eventListener, times(1)).onBeforeConnectionClose(any());
+        verify(eventListener, times(1)).onAfterConnectionClose(any(), isNull());
+    }
+
+    @Test
+    void testClose_WhenSQLExceptionOccurs_ShouldThrowSQLException() throws SQLException {
+        doThrow(new SQLException("Close error")).when(physicalConnection).close();
+        assertThrows(SQLException.class, () -> proxyConnection.close());
+        verify(physicalConnection, times(1)).close();
+        verify(eventListener, times(1)).onBeforeConnectionClose(any());
+        verify(eventListener, times(1)).onAfterConnectionClose(any(), any(SQLException.class));
+    }
 
     @Test
     void testGetMetaData_WhenPhysicalConnectionIsNull_ShouldReturnNewRoutedConnection() throws Exception {

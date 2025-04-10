@@ -648,20 +648,4 @@ public class ProxyStatement extends AbstractStatementAdapter {
         }
     }
 
-    private boolean isValidResultSetType(int resultSetType) {
-        return resultSetType == ResultSet.TYPE_FORWARD_ONLY ||
-                resultSetType == ResultSet.TYPE_SCROLL_INSENSITIVE ||
-                resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE;
-    }
-
-    private boolean isValidResultSetConcurrency(int resultSetConcurrency) {
-        return resultSetConcurrency == ResultSet.CONCUR_READ_ONLY ||
-                resultSetConcurrency == ResultSet.CONCUR_UPDATABLE;
-    }
-
-    private boolean isValidResultSetHoldability(int resultSetHoldability) {
-        return resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT ||
-                resultSetHoldability == ResultSet.CLOSE_CURSORS_AT_COMMIT;
-    }
-
 }

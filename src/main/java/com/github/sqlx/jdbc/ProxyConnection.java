@@ -288,6 +288,7 @@ public class ProxyConnection extends AbstractConnectionAdapter {
             physicalConnection.close();
         } catch (SQLException ex) {
             e = ex;
+            throw ex;
         } finally {
             connectionInfo.setAfterTimeToCloseConnectionNs(System.nanoTime());
             connectionInfo.setAfterTimeToCloseConnectionMillis(System.currentTimeMillis());
