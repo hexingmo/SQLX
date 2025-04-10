@@ -167,11 +167,11 @@ class ProxyConnectionTest {
     @Test
     void testPrepareStatement_ThrowsSQLException() throws Exception {
         String sql = "SELECT * FROM table";
-        when(physicalConnection.prepareStatement(anyString())).thenThrow(new SQLException("Test exception"));
 
-        assertThrows(SQLException.class, () -> {
-            proxyConnection.prepareStatement(sql);
-        });
+        when(sqlAttribute.getNativeSql()).thenReturn(sql);
+        when(physicalConnection.prepareStatement(sql)).thenThrow(new SQLException("prepareStatement error"));
+
+        assertThrows(SQLException.class, () -> proxyConnection.prepareStatement(sql));
 
         verify(eventListener, times(1)).onBeforePrepareStatement(any());
         verify(eventListener, times(1)).onAfterPrepareStatement(any(), any());
