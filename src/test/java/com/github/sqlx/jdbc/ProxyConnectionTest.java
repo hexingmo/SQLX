@@ -131,11 +131,11 @@ class ProxyConnectionTest {
     }
 
     @Test
-    public void prepareStatement_SuccessfulExecution_ReturnsPreparedStatement() throws SQLException {
+    void prepareStatement_SuccessfulExecution_ReturnsPreparedStatement() throws SQLException {
         String sql = "SELECT * FROM table";
         PreparedStatement preparedStatement = mock(PreparedStatement.class);
-        when(physicalConnection.prepareStatement(anyString())).thenReturn(preparedStatement);
         when(sqlAttribute.getNativeSql()).thenReturn(sql);
+        when(physicalConnection.prepareStatement(anyString() , anyInt() , anyInt())).thenReturn(preparedStatement);
 
         PreparedStatement ps = proxyConnection.prepareStatement(sql, 0, 0);
 
@@ -153,16 +153,6 @@ class ProxyConnectionTest {
         verify(eventListener, times(1)).onAfterPrepareStatement(any(), any());
     }
 
-    @Test
-    public void prepareStatement_SQLExceptionThrown_ThrowsSQLException() throws SQLException {
-        String sql = "SELECT * FROM table";
-        when(physicalConnection.prepareStatement(anyString())).thenThrow(SQLException.class);
-
-        assertThrows(SQLException.class, () -> proxyConnection.prepareStatement(sql, 0, 0));
-
-        verify(eventListener, times(1)).onBeforePrepareStatement(any());
-        verify(eventListener, times(1)).onAfterPrepareStatement(any(), any());
-    }
 
     @Test
     void testPrepareStatement_ThrowsSQLException() throws Exception {
