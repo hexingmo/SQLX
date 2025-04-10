@@ -471,6 +471,29 @@ class ProxyConnectionTest {
     }
 
     @Test
+    void testAcquireConnection_WithUsernameAndPassword() throws Exception {
+        setPrivateField(proxyConnection , "username", "uname");
+        setPrivateField(proxyConnection , "password", "pwd");
+
+        Method method = proxyConnection.getClass().getDeclaredMethod("acquireConnection", DataSource.class);
+        method.setAccessible(true);
+        Object retVal = method.invoke(proxyConnection, routedDataSource);
+        ConnectionInfo connectionInfo = proxyConnection.getConnectionInfo();
+
+        assertNotNull(retVal);
+        assertEquals(retVal , physicalConnection);
+        assertNotNull(connectionInfo);
+        assertTrue(connectionInfo.getBeforeTimeToGetConnectionNs() > 0);
+        assertTrue(connectionInfo.getBeforeTimeToGetConnectionMillis() > 0);
+        assertTrue(connectionInfo.getAfterTimeToGetConnectionNs() > 0);
+        assertTrue(connectionInfo.getAfterTimeToGetConnectionMillis() > 0);
+        verify(routedDataSource, times(1)).getConnection(anyString() , anyString());
+        verify(eventListener, times(1)).onBeforeGetConnection(connectionInfo);
+        verify(eventListener, times(1)).onAfterGetConnection(connectionInfo , null);
+
+    }
+
+    @Test
     void testAcquireConnection_WhenPhysicalConnectionIsNull_ShouldReturnNewRoutedConnection() throws Exception {
         setPrivateField(proxyConnection , "physicalConnection", null);
 
