@@ -81,11 +81,21 @@ public class ProxyConnection extends AbstractConnectionAdapter {
 
     private Properties clientInfo;
 
+    private String username;
+
+    private String password;
+
     private final DatabaseMetaDataWrapper databaseMetaData;
 
     private final SqlXDataSource sqlXDataSource;
 
     private EventListener eventListener;
+
+    public ProxyConnection(SqlXDataSource sqlXDataSource, EventListener eventListener , String username , String password) {
+        this(sqlXDataSource , eventListener);
+        this.username = username;
+        this.password = password;
+    }
 
     public ProxyConnection(SqlXDataSource sqlXDataSource, EventListener eventListener) {
         this(sqlXDataSource);
@@ -514,7 +524,11 @@ public class ProxyConnection extends AbstractConnectionAdapter {
             connectionInfo.setBeforeTimeToGetConnectionNs(System.nanoTime());
             connectionInfo.setBeforeTimeToGetConnectionMillis(System.currentTimeMillis());
             eventListener.onBeforeGetConnection(connectionInfo);
-            this.physicalConnection = dataSource.getConnection();
+            if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)) {
+                this.physicalConnection = dataSource.getConnection(username , password);
+            } else {
+                this.physicalConnection = dataSource.getConnection();
+            }
             this.databaseMetaData.setDelegate(this.physicalConnection.getMetaData());
             connectionPropertiesSet();
             return this.physicalConnection;

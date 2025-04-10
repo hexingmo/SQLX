@@ -88,47 +88,7 @@ class ProxyConnectionTest {
 
     }
 
-    @Test
-    public void prepareStatement_ValidSQL_ReturnsPreparedStatement() throws SQLException {
-        String sql = "SELECT * FROM table";
-        PreparedStatement preparedStatement = mock(PreparedStatement.class);
-        when(physicalConnection.prepareStatement(anyString())).thenReturn(preparedStatement);
-        when(sqlAttribute.getNativeSql()).thenReturn(sql);
 
-        PreparedStatement ps = proxyConnection.prepareStatement(sql);
-
-        assertNotNull(ps);
-        assertInstanceOf(ProxyPreparedStatement.class, ps);
-        assertNotNull(((ProxyPreparedStatement) ps).getDelegate());
-        assertNotNull(((ProxyPreparedStatement) ps).getPreparedStatementInfo());
-        assertTrue(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getBeforeTimeToCreateStatementNs() > 0);
-        assertTrue(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getBeforeTimeToCreateStatementMillis() > 0);
-        assertEquals(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getNativeSql(), sql);
-        assertEquals(((ProxyPreparedStatement) ps).getPreparedStatementInfo().getStatement(), preparedStatement);
-
-        verify(eventListener, times(1)).onBeforePrepareStatement(any());
-        verify(eventListener, times(1)).onAfterPrepareStatement(any(), any());
-    }
-
-    @Test
-    public void prepareStatement_ExceptionThrown_ThrowsSQLException() throws SQLException {
-        String sql = "SELECT * FROM table";
-        when(physicalConnection.prepareStatement(anyString())).thenThrow(new SQLException("Test exception"));
-
-        assertThrows(SQLException.class, () -> proxyConnection.prepareStatement(sql));
-
-        verify(eventListener, times(1)).onBeforePrepareStatement(any());
-        verify(eventListener, times(1)).onAfterPrepareStatement(any(), any());
-    }
-
-    @Test
-    public void prepareStatement_EmptySQL_NoExceptionThrown() {
-        try {
-            proxyConnection.prepareStatement("");
-        } catch (SQLException e) {
-            fail("Expected no SQLException to be thrown for empty SQL");
-        }
-    }
 
     @Test
     void prepareStatement_SuccessfulExecution_ReturnsPreparedStatement() throws SQLException {

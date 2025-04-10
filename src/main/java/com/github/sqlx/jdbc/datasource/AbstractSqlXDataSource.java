@@ -73,7 +73,7 @@ public abstract class AbstractSqlXDataSource extends WrapperAdapter implements S
 
     @Override
     public Connection getConnection(String username, String password) throws SQLException {
-        return new ProxyConnection(this , eventListener);
+        return new ProxyConnection(this , eventListener , username , password);
     }
 
     @Override
