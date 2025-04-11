@@ -54,14 +54,18 @@
                             <input type="text" class="form-control" name="name" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label" data-en="Type" data-zh="节点类型">Type <span class="text-danger">*</span></label>
-                            <select class="form-control" name="type" required>
-                                <option value="">-- Select Type --</option>
-                                <option value="READ" data-en="READ (Read Only)" data-zh="READ (只读)">READ (Read Only)</option>
-                                <option value="WRITE" data-en="WRITE (Write Only)" data-zh="WRITE (只写)">WRITE (Write Only)</option>
-                                <option value="READ_WRITE" data-en="READ_WRITE (Read & Write)" data-zh="READ_WRITE (可读可写)">READ_WRITE (Read & Write)</option>
-                                <option value="INDEPENDENT" data-en="INDEPENDENT (Independent R/W)" data-zh="INDEPENDENT (独立可读写)">INDEPENDENT (Independent R/W)</option>
-                            </select>
+                            <label class="form-label" data-en="Datasource Class" data-zh="数据源类">Datasource Class <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="dataSourceClass" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label" data-en="Init Method" data-zh="数据源初始化方法">Init Method <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="initMethod">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" data-en="Destroy Method" data-zh="数据源回收方法">Destroy Method <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="destroyMethod">
                         </div>
                     </div>
                     <div class="row mb-3">
@@ -70,21 +74,11 @@
                             <input type="number" class="form-control" name="weight" required min="0" max="100">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label" data-en="Datasource Class" data-zh="数据源类">Datasource Class <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="dataSourceClass" required>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label" data-en="Destroy Method" data-zh="数据源回收方法">Destroy Method <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="destroyMethod" required>
-                        </div>
-                        <div class="col-md-6">
                             <label class="form-label" data-en="Heartbeat Interval (ms)" data-zh="检测周期(毫秒)">
                                 Heartbeat Interval (ms)
                             </label>
-                            <input type="number" class="form-control" name="heartbeatInterval" 
-                                placeholder="60000" min="1000">
+                            <input type="number" class="form-control" name="heartbeatInterval"
+                                   placeholder="60000" min="1000">
                         </div>
                     </div>
                     
