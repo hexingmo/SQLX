@@ -25,6 +25,7 @@
                     <th data-en="Name" data-zh="名称">Name</th>
                     <th data-en="DB Type" data-zh="数据库类型">DB Type</th>
                     <th data-en="URL" data-zh="连接地址">URL</th>
+                    <th data-en="Default" data-zh="默认数据源">Default</th>
                     <th data-en="Weight" data-zh="权重">Weight</th>
                     <th data-en="Status" data-zh="状态">Status</th>
                     <th data-en="Actions" data-zh="操作">Actions</th>
@@ -337,7 +338,10 @@ function updateDatasourceTable(data) {
                           'secondary';  // UNKNOWN 状态使用灰色
         
         const shortUrl = item.props.jdbcUrl.length > 30 ? item.props.jdbcUrl.substring(0, 30) + '...' : item.props.jdbcUrl;
-        
+        const defaultBadge = item.defaulted ?
+            `<span class="badge bg-success">${window.currentLanguage === 'en' ? 'Yes' : '是'}</span>` :
+            `<span class="badge bg-secondary">${window.currentLanguage === 'en' ? 'No' : '否'}</span>`;
+
         tbody.append(`
             <tr>
                 <td>
@@ -345,6 +349,7 @@ function updateDatasourceTable(data) {
                 </td>
                 <td>${item.nodeAttribute.databaseType}</td>
                 <td class="short-url" data-full-url="${item.props.jdbcUrl}">${shortUrl}</td>
+                <td>${defaultBadge}</td>
                 <td>${item.weight}</td>
                 <td>
                     <span class="badge bg-${statusClass}">
