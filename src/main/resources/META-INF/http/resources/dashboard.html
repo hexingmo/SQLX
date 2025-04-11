@@ -309,8 +309,6 @@
         const updateData = metrics.map(metric => metric.updateCount);
         const deleteData = metrics.map(metric => metric.deleteCount);
 
-        // 直接从响应中获取数据源类型和状态
-        const dsType = source.nodeType || 'UNKNOWN';
         const dsState = source.nodeState || 'UNKNOWN';
         
         // 根据状态设置标题颜色
@@ -389,7 +387,7 @@
                         display: true,
                         text: [
                             source.dataSource,
-                            `Type: ${dsType} - Status: ${dsState}`
+                            `Status: ${dsState}`
                         ],
                         position: 'top',
                         align: 'center',
