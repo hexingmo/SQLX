@@ -102,6 +102,21 @@
 </div>
 
 <style>
+.node-type-write::after {
+    content: ' (Writable)';
+    color: white;
+    padding: 2px 5px;
+    border-radius: 3px;
+    margin-left: 5px;
+}
+
+.node-type-read::after {
+    content: ' (Readable)';
+    color: white;
+    padding: 2px 5px;
+    border-radius: 3px;
+    margin-left: 5px;
+}
 </style>
 
 <script>
@@ -150,7 +165,6 @@ $(document).ready(function() {
                             <input type="checkbox" name="nodes" value="${node.name}" id="node-${node.name}">
                             <label for="node-${node.name}">
                                 <span class="node-name">${node.name}</span>
-                                <span class="node-type">(${node.type})</span>
                             </label>
                         </div>
                     `).join('');
@@ -252,7 +266,11 @@ function updateClusterTable(data) {
                                 node.nodeState === 'OUT_OF_SERVICE' ? 'warning' : 
                                 'secondary';  // UNKNOWN 状态使用灰色
 
-            return `<span class="badge bg-${statusClass}">${node.name}</span>`;
+            const nodeType = item.writableNodes.includes(node.name) ? 'write' : 
+                             item.readableNodes.includes(node.name) ? 'read' : 
+                             'unknown';
+
+            return `<span class="badge bg-${statusClass} node-type-${nodeType}">${node.name}</span>`;
         }).join(' ');
 
         const defaultBadge = item.defaulted ? 
@@ -380,7 +398,6 @@ function createNodeHtml(node, isInCluster, clusterName) {
         <div class="node-item" id="node-${node.name}">
             <div class="node-info">
                 <div class="node-name">${node.name}</div>
-                <div class="node-type">${node.type}</div>
             </div>
             ${actionBtn}
         </div>
