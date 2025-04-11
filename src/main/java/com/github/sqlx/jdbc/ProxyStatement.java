@@ -493,7 +493,6 @@ public class ProxyStatement extends AbstractStatementAdapter {
 
     @Override
     public Connection getConnection() throws SQLException {
-        // TODO 返回一个新的还是返回现有的 connection ？
         return dataSource.getConnection();
     }
 
@@ -552,7 +551,6 @@ public class ProxyStatement extends AbstractStatementAdapter {
 
     private synchronized StatementInfo acquireStatement(String sql) throws SQLException {
 
-        // TODO 有可能造成连接泄露？
         ProxyConnection proxyConnection = (ProxyConnection) getConnection();
         ConnectionInfo connectionInfo = proxyConnection.getConnectionInfo();
         RoutedConnection routedConnection = proxyConnection.getConnection(sql);
@@ -586,8 +584,6 @@ public class ProxyStatement extends AbstractStatementAdapter {
             }
 
             statementInfo.setStatement(actualStatement);
-
-            actualStatement = routedConnection.getConnection().createStatement(resultSetType , resultSetConcurrency , resultSetHoldability);
             this.currentStatement = actualStatement;
             this.currentStatementInfo = statementInfo;
             if (this.fetchSize != null) {
