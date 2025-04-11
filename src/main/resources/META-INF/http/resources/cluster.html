@@ -252,7 +252,7 @@ function updateClusterTable(data) {
                                 node.nodeState === 'OUT_OF_SERVICE' ? 'warning' : 
                                 'secondary';  // UNKNOWN 状态使用灰色
 
-            return `<span class="badge bg-${statusClass}">${node.name} (${node.nodeType})</span>`;
+            return `<span class="badge bg-${statusClass}">${node.name}</span>`;
         }).join(' ');
 
         const defaultBadge = item.defaulted ? 
