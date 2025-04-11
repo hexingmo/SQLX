@@ -308,6 +308,7 @@
         const insertData = metrics.map(metric => metric.insertCount);
         const updateData = metrics.map(metric => metric.updateCount);
         const deleteData = metrics.map(metric => metric.deleteCount);
+        const otherData = metrics.map(metric => metric.otherCount);
 
         const dsState = source.nodeState || 'UNKNOWN';
         
@@ -368,6 +369,16 @@
                         pointRadius: 3,
                         pointHoverRadius: 5,
                         pointBackgroundColor: 'rgba(255, 206, 86, 1)',
+                        fill: false
+                    },
+                    {
+                        label: `${source.dataSource} - OTHER`,
+                        data: otherData,
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 2,
+                        borderDash: [2, 2],
+                        pointStyle: 'rectRot',
+                        pointRadius: 3,
                         fill: false
                     }
                 ]
@@ -511,6 +522,7 @@
                 chart.data.datasets[1].data[index] = metric.insertCount;
                 chart.data.datasets[2].data[index] = metric.updateCount;
                 chart.data.datasets[3].data[index] = metric.deleteCount;
+                chart.data.datasets[4].data[index] = metric.otherCount;
             } else {
                 // 添加新数据点
                 chart.data.labels.push(timestamp);
@@ -518,6 +530,7 @@
                 chart.data.datasets[1].data.push(metric.insertCount);
                 chart.data.datasets[2].data.push(metric.updateCount);
                 chart.data.datasets[3].data.push(metric.deleteCount);
+                chart.data.datasets[4].data.push(metric.otherCount);
                 
                 // 更新映射
                 timestampMap[timestampValue] = chart.data.labels.length - 1;
