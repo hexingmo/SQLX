@@ -23,7 +23,6 @@
             <thead>
                 <tr>
                     <th data-en="Name" data-zh="名称">Name</th>
-                    <th data-en="Type" data-zh="节点类型">Type</th>
                     <th data-en="DB Type" data-zh="数据库类型">DB Type</th>
                     <th data-en="URL" data-zh="连接地址">URL</th>
                     <th data-en="Weight" data-zh="权重">Weight</th>
@@ -350,7 +349,6 @@ function updateDatasourceTable(data) {
                 <td>
                     <a href="javascript:void(0)" class="datasource-name" onclick="showDatasourceDetail('${item.name}')">${item.name}</a>
                 </td>
-                <td>${getTypeTranslation(item.type)}</td>
                 <td>${item.nodeAttribute.databaseType}</td>
                 <td class="short-url" data-full-url="${item.props.jdbcUrl}">${shortUrl}</td>
                 <td>${item.weight}</td>
