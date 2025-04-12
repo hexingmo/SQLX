@@ -20,6 +20,7 @@ import com.github.sqlx.NodeAttribute;
 import com.github.sqlx.loadbalance.LoadBalance;
 import com.github.sqlx.sql.SqlAttribute;
 import com.github.sqlx.sql.parser.SqlParser;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Objects;
 
@@ -31,6 +32,7 @@ import java.util.Objects;
  * @author He Xing Mo
  * @since 1.0
  */
+@Slf4j
 public class ReadWriteSplittingRouteRule extends AbstractRouteRule {
 
 
@@ -43,6 +45,15 @@ public class ReadWriteSplittingRouteRule extends AbstractRouteRule {
         if (Objects.isNull(sqlAttribute)) {
             return null;
         }
-        return sqlAttribute.isWrite() ? chooseWriteNode() : chooseReadNode();
+        if (sqlAttribute.isWrite()) {
+            return chooseWriteNode();
+        }
+
+        NodeAttribute nodeAttribute = chooseReadNode();
+        if (Objects.isNull(nodeAttribute)) {
+            log.warn("No available readable nodes attempted to obtain writable nodes SQL:[{}]" , sqlAttribute.getSql());
+            nodeAttribute = chooseWriteNode();
+        }
+        return nodeAttribute;
     }
 }

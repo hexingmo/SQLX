@@ -24,6 +24,7 @@ import com.github.sqlx.sql.parser.NodeNameSqlHintConverter;
 import com.github.sqlx.sql.parser.SqlHint;
 import com.github.sqlx.sql.parser.SqlHintConverter;
 import com.github.sqlx.sql.parser.SqlParser;
+import com.github.sqlx.util.SqlUtils;
 
 import java.util.Objects;
 
@@ -51,7 +52,7 @@ public class DataSourceNameSqlHintRouteRule extends AbstractRouteRule {
             return null;
         }
 
-        if (!(attribute instanceof AnnotationSqlAttribute)) {
+        if (!SqlUtils.isAnnotationSql(attribute)) {
             return null;
         }
 
