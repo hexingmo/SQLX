@@ -18,7 +18,6 @@ package com.github.sqlx.rule;
 import com.github.sqlx.RoutingContext;
 import com.github.sqlx.integration.springboot.RouteAttribute;
 import com.github.sqlx.util.ArrayUtils;
-import com.github.sqlx.util.StringUtils;
 
 import java.util.Arrays;
 
