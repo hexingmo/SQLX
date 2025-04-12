@@ -22,6 +22,7 @@ package com.github.sqlx.rule;
  * @author He Xing Mo
  * @since 1.0
  */
+@FunctionalInterface
 public interface SqlFunction<T> {
 
     /**
