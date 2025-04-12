@@ -34,12 +34,15 @@ public class WeightRoundRobinLoadBalance extends AbstractLoadBalance {
     private Double maxWeight;
     private Double gcdWeight;
 
-    public WeightRoundRobinLoadBalance(Set<NodeAttribute> options) {
-        super(options);
+    public WeightRoundRobinLoadBalance() {
         this.currentIndex = -1;
         this.currentWeight = 0d;
         this.maxWeight = 0d;
         this.gcdWeight = 0d;
+    }
+
+    public WeightRoundRobinLoadBalance(Set<NodeAttribute> options) {
+        super(options);
     }
 
     @Override

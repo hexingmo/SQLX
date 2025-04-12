@@ -44,6 +44,9 @@ public abstract class AbstractLoadBalance implements LoadBalance {
      */
     private final Set<NodeAttribute> options = new HashSet<>();
 
+    protected AbstractLoadBalance() {
+    }
+
     /**
      * Constructs an AbstractLoadBalance instance with an initial list of nodes.
      * If the provided list is not empty, its elements are added to the internal options list.

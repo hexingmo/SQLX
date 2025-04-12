@@ -32,6 +32,10 @@ public class WeightRandomLoadBalance extends AbstractLoadBalance {
 
     private final Random random = new Random();
 
+    public WeightRandomLoadBalance() {
+
+    }
+
     public WeightRandomLoadBalance(Set<NodeAttribute> options) {
         super(options);
     }
