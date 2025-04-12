@@ -8,7 +8,6 @@ import com.github.sqlx.exception.SqlRouteException;
 import com.github.sqlx.integration.springboot.RouteAttribute;
 import com.github.sqlx.jdbc.transaction.Transaction;
 import com.github.sqlx.sql.SqlAttribute;
-import com.github.sqlx.sql.parser.SqlParser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -29,17 +28,15 @@ import static org.mockito.Mockito.*;
  */
 class TransactionRouteRuleTest {
 
-    private SqlParser sqlParser;
     private SqlXConfiguration configuration;
     private Transaction transaction;
     private TransactionRouteRule transactionRouteRule;
 
     @BeforeEach
     void setUp() {
-        sqlParser = mock(SqlParser.class);
         configuration = mock(SqlXConfiguration.class);
         transaction = mock(Transaction.class);
-        transactionRouteRule = new TransactionRouteRule(1, sqlParser, configuration, transaction);
+        transactionRouteRule = new TransactionRouteRule(1, configuration, transaction);
     }
 
     @Test

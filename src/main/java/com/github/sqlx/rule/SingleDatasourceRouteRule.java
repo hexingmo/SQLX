@@ -4,7 +4,6 @@ import com.github.sqlx.NodeAttribute;
 import com.github.sqlx.jdbc.datasource.DataSourceWrapper;
 import com.github.sqlx.jdbc.datasource.DatasourceManager;
 import com.github.sqlx.sql.SqlAttribute;
-import com.github.sqlx.sql.parser.SqlParser;
 
 import java.util.List;
 
@@ -16,8 +15,8 @@ public class SingleDatasourceRouteRule extends AbstractRouteRule {
 
     private final DatasourceManager datasourceManager;
 
-    public SingleDatasourceRouteRule(Integer priority, SqlParser sqlParser, DatasourceManager datasourceManager) {
-        super(priority, sqlParser);
+    public SingleDatasourceRouteRule(Integer priority, DatasourceManager datasourceManager) {
+        super(priority);
         this.datasourceManager = datasourceManager;
     }
 

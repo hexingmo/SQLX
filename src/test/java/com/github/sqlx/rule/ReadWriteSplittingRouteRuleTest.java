@@ -3,7 +3,6 @@ package com.github.sqlx.rule;
 import com.github.sqlx.NodeAttribute;
 import com.github.sqlx.loadbalance.LoadBalance;
 import com.github.sqlx.sql.SqlAttribute;
-import com.github.sqlx.sql.parser.SqlParser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -19,17 +18,15 @@ import static org.mockito.Mockito.*;
  */
 class ReadWriteSplittingRouteRuleTest {
 
-    private SqlParser sqlParser;
     private LoadBalance readLoadBalance;
     private LoadBalance writeLoadBalance;
     private ReadWriteSplittingRouteRule readWriteSplittingRouteRule;
 
     @BeforeEach
     void setUp() {
-        sqlParser = mock(SqlParser.class);
         readLoadBalance = mock(LoadBalance.class);
         writeLoadBalance = mock(LoadBalance.class);
-        readWriteSplittingRouteRule = new ReadWriteSplittingRouteRule(1, sqlParser, readLoadBalance, writeLoadBalance);
+        readWriteSplittingRouteRule = new ReadWriteSplittingRouteRule(1, readLoadBalance, writeLoadBalance);
     }
 
     @Test

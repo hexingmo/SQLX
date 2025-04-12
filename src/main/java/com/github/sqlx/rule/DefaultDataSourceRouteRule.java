@@ -18,7 +18,6 @@ package com.github.sqlx.rule;
 import com.github.sqlx.NodeAttribute;
 import com.github.sqlx.jdbc.datasource.DatasourceManager;
 import com.github.sqlx.sql.SqlAttribute;
-import com.github.sqlx.sql.parser.SqlParser;
 
 
 /**
@@ -29,8 +28,8 @@ public class DefaultDataSourceRouteRule extends AbstractRouteRule {
 
     private final DatasourceManager datasourceManager;
 
-    public DefaultDataSourceRouteRule(Integer priority, SqlParser sqlParser, DatasourceManager datasourceManager) {
-        super(priority, sqlParser);
+    public DefaultDataSourceRouteRule(Integer priority, DatasourceManager datasourceManager) {
+        super(priority);
         this.datasourceManager = datasourceManager;
     }
 

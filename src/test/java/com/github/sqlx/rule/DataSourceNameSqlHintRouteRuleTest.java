@@ -5,7 +5,6 @@ import com.github.sqlx.config.SqlXConfiguration;
 import com.github.sqlx.sql.AnnotationSqlAttribute;
 import com.github.sqlx.sql.SqlAttribute;
 import com.github.sqlx.sql.parser.SqlHint;
-import com.github.sqlx.sql.parser.SqlParser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,15 +23,13 @@ import static org.mockito.Mockito.*;
  */
 class DataSourceNameSqlHintRouteRuleTest {
 
-    private SqlParser sqlParser;
     private SqlXConfiguration configuration;
     private DataSourceNameSqlHintRouteRule dataSourceNameSqlHintRouteRule;
 
     @BeforeEach
     void setUp() {
-        sqlParser = mock(SqlParser.class);
         configuration = mock(SqlXConfiguration.class);
-        dataSourceNameSqlHintRouteRule = new DataSourceNameSqlHintRouteRule(1, sqlParser, configuration);
+        dataSourceNameSqlHintRouteRule = new DataSourceNameSqlHintRouteRule(1, configuration);
     }
 
     @Test

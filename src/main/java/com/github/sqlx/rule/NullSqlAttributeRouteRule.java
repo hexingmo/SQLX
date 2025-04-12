@@ -35,8 +35,8 @@ import java.util.Objects;
  */
 public class NullSqlAttributeRouteRule extends AbstractRouteRule {
 
-    public NullSqlAttributeRouteRule(Integer priority, SqlParser sqlParser, LoadBalance readLoadBalance, LoadBalance writeLoadBalance) {
-        super(priority, sqlParser, readLoadBalance, writeLoadBalance);
+    public NullSqlAttributeRouteRule(Integer priority, LoadBalance readLoadBalance, LoadBalance writeLoadBalance) {
+        super(priority, readLoadBalance, writeLoadBalance);
     }
 
     @Override

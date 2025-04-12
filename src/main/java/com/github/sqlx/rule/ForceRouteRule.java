@@ -20,10 +20,7 @@ import com.github.sqlx.RoutingContext;
 import com.github.sqlx.NodeAttribute;
 import com.github.sqlx.config.SqlXConfiguration;
 import com.github.sqlx.integration.springboot.RouteAttribute;
-import com.github.sqlx.sql.AnnotationSqlAttribute;
-import com.github.sqlx.sql.DefaultSqlAttribute;
 import com.github.sqlx.sql.SqlAttribute;
-import com.github.sqlx.sql.parser.SqlParser;
 import com.github.sqlx.util.CollectionUtils;
 import com.github.sqlx.util.RandomUtils;
 import com.github.sqlx.util.SqlUtils;
@@ -44,8 +41,8 @@ public class ForceRouteRule extends AbstractRouteRule {
 
     private final SqlXConfiguration configuration;
 
-    public ForceRouteRule(Integer priority, SqlParser sqlParser, SqlXConfiguration configuration) {
-        super(priority, sqlParser);
+    public ForceRouteRule(Integer priority,SqlXConfiguration configuration) {
+        super(priority);
         this.configuration = configuration;
     }
 

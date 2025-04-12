@@ -53,12 +53,12 @@ public class ClusterRoutingGroupBuilder {
 
     public DefaultRouteGroup build() {
         DefaultRouteGroup routingGroup = new DefaultRouteGroup(sqlParser);
-        routingGroup.install(new TransactionRouteRule(0 , sqlParser ,configuration , transaction));
-        routingGroup.install(new DataSourceNameSqlHintRouteRule(10 , sqlParser , configuration));
-        routingGroup.install(new ForceRouteRule(20 , sqlParser , configuration));
-        routingGroup.install(new ReadWriteSplittingRouteRule(30 , sqlParser ,  readLoadBalance , writeLoadBalance));
-        routingGroup.install(new NullSqlAttributeRouteRule(40 , sqlParser ,  readLoadBalance , writeLoadBalance));
-        routingGroup.install(new RouteWritableRule(50 , sqlParser ,  readLoadBalance , writeLoadBalance));
+        routingGroup.install(new TransactionRouteRule(0 ,configuration , transaction));
+        routingGroup.install(new DataSourceNameSqlHintRouteRule(10 , configuration));
+        routingGroup.install(new ForceRouteRule(20 , configuration));
+        routingGroup.install(new ReadWriteSplittingRouteRule(30 ,  readLoadBalance , writeLoadBalance));
+        routingGroup.install(new NullSqlAttributeRouteRule(40 ,  readLoadBalance , writeLoadBalance));
+        routingGroup.install(new RouteWritableRule(50 ,  readLoadBalance , writeLoadBalance));
         return routingGroup;
     }
 }

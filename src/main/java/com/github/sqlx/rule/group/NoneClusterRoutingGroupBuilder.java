@@ -66,11 +66,11 @@ public class NoneClusterRoutingGroupBuilder {
 
     public DefaultRouteGroup build() {
         DefaultRouteGroup routingGroup = new DefaultRouteGroup(sqlParser);
-        routingGroup.install(new TransactionRouteRule(0 , sqlParser , configuration , transaction));
-        routingGroup.install(new SingleDatasourceRouteRule(10 , sqlParser , datasourceManager));
-        routingGroup.install(new DataSourceNameSqlHintRouteRule(20 , sqlParser , configuration));
-        routingGroup.install(new ForceRouteRule(30 , sqlParser , configuration));
-        routingGroup.install(new DefaultDataSourceRouteRule(40 , sqlParser , datasourceManager));
+        routingGroup.install(new TransactionRouteRule(0 , configuration , transaction));
+        routingGroup.install(new SingleDatasourceRouteRule(10 , datasourceManager));
+        routingGroup.install(new DataSourceNameSqlHintRouteRule(20 , configuration));
+        routingGroup.install(new ForceRouteRule(30 , configuration));
+        routingGroup.install(new DefaultDataSourceRouteRule(40 , datasourceManager));
         return routingGroup;
     }
 }

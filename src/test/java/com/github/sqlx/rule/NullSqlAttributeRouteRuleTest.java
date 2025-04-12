@@ -19,17 +19,15 @@ import static org.mockito.Mockito.*;
  */
 class NullSqlAttributeRouteRuleTest {
 
-    private SqlParser sqlParser;
     private LoadBalance readLoadBalance;
     private LoadBalance writeLoadBalance;
     private NullSqlAttributeRouteRule nullSqlAttributeRouteRule;
 
     @BeforeEach
     void setUp() {
-        sqlParser = mock(SqlParser.class);
         readLoadBalance = mock(LoadBalance.class);
         writeLoadBalance = mock(LoadBalance.class);
-        nullSqlAttributeRouteRule = new NullSqlAttributeRouteRule(1, sqlParser, readLoadBalance, writeLoadBalance);
+        nullSqlAttributeRouteRule = new NullSqlAttributeRouteRule(1, readLoadBalance, writeLoadBalance);
     }
 
     @Test

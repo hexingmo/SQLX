@@ -19,7 +19,6 @@ package com.github.sqlx.rule;
 import com.github.sqlx.NodeAttribute;
 import com.github.sqlx.loadbalance.LoadBalance;
 import com.github.sqlx.sql.SqlAttribute;
-import com.github.sqlx.sql.parser.SqlParser;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Objects;
@@ -36,8 +35,8 @@ import java.util.Objects;
 public class ReadWriteSplittingRouteRule extends AbstractRouteRule {
 
 
-    public ReadWriteSplittingRouteRule(Integer priority, SqlParser sqlParser, LoadBalance readLoadBalance, LoadBalance writeLoadBalance) {
-        super(priority, sqlParser, readLoadBalance, writeLoadBalance);
+    public ReadWriteSplittingRouteRule(Integer priority, LoadBalance readLoadBalance, LoadBalance writeLoadBalance) {
+        super(priority, readLoadBalance, writeLoadBalance);
     }
 
     @Override

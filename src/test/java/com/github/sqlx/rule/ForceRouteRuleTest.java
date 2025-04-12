@@ -7,7 +7,6 @@ import com.github.sqlx.config.SqlXConfiguration;
 import com.github.sqlx.integration.springboot.RouteAttribute;
 import com.github.sqlx.sql.AnnotationSqlAttribute;
 import com.github.sqlx.sql.SqlAttribute;
-import com.github.sqlx.sql.parser.SqlParser;
 import com.github.sqlx.util.RandomUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,7 +31,6 @@ import static org.mockito.Mockito.*;
 class ForceRouteRuleTest {
 
     private SqlXConfiguration configuration;
-    private SqlParser sqlParser;
     private ForceRouteRule forceRouteRule;
 
     @BeforeEach
@@ -61,8 +59,7 @@ class ForceRouteRuleTest {
         configuration.setDataSources(new ArrayList<>(Arrays.asList(dsConfig1, dsConfig2)));
         configuration.init();
 
-        sqlParser = mock(SqlParser.class);
-        forceRouteRule = new ForceRouteRule(1, sqlParser, configuration);
+        forceRouteRule = new ForceRouteRule(1, configuration);
     }
 
     @Test

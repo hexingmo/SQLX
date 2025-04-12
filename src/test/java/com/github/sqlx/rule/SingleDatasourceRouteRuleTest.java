@@ -4,7 +4,6 @@ import com.github.sqlx.NodeAttribute;
 import com.github.sqlx.jdbc.datasource.DataSourceWrapper;
 import com.github.sqlx.jdbc.datasource.DatasourceManager;
 import com.github.sqlx.sql.SqlAttribute;
-import com.github.sqlx.sql.parser.SqlParser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -25,15 +24,13 @@ import static org.mockito.Mockito.*;
  */
 class SingleDatasourceRouteRuleTest {
 
-    private SqlParser sqlParser;
     private DatasourceManager datasourceManager;
     private SingleDatasourceRouteRule singleDatasourceRouteRule;
 
     @BeforeEach
     void setUp() {
-        sqlParser = mock(SqlParser.class);
         datasourceManager = mock(DatasourceManager.class);
-        singleDatasourceRouteRule = new SingleDatasourceRouteRule(1, sqlParser, datasourceManager);
+        singleDatasourceRouteRule = new SingleDatasourceRouteRule(1, datasourceManager);
     }
 
     @Test

@@ -24,7 +24,6 @@ import com.github.sqlx.exception.SqlRouteException;
 import com.github.sqlx.integration.springboot.RouteAttribute;
 import com.github.sqlx.jdbc.transaction.Transaction;
 import com.github.sqlx.sql.SqlAttribute;
-import com.github.sqlx.sql.parser.SqlParser;
 import com.github.sqlx.util.CollectionUtils;
 import com.github.sqlx.util.RandomUtils;
 
@@ -50,8 +49,8 @@ public class TransactionRouteRule extends AbstractRouteRule {
     private final SqlXConfiguration configuration;
 
 
-    public TransactionRouteRule(Integer priority, SqlParser sqlParser,SqlXConfiguration configuration, Transaction transaction) {
-        super(priority, sqlParser);
+    public TransactionRouteRule(Integer priority, SqlXConfiguration configuration, Transaction transaction) {
+        super(priority);
         this.configuration = configuration;
         this.transaction = transaction;
     }
