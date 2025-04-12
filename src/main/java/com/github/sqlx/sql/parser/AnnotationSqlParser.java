@@ -18,6 +18,7 @@ package com.github.sqlx.sql.parser;
 
 import com.github.sqlx.sql.AnnotationSqlAttribute;
 import com.github.sqlx.sql.SqlAttribute;
+import com.github.sqlx.util.MapUtils;
 
 import java.util.Objects;
 
@@ -43,7 +44,7 @@ public class AnnotationSqlParser implements SqlParser {
 
         SqlAttribute sqlAttribute = null;
         SqlHint sqlHint = sqlHintParser.parse(sql);
-        if (Objects.nonNull(sqlHint)) {
+        if (Objects.nonNull(sqlHint) && MapUtils.isNotEmpty(sqlHint.getHints())) {
             SqlAttribute attribute = delegate.parse(sqlHint.getNativeSql());
             if (Objects.nonNull(attribute)) {
                 sqlAttribute = new AnnotationSqlAttribute(attribute , sqlHint);

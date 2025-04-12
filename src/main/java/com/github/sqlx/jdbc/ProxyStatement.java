@@ -560,13 +560,7 @@ public class ProxyStatement extends AbstractStatementAdapter {
         connectionInfo.addStatementInfo(statementInfo);
         statementInfo.setConnectionInfo(connectionInfo);
         statementInfo.setSql(sql);
-        SqlAttribute sqlAttribute = routedConnection.getRoutedDataSource().getRouteInfo().getSqlAttribute();
-        if (sqlAttribute != null) {
-            statementInfo.setNativeSql(sqlAttribute.getNativeSql());
-        } else {
-            statementInfo.setNativeSql(sql);
-        }
-
+        statementInfo.setNativeSql(routedConnection.getNativeSql());
         statementInfo.setBeforeTimeToCreateStatementNs(System.nanoTime());
         statementInfo.setBeforeTimeToCreateStatementMillis(System.currentTimeMillis());
         eventListener.onBeforeCreateStatement(statementInfo);

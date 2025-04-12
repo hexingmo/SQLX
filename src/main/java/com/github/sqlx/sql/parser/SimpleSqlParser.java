@@ -1,6 +1,5 @@
 package com.github.sqlx.sql.parser;
 
-import com.github.sqlx.config.SqlXConfiguration;
 import com.github.sqlx.sql.DefaultSqlAttribute;
 import com.github.sqlx.sql.SqlAttribute;
 import com.github.sqlx.sql.SqlType;
@@ -39,6 +38,6 @@ public class SimpleSqlParser implements SqlParser {
         }
 
         boolean isWrite = insert || update || delete;
-        return new DefaultSqlAttribute().setSql(sql).setWrite(isWrite).setRead(isRead).setSqlType(sqlType);
+        return new DefaultSqlAttribute().setSql(sql).setNativeSql(sql).setWrite(isWrite).setRead(isRead).setSqlType(sqlType);
     }
 }

@@ -1,5 +1,6 @@
 package com.github.sqlx.integration.springboot;
 
+import com.github.sqlx.rule.SqlExecutor;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -36,6 +37,14 @@ class JdbcTemplateTest extends BeforeAfterEachHandleDataTest {
 
         String sql = "select * from employee where id = ?";
         Map<String, Object> result = jdbcTemplate.queryForObject(sql , new Object[] {1} ,new ColumnMapRowMapper());
+        assertThat(result).isNotNull().extractingByKey("ID").isEqualTo(1L);
+        assertThat(result).extractingByKey("NAME").isEqualTo("John Doe");
+        assertThat(result).extractingByKey("DEPARTMENT_ID").isEqualTo(1);
+    }
+
+    @Test
+    void testSqlExecutor() {
+        Map<String, Object> result = SqlExecutor.execute(() -> jdbcTemplate.queryForObject("select * from employee where id = 1", new ColumnMapRowMapper()), null, "write_0");
         assertThat(result).isNotNull().extractingByKey("ID").isEqualTo(1L);
         assertThat(result).extractingByKey("NAME").isEqualTo("John Doe");
         assertThat(result).extractingByKey("DEPARTMENT_ID").isEqualTo(1);

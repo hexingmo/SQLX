@@ -89,7 +89,7 @@ public class JSqlParser implements SqlParser {
             throw new SqlParseException(e);
         }
         SqlAttributeVisitor visitor = new SqlAttributeVisitor();
-        return visitor.build(statement).setSql(sql);
+        return visitor.build(statement).setSql(sql).setNativeSql(sql);
     }
 
     private static class SqlAttributeVisitor extends TablesNamesFinder implements SqlAttributeBuilder<Statement> {
