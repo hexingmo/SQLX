@@ -123,7 +123,6 @@ sqlx:
         readable-nodes:
           - read_0
           - read_1
-          - write_0
       - name: cluster_1
         writable-nodes:
           - write_0

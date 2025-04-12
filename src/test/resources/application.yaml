@@ -117,6 +117,8 @@ sqlx:
     clusters:
       - name: cluster_0
         defaulted: true
+        read-load-balance-class: com.github.sqlx.loadbalance.WeightRandomLoadBalance
+        write-load-balance-class: com.github.sqlx.loadbalance.WeightRandomLoadBalance
         writable-nodes:
           - write_0
         readable-nodes:
