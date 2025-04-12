@@ -25,20 +25,20 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Tests for {@link ClusterRoutingGroupBuilder}.
+ * Tests for {@link ClusterRouteGroupBuilder}.
  * This class tests the building logic of ClusterRoutingGroupBuilder.
  *
  * Author: He Xing Mo
  * Version: 1.0
  */
-class ClusterRoutingGroupBuilderTest {
+class ClusterRouteGroupBuilderTest {
 
     private SqlXConfiguration configuration;
     private SqlParser sqlParser;
     private Transaction transaction;
     private LoadBalance readLoadBalance;
     private LoadBalance writeLoadBalance;
-    private ClusterRoutingGroupBuilder builder;
+    private ClusterRouteGroupBuilder builder;
 
     @BeforeEach
     void setUp() {
@@ -50,7 +50,7 @@ class ClusterRoutingGroupBuilderTest {
 
         when(sqlParser.parse(anyString())).thenReturn(mock(SqlAttribute.class));
 
-        builder = ClusterRoutingGroupBuilder.builder()
+        builder = ClusterRouteGroupBuilder.builder()
                 .sqlXConfiguration(configuration)
                 .sqlParser(sqlParser)
                 .transaction(transaction)

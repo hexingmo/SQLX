@@ -285,19 +285,14 @@ class NotificationService {
 
 ### 指定数据源名称
 
-sql 被路由到名称为 `read_0` 的节点执行.
+sql 被路由到名称为 `read_0` 的节点执行. 
+
+注意注解 SQL 不能在事务方法中使用,注解 SQL 适合的场景是单一的数据库访问场景,比如从多个不同的库当中聚合数据。
 
 ```sql
 /*!nodeName=read_0;*/ SELECT * FROM users WHERE id = 1;
 ```
 
-### 指定数据源类型
-
-sql 被路由到一个可读可写类型的数据源执行.
-
-```sql
-/*!nodeType=READ_WRITE;*/ UPDATE users SET name = 'John Doe' WHERE id = 1;
-```
 
 ## 路由组 & 路由规则
 
@@ -306,16 +301,18 @@ sql 被路由到一个可读可写类型的数据源执行.
 
 ![](./assets/RouteGroup.png)
 
-`SQLX` 提供了一个默认路由组 `com.github.sqlx.rule.group.DefaultRouteGroup` , 该路由组包含的路由规则:
+`SQLX` 提供了一个默认路由规则:
 
 - SingleDatasourceRouteRule : 单数据源路由规则
 - TransactionRouteRule : 事务路由规则
 - ForceTargetRouteRule : 强制指定目标数据源路由规则
-- RoutingTypeSqlHintRouteRule : 节点类型 SQL 注解路由规则
 - RoutingNameSqlHintRouteRule : 节点名称 SQL 注解路由规则
 - ReadWriteSplittingRouteRule : 读写分离路由规则
 - NullSqlAttributeRouteRule : 空 SQL 属性路由规则
-- RandomRouteWritableRule :  随机可写数据源路由规则
+- DefaultDataSourceRouteRule ： 默认数据源路由规则
+- RouteWritableRule : 路由到可读节点路由规则
+
+具体您可以参考 `com.github.sqlx.rule.group.ClusterRouteGroupBuilder` 和 `com.github.sqlx.rule.group.NoneClusterRouteGroupBuilder`.
 
 **注意** 自定义路由规则时需要注意规则的执行顺序，如果规则执行顺序有冲突，可能会导致路由结果错误。
 

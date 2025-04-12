@@ -30,7 +30,7 @@ import com.github.sqlx.rule.DataSourceNameSqlHintRouteRule;
  * @author He Xing Mo
  * @since 1.0
  */
-public class NoneClusterRoutingGroupBuilder {
+public class NoneClusterRouteGroupBuilder {
 
     private SqlXConfiguration configuration;
 
@@ -40,26 +40,26 @@ public class NoneClusterRoutingGroupBuilder {
 
     private DatasourceManager datasourceManager;
 
-    public static NoneClusterRoutingGroupBuilder builder() {
-        return new NoneClusterRoutingGroupBuilder();
+    public static NoneClusterRouteGroupBuilder builder() {
+        return new NoneClusterRouteGroupBuilder();
     }
 
-    public NoneClusterRoutingGroupBuilder sqlXConfiguration(SqlXConfiguration configuration) {
+    public NoneClusterRouteGroupBuilder sqlXConfiguration(SqlXConfiguration configuration) {
         this.configuration = configuration;
         return this;
     }
 
-    public NoneClusterRoutingGroupBuilder sqlParser(SqlParser sqlParser) {
+    public NoneClusterRouteGroupBuilder sqlParser(SqlParser sqlParser) {
         this.sqlParser = sqlParser;
         return this;
     }
 
-    public NoneClusterRoutingGroupBuilder transaction(Transaction transaction) {
+    public NoneClusterRouteGroupBuilder transaction(Transaction transaction) {
         this.transaction = transaction;
         return this;
     }
 
-    public NoneClusterRoutingGroupBuilder datasourceManager(DatasourceManager datasourceManager) {
+    public NoneClusterRouteGroupBuilder datasourceManager(DatasourceManager datasourceManager) {
         this.datasourceManager = datasourceManager;
         return this;
     }

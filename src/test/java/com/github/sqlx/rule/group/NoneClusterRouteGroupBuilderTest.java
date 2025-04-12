@@ -12,19 +12,19 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Tests for {@link NoneClusterRoutingGroupBuilder}.
+ * Tests for {@link NoneClusterRouteGroupBuilder}.
  * This class tests the building logic of DefaultRoutingGroupBuilder.
  * 
  * Author: He Xing Mo
  * Version: 1.0
  */
-class NoneClusterRoutingGroupBuilderTest {
+class NoneClusterRouteGroupBuilderTest {
 
     private SqlXConfiguration configuration;
     private SqlParser sqlParser;
     private Transaction transaction;
     private DatasourceManager datasourceManager;
-    private NoneClusterRoutingGroupBuilder builder;
+    private NoneClusterRouteGroupBuilder builder;
 
     @BeforeEach
     void setUp() {
@@ -32,7 +32,7 @@ class NoneClusterRoutingGroupBuilderTest {
         sqlParser = mock(SqlParser.class);
         transaction = mock(Transaction.class);
         datasourceManager = mock(DatasourceManager.class);
-        builder = NoneClusterRoutingGroupBuilder.builder()
+        builder = NoneClusterRouteGroupBuilder.builder()
                 .sqlXConfiguration(configuration)
                 .sqlParser(sqlParser)
                 .transaction(transaction)

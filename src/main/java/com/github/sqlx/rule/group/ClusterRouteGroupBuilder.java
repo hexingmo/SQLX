@@ -10,7 +10,7 @@ import com.github.sqlx.sql.parser.SqlParser;
  * @author He Xing Mo
  * @since 1.0
  */
-public class ClusterRoutingGroupBuilder {
+public class ClusterRouteGroupBuilder {
 
     private SqlXConfiguration configuration;
 
@@ -22,31 +22,31 @@ public class ClusterRoutingGroupBuilder {
 
     private LoadBalance writeLoadBalance;
 
-    public static ClusterRoutingGroupBuilder builder() {
-        return new ClusterRoutingGroupBuilder();
+    public static ClusterRouteGroupBuilder builder() {
+        return new ClusterRouteGroupBuilder();
     }
 
-    public ClusterRoutingGroupBuilder sqlXConfiguration(SqlXConfiguration configuration) {
+    public ClusterRouteGroupBuilder sqlXConfiguration(SqlXConfiguration configuration) {
         this.configuration = configuration;
         return this;
     }
 
-    public ClusterRoutingGroupBuilder sqlParser(SqlParser sqlParser) {
+    public ClusterRouteGroupBuilder sqlParser(SqlParser sqlParser) {
         this.sqlParser = sqlParser;
         return this;
     }
 
-    public ClusterRoutingGroupBuilder transaction(Transaction transaction) {
+    public ClusterRouteGroupBuilder transaction(Transaction transaction) {
         this.transaction = transaction;
         return this;
     }
 
-    public ClusterRoutingGroupBuilder readLoadBalance(LoadBalance readLoadBalance) {
+    public ClusterRouteGroupBuilder readLoadBalance(LoadBalance readLoadBalance) {
         this.readLoadBalance = readLoadBalance;
         return this;
     }
 
-    public ClusterRoutingGroupBuilder writeLoadBalance(LoadBalance writeLoadBalance) {
+    public ClusterRouteGroupBuilder writeLoadBalance(LoadBalance writeLoadBalance) {
         this.writeLoadBalance = writeLoadBalance;
         return this;
     }

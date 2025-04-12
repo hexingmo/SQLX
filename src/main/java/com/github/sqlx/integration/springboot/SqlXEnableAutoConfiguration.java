@@ -50,12 +50,9 @@ import com.github.sqlx.loadbalance.LoadBalance;
 import com.github.sqlx.loadbalance.WeightRandomLoadBalance;
 import com.github.sqlx.metrics.*;
 import com.github.sqlx.metrics.nitrite.*;
-import com.github.sqlx.rule.group.ClusterRoutingGroupBuilder;
-import com.github.sqlx.rule.group.CompositeRouteGroup;
-import com.github.sqlx.rule.group.DefaultRouteGroup;
+import com.github.sqlx.rule.group.*;
+import com.github.sqlx.rule.group.ClusterRouteGroupBuilder;
 
-import com.github.sqlx.rule.group.NoneClusterRoutingGroupBuilder;
-import com.github.sqlx.rule.group.RouteGroup;
 import com.github.sqlx.sql.parser.SqlParser;
 import com.github.sqlx.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -199,7 +196,7 @@ public class SqlXEnableAutoConfiguration {
                 cluster.setNodes(conf.getNodeAttributes());
 
                 CompositeRouteGroup compositeRoutingGroup = new CompositeRouteGroup(eventListener, transaction);
-                DefaultRouteGroup defaultRoutingGroup = ClusterRoutingGroupBuilder.builder()
+                DefaultRouteGroup defaultRoutingGroup = ClusterRouteGroupBuilder.builder()
                         .sqlXConfiguration(config)
                         .sqlParser(sqlParser)
                         .transaction(transaction)
@@ -230,7 +227,7 @@ public class SqlXEnableAutoConfiguration {
         public CompositeRouteGroup routingGroup(SqlXProperties properties, SqlParser sqlParser, Transaction transaction, @Autowired(required = false) List<RouteGroup<?>> routingGroups, EventListener eventListener, DatasourceManager datasourceManager) {
 
             SqlXConfiguration routing = properties.getConfig();
-            DefaultRouteGroup drg = NoneClusterRoutingGroupBuilder.builder()
+            DefaultRouteGroup drg = NoneClusterRouteGroupBuilder.builder()
                     .sqlXConfiguration(routing)
                     .sqlParser(sqlParser)
                     .transaction(transaction)
@@ -251,7 +248,7 @@ public class SqlXEnableAutoConfiguration {
         public SqlXDataSource sqlXDataSource(SqlXProperties properties ,StatManager statManager, ClusterManager clusterManager, DatasourceManager datasourceManager, EventListener eventListener , Transaction transaction) {
             registerMBean(statManager);
             SqlXConfiguration configuration = properties.getConfig();
-            DefaultRouteGroup drg = NoneClusterRoutingGroupBuilder.builder()
+            DefaultRouteGroup drg = NoneClusterRouteGroupBuilder.builder()
                     .sqlXConfiguration(configuration)
                     .sqlParser(configuration.getSqlParserInstance())
                     .transaction(transaction)

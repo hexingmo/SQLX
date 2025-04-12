@@ -32,7 +32,7 @@ import com.github.sqlx.jdbc.transaction.Transaction;
 import com.github.sqlx.listener.EventListener;
 import com.github.sqlx.rule.group.CompositeRouteGroup;
 import com.github.sqlx.rule.group.DefaultRouteGroup;
-import com.github.sqlx.rule.group.NoneClusterRoutingGroupBuilder;
+import com.github.sqlx.rule.group.NoneClusterRouteGroupBuilder;
 import com.github.sqlx.rule.group.RouteGroup;
 import com.github.sqlx.util.CollectionUtils;
 import com.github.sqlx.util.JsonUtils;
@@ -224,7 +224,7 @@ public class StatManager implements StatManagerMBean {
         cluster.setNodes(configuration.getNodeAttributes());
         CompositeRouteGroup compositeRoutingGroup = new CompositeRouteGroup(eventListener , transaction);
         compositeRoutingGroup.installFirst(routingGroups);
-        DefaultRouteGroup defaultRoutingGroup = NoneClusterRoutingGroupBuilder.builder()
+        DefaultRouteGroup defaultRoutingGroup = NoneClusterRouteGroupBuilder.builder()
                 .sqlXConfiguration(sqlXConfiguration)
                 .sqlParser(sqlXConfiguration.getSqlParserInstance())
                 .transaction(transaction)
