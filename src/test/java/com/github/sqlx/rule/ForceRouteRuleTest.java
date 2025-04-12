@@ -5,6 +5,7 @@ import com.github.sqlx.RoutingContext;
 import com.github.sqlx.config.DataSourceConfiguration;
 import com.github.sqlx.config.SqlXConfiguration;
 import com.github.sqlx.integration.springboot.RouteAttribute;
+import com.github.sqlx.sql.AnnotationSqlAttribute;
 import com.github.sqlx.sql.SqlAttribute;
 import com.github.sqlx.sql.parser.SqlParser;
 import com.github.sqlx.util.RandomUtils;
@@ -62,6 +63,18 @@ class ForceRouteRuleTest {
 
         sqlParser = mock(SqlParser.class);
         forceRouteRule = new ForceRouteRule(1, sqlParser, configuration);
+    }
+
+    @Test
+    void testAnnotationSql_ShouldReturnNull() {
+        RouteAttribute routeAttribute = new RouteAttribute();
+        routeAttribute.setNodes(new ArrayList<>(Arrays.asList("DataSource1", "DataSource2")));
+
+        try (MockedStatic<RoutingContext> mockedContext = Mockito.mockStatic(RoutingContext.class)) {
+            mockedContext.when(RoutingContext::getRoutingAttribute).thenReturn(routeAttribute);
+            NodeAttribute nodeAttribute = forceRouteRule.routing(mock(AnnotationSqlAttribute.class));
+            assertNull(nodeAttribute);
+        }
     }
 
     @Test
