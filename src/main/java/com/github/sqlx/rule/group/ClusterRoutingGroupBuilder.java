@@ -3,11 +3,7 @@ package com.github.sqlx.rule.group;
 import com.github.sqlx.config.SqlXConfiguration;
 import com.github.sqlx.jdbc.transaction.Transaction;
 import com.github.sqlx.loadbalance.LoadBalance;
-import com.github.sqlx.rule.ForceRouteRule;
-import com.github.sqlx.rule.NullSqlAttributeRouteRule;
-import com.github.sqlx.rule.ReadWriteSplittingRouteRule;
-import com.github.sqlx.rule.RouteWritableRule;
-import com.github.sqlx.rule.TransactionRouteRule;
+import com.github.sqlx.rule.*;
 import com.github.sqlx.sql.parser.SqlParser;
 
 /**
@@ -59,9 +55,10 @@ public class ClusterRoutingGroupBuilder {
         DefaultRouteGroup routingGroup = new DefaultRouteGroup(sqlParser);
         routingGroup.install(new TransactionRouteRule(0 , sqlParser ,configuration , transaction));
         routingGroup.install(new ForceRouteRule(10 , sqlParser , configuration));
-        routingGroup.install(new ReadWriteSplittingRouteRule(20 , sqlParser ,  readLoadBalance , writeLoadBalance));
-        routingGroup.install(new NullSqlAttributeRouteRule(30 , sqlParser ,  readLoadBalance , writeLoadBalance));
-        routingGroup.install(new RouteWritableRule(40 , sqlParser ,  readLoadBalance , writeLoadBalance));
+        routingGroup.install(new DataSourceNameSqlHintRouteRule(20 , sqlParser , configuration));
+        routingGroup.install(new ReadWriteSplittingRouteRule(30 , sqlParser ,  readLoadBalance , writeLoadBalance));
+        routingGroup.install(new NullSqlAttributeRouteRule(40 , sqlParser ,  readLoadBalance , writeLoadBalance));
+        routingGroup.install(new RouteWritableRule(50 , sqlParser ,  readLoadBalance , writeLoadBalance));
         return routingGroup;
     }
 }
