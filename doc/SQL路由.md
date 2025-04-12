@@ -293,6 +293,15 @@ sql 被路由到名称为 `read_0` 的节点执行.
 /*!nodeName=read_0;*/ SELECT * FROM users WHERE id = 1;
 ```
 
+## SQL 函数执行器
+
+`SQLX` 提供了一个 `SqlExecutor` 工具类，来执行 SQL 函数并返回结果。考虑到您可能使用一些无需手动编写 SQL 的 ORM 框架如 JPA.
+通过 SQL 函数的方式也可以达到和 SQL 注解方式一样的效果。
+
+```java
+Employee result = SqlExecutor.execute(() -> employeeRepository.findById(1L), "write_0");
+```
+
 
 ## 路由组 & 路由规则
 

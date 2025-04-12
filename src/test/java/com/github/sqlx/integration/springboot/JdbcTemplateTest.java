@@ -44,7 +44,7 @@ class JdbcTemplateTest extends BeforeAfterEachHandleDataTest {
 
     @Test
     void testSqlExecutor() {
-        Map<String, Object> result = SqlExecutor.execute(() -> jdbcTemplate.queryForObject("select * from employee where id = 1", new ColumnMapRowMapper()), null, "write_0");
+        Map<String, Object> result = SqlExecutor.execute(() -> jdbcTemplate.queryForObject("select * from employee where id = 1", new ColumnMapRowMapper()),  "write_0");
         assertThat(result).isNotNull().extractingByKey("ID").isEqualTo(1L);
         assertThat(result).extractingByKey("NAME").isEqualTo("John Doe");
         assertThat(result).extractingByKey("DEPARTMENT_ID").isEqualTo(1);

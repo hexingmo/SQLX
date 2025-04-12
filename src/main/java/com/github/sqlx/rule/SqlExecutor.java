@@ -39,21 +39,20 @@ public class SqlExecutor {
      * Executes the given SQL function with the specified cluster and nodes.
      *
      * @param function the SQL function to be executed
-     * @param cluster the cluster to route the SQL function to
      * @param nodes the nodes to route the SQL function to
      * @param <T> the type of the result returned by the function
      * @return the result of the function execution
      * @throws IllegalArgumentException if the SQL function is null or if both cluster and nodes are empty
      */
-    public static <T> T execute(SqlFunction<T> function, String cluster, String... nodes) {
+    public static <T> T execute(SqlFunction<T> function, String... nodes) {
         if (function == null) {
             throw new IllegalArgumentException("SQL function must not be null");
         }
-        if (StringUtils.isBlank(cluster) && ArrayUtils.isEmpty(nodes)) {
+        if (ArrayUtils.isEmpty(nodes)) {
             throw new IllegalArgumentException("cluster or nodes must not be empty");
         }
         RouteAttribute existsRouteAttr = RoutingContext.getRoutingAttribute();
-        RouteAttribute ra = new RouteAttribute(cluster, Arrays.asList(nodes), false, true, null, null);
+        RouteAttribute ra = new RouteAttribute(null, Arrays.asList(nodes), false, true, null, null);
         try {
             RoutingContext.force(ra);
             return function.run();
