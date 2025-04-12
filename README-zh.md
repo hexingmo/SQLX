@@ -46,13 +46,14 @@ sqlx:
   config:
     enabled: true # 是否启用SQLX
     sql-parsing-fail-behavior: warning # SQL解析失败时的行为，支持 WARNING (警告)、FAILING (报错)、IGNORE (忽略)
-    cluster-enable: false # 是否启用集群模式
-    default-cluster: cluster_0 # 默认集群名称
     metrics:
       enabled: true # 是否启用监控功能
       username: admin # 监控用户名
       password: adminpw # 监控密码
       collect-scope: SLOW # 监控采集范围, 支持 SLOW (只采集慢SQL和慢事务)、ALL (采集所有)
+      enable-routing-metrics: true
+      enable-sql-metrics: true
+      enable-transaction-metrics: true
       slow-sql-millis: 300 # 慢 SQL 阈值，单位为毫秒
       slow-transaction-millis: 3000 # 慢事务阈值，单位为毫秒
       #      collect-mode: ASYNC # 采集方式，支持 SYNC (同步)、ASYNC (异步)
@@ -64,8 +65,8 @@ sqlx:
       data-retention-duration: 2h # 数据保留时长，支持 s、m、h、d、w、M、y
     data-sources: # 数据源配置
       - name: write_0 # 数据源名称需唯一
-        type: write # 数据源类型，支持 WRITE (只写)、READ (只读)、READ_WRITE (可读写)、INDEPENDENT (独立数据源可读写)
         weight: 99 # 数据源权重，用于负载均衡
+        defaulted: true
         data-source-class: com.zaxxer.hikari.HikariDataSource
         init-method: init # 初始化方法
         destroy-method: close # 销毁方法
@@ -82,7 +83,6 @@ sqlx:
           isReadOnly: false
 
       - name: read_0
-        type: READ
         weight: 6
         data-source-class: com.zaxxer.hikari.HikariDataSource
         init-method: init
@@ -100,7 +100,6 @@ sqlx:
           isReadOnly: true
 
       - name: read_1
-        type: READ
         weight: 10
         data-source-class: com.zaxxer.hikari.HikariDataSource
         init-method: init
@@ -118,12 +117,17 @@ sqlx:
           isReadOnly: true
     clusters: # 集群配置
       - name: cluster_0 # 集群名称需唯一
-        nodes: # 集群中包含的节点,配置数据源名称
+        defaulted: true # 当存在多个集群时指定是否是默认集群
+        writable-nodes:
           - write_0
+        readable-nodes:
           - read_0
-      - name: cluster_1
-        nodes:
+          - read_1
           - write_0
+      - name: cluster_1
+        writable-nodes:
+          - write_0
+        readable-nodes:
           - read_1
 
     pointcuts: # SQL 路由切入点配置,该方法内的 SQL 会被路由到指定的集群和节点
