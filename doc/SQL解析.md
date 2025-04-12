@@ -10,19 +10,16 @@
 sqlx:
   config:
     enabled: true
-    sql-parser-class: com.github.sqlx.sql.parser.SimpleSqlParser
+    sql-parser-class: com.github.sqlx.sql.parser.JSqlParser
 ```
 
 没有指定时默认使用 `com.github.sqlx.sql.parser.JSqlParser`.
 
-**注意**
-当使用 `com.github.sqlx.sql.parser.SimpleSqlParser` 时,只能简单的识别出 SQL 语句的类型，无法识别出 SQL 语句所操作的数据库表，会对部分监控功能造成影响。
-
 ## 自定义 SQL 解析器
 
-如果默认的 SQL 解析器不能满足您的需求，您可以实现自定义的 SQL 解析器。自定义解析器需要实现 `com.github.sqlx.sql.parser.SqlParser` 接口或继承 `com.github.sqlx.sql.parser.AbstractSqlParser` 抽象类。
+您也可以实现自定义的 SQL 解析器。自定义解析器需要实现 `com.github.sqlx.sql.parser.SqlParser` 接口。
 
-### 自定义解析器示例
+### 自定义SQL解析器示例
 
 ```java
 package com.example.sqlparser;
