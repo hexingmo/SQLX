@@ -17,18 +17,15 @@ package com.github.sqlx.cluster;
 
 
 import com.github.sqlx.NodeAttribute;
-import com.github.sqlx.config.ClusterConfiguration;
 import com.github.sqlx.config.DataSourceConfiguration;
 import com.github.sqlx.config.SqlXConfiguration;
 import com.github.sqlx.exception.ManagementException;
-import com.github.sqlx.exception.SqlXRuntimeException;
 import com.github.sqlx.util.CollectionUtils;
 import com.github.sqlx.util.MapUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -154,7 +151,7 @@ public class ClusterManager {
         }
         boolean added = sqlXConfiguration.addNodeInCluster(clusterName, nodeName);
         if (added) {
-            DataSourceConfiguration dsConf = sqlXConfiguration.getDataSourceConfByName(nodeName);
+            DataSourceConfiguration dsConf = sqlXConfiguration.getDataSourceConfiguration(nodeName);
             cluster.addNode(dsConf.getNodeAttribute());
         }
     }

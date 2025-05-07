@@ -114,8 +114,8 @@ class SqlXConfigurationTest {
     }
 
     @Test
-    void testGetDataSourceConfByName() {
-        DataSourceConfiguration dsConfig = sqlXConfig.getDataSourceConfByName("DataSource1");
+    void testGetDataSourceConfiguration() {
+        DataSourceConfiguration dsConfig = sqlXConfig.getDataSourceConfiguration("DataSource1");
         assertNotNull(dsConfig);
         assertEquals("DataSource1", dsConfig.getName());
     }
@@ -131,7 +131,7 @@ class SqlXConfigurationTest {
     void testRemoveDataSourceConfiguration() {
         boolean removed = sqlXConfig.removeDataSourceConfiguration("DataSource1");
         assertTrue(removed);
-        assertNull(sqlXConfig.getDataSourceConfByName("DataSource1"));
+        assertNull(sqlXConfig.getDataSourceConfiguration("DataSource1"));
     }
 
     @Test
@@ -181,7 +181,7 @@ class SqlXConfigurationTest {
         newDsConfig.setProps(props3);
 
         sqlXConfig.addDataSourceConfiguration(newDsConfig);
-        assertNotNull(sqlXConfig.getDataSourceConfByName("DataSource3"));
+        assertNotNull(sqlXConfig.getDataSourceConfiguration("DataSource3"));
     }
 
     @Test

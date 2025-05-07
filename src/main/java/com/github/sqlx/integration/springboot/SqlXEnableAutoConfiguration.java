@@ -17,10 +17,13 @@
 package com.github.sqlx.integration.springboot;
 
 import com.github.sqlx.NodeAttribute;
+import com.github.sqlx.banner.Banner;
+import com.github.sqlx.banner.BlocksBanner;
 import com.github.sqlx.cluster.Cluster;
 import com.github.sqlx.cluster.ClusterManager;
-import com.github.sqlx.jdbc.datasource.*;
 import com.github.sqlx.config.ClusterConfiguration;
+import com.github.sqlx.config.DataSourceConfiguration;
+import com.github.sqlx.config.SqlXConfiguration;
 import com.github.sqlx.endpoint.http.DispatcherHttpHandler;
 import com.github.sqlx.endpoint.http.ManagementServlet;
 import com.github.sqlx.endpoint.http.ManagementWebHandler;
@@ -32,27 +35,24 @@ import com.github.sqlx.factory.CompositeObjectFactory;
 import com.github.sqlx.factory.InstantiationObjectFactory;
 import com.github.sqlx.factory.ObjectFactory;
 import com.github.sqlx.factory.SpringObjectFactory;
-import com.github.sqlx.integration.datasource.GenericDataSourceInitializer;
-
-import com.github.sqlx.config.DataSourceConfiguration;
-import com.github.sqlx.config.SqlXConfiguration;
 import com.github.sqlx.integration.datasource.CompositeDataSourceInitializer;
 import com.github.sqlx.integration.datasource.DataSourceInitializer;
+import com.github.sqlx.integration.datasource.GenericDataSourceInitializer;
+import com.github.sqlx.integration.springboot.properties.SqlXProperties;
+import com.github.sqlx.jdbc.datasource.DataSourceWrapper;
+import com.github.sqlx.jdbc.datasource.DatasourceManager;
+import com.github.sqlx.jdbc.datasource.DefaultSqlXDataSource;
+import com.github.sqlx.jdbc.datasource.SqlXDataSource;
 import com.github.sqlx.jdbc.transaction.Transaction;
 import com.github.sqlx.jdbc.transaction.TransactionIdGenerator;
 import com.github.sqlx.jdbc.transaction.UUIDTransactionIdGenerator;
-import com.github.sqlx.listener.CompositeEventListener;
-import com.github.sqlx.listener.DefaultEventListener;
-import com.github.sqlx.listener.LoggingEventListener;
-import com.github.sqlx.listener.MetricsCollectEventListener;
+import com.github.sqlx.listener.*;
 import com.github.sqlx.listener.EventListener;
 import com.github.sqlx.loadbalance.LoadBalance;
 import com.github.sqlx.loadbalance.WeightRandomLoadBalance;
 import com.github.sqlx.metrics.*;
 import com.github.sqlx.metrics.nitrite.*;
 import com.github.sqlx.rule.group.*;
-import com.github.sqlx.rule.group.ClusterRouteGroupBuilder;
-
 import com.github.sqlx.sql.parser.SqlParser;
 import com.github.sqlx.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -86,7 +86,7 @@ import java.util.*;
  * @since 1.0
  */
 @EnableConfigurationProperties(SqlXProperties.class)
-@ConditionalOnProperty(prefix = "sqlx.config", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "sqlx", name = "enabled", havingValue = "true", matchIfMissing = true)
 @Import({SqlXEnableAutoConfiguration.BaseConfiguration.class,
         SqlXEnableAutoConfiguration.MetricsConfiguration.class})
 @Slf4j
@@ -105,16 +105,29 @@ public class SqlXEnableAutoConfiguration {
     }
 
     @Configuration
-    class BaseConfiguration {
+    static class BaseConfiguration {
 
-        @Bean
-        public ExpressionBeanPostProcessor expressionBeanPostProcessor(SqlXProperties properties) {
-            return new ExpressionBeanPostProcessor(properties.getConfig());
+        private final SqlXProperties properties;
+
+        BaseConfiguration(SqlXProperties properties) {
+            this.properties = properties;
         }
 
         @Bean
-        public AnnotationBeanPostProcessor annotationBeanPostProcessor(SqlXProperties properties) {
-            return new AnnotationBeanPostProcessor(properties.getConfig());
+        public SqlXConfiguration sqlXConfiguration() {
+            Banner banner = new BlocksBanner();
+            banner.printBanner(log::info);
+            return SqlXConfigurationCreator.create(properties);
+        }
+
+        @Bean
+        public ExpressionBeanPostProcessor expressionBeanPostProcessor() {
+            return new ExpressionBeanPostProcessor(sqlXConfiguration());
+        }
+
+        @Bean
+        public AnnotationBeanPostProcessor annotationBeanPostProcessor() {
+            return new AnnotationBeanPostProcessor(sqlXConfiguration());
         }
 
 
@@ -137,9 +150,9 @@ public class SqlXEnableAutoConfiguration {
         }
 
         @Bean
-        public SqlParser sqlParser(SqlXProperties properties) {
-            SqlXConfiguration configuration = properties.getConfig();
-            return configuration.getSqlParserInstance();
+        public SqlParser sqlParser() {
+            SqlXConfiguration configuration = sqlXConfiguration();
+            return configuration.getSqlParser();
         }
 
         @Bean
@@ -148,14 +161,13 @@ public class SqlXEnableAutoConfiguration {
         }
 
 
-
         @Bean
-        public DatasourceManager datasourceManager(SqlXProperties properties, DataSourceInitializer dataSourceInitializer) {
-            SqlXConfiguration configuration = properties.getConfig();
+        public DatasourceManager datasourceManager(DataSourceInitializer dataSourceInitializer) {
+            SqlXConfiguration configuration = sqlXConfiguration();
             Map<String, DataSourceWrapper> allDataSources = new HashMap<>();
             for (DataSourceConfiguration dataSourceConf : configuration.getDataSources()) {
                 DataSource dataSource = dataSourceInitializer.initialize(dataSourceConf);
-                allDataSources.put(dataSourceConf.getName(), new DataSourceWrapper(dataSourceConf.getName(), dataSource, dataSourceConf.getNodeAttribute() , dataSourceConf.getDefaulted()));
+                allDataSources.put(dataSourceConf.getName(), new DataSourceWrapper(dataSourceConf.getName(), dataSource, dataSourceConf.getNodeAttribute(), dataSourceConf.getDefaulted()));
             }
 
             DatasourceManager datasourceManager = new DatasourceManager(configuration);
@@ -164,8 +176,8 @@ public class SqlXEnableAutoConfiguration {
         }
 
         @Bean
-        public ClusterManager clusterManager(SqlXProperties properties, SqlParser sqlParser, Transaction transaction, EventListener eventListener) {
-            SqlXConfiguration config = properties.getConfig();
+        public ClusterManager clusterManager(SqlParser sqlParser, Transaction transaction, EventListener eventListener) {
+            SqlXConfiguration config = sqlXConfiguration();
             ClusterManager cm = new ClusterManager(config);
             for (ClusterConfiguration conf : config.getClusters()) {
                 String writeLoadBalanceClass = conf.getWriteLoadBalanceClass();
@@ -224,11 +236,11 @@ public class SqlXEnableAutoConfiguration {
         }
 
         @Bean
-        public CompositeRouteGroup routingGroup(SqlXProperties properties, SqlParser sqlParser, Transaction transaction, @Autowired(required = false) List<RouteGroup<?>> routingGroups, EventListener eventListener, DatasourceManager datasourceManager) {
+        public CompositeRouteGroup routingGroup(SqlParser sqlParser, Transaction transaction, @Autowired(required = false) List<RouteGroup<?>> routingGroups, EventListener eventListener, DatasourceManager datasourceManager) {
 
-            SqlXConfiguration routing = properties.getConfig();
+            SqlXConfiguration sqlXConfiguration = sqlXConfiguration();
             DefaultRouteGroup drg = NoneClusterRouteGroupBuilder.builder()
-                    .sqlXConfiguration(routing)
+                    .sqlXConfiguration(sqlXConfiguration)
                     .sqlParser(sqlParser)
                     .transaction(transaction)
                     .datasourceManager(datasourceManager)
@@ -240,23 +252,23 @@ public class SqlXEnableAutoConfiguration {
         }
 
         @Bean
-        public StatManager statManager(SqlXProperties properties, DataSourceInitializer dataSourceInitializer, DatasourceManager datasourceManager, ClusterManager clusterManager, List<RouteGroup<?>> routingGroups, EventListener eventListener, Transaction transaction) {
-            return new StatManager(properties.getConfig(), dataSourceInitializer, datasourceManager, clusterManager, routingGroups, eventListener, transaction);
+        public StatManager statManager(DataSourceInitializer dataSourceInitializer, DatasourceManager datasourceManager, ClusterManager clusterManager, List<RouteGroup<?>> routingGroups, EventListener eventListener, Transaction transaction) {
+            return new StatManager(sqlXConfiguration(), dataSourceInitializer, datasourceManager, clusterManager, routingGroups, eventListener, transaction);
         }
 
         @Bean("sqlXDataSource")
-        public SqlXDataSource sqlXDataSource(SqlXProperties properties ,StatManager statManager, ClusterManager clusterManager, DatasourceManager datasourceManager, EventListener eventListener , Transaction transaction) {
+        public SqlXDataSource sqlXDataSource(StatManager statManager, ClusterManager clusterManager, DatasourceManager datasourceManager, EventListener eventListener, Transaction transaction) {
             registerMBean(statManager);
-            SqlXConfiguration configuration = properties.getConfig();
+            SqlXConfiguration configuration = sqlXConfiguration();
             DefaultRouteGroup drg = NoneClusterRouteGroupBuilder.builder()
                     .sqlXConfiguration(configuration)
-                    .sqlParser(configuration.getSqlParserInstance())
+                    .sqlParser(configuration.getSqlParser())
                     .transaction(transaction)
                     .datasourceManager(datasourceManager)
                     .build();
             CompositeRouteGroup compositeRoutingGroup = new CompositeRouteGroup(eventListener, transaction);
             compositeRoutingGroup.installLast(drg);
-            return new DefaultSqlXDataSource(clusterManager ,datasourceManager, eventListener , compositeRoutingGroup);
+            return new DefaultSqlXDataSource(clusterManager, datasourceManager, eventListener, compositeRoutingGroup);
         }
 
     }
@@ -264,12 +276,12 @@ public class SqlXEnableAutoConfiguration {
 
     @Configuration
     @DependsOn("eventListener")
-    @ConditionalOnProperty(prefix = "sqlx.config.metrics", name = "enabled", havingValue = "true")
-    class MetricsConfiguration implements InitializingBean {
+    @ConditionalOnProperty(prefix = "sqlx.metrics", name = "enabled", havingValue = "true")
+    static class MetricsConfiguration implements InitializingBean {
 
         private static final String PATH_PREFIX = "/sqlx";
 
-        private final SqlXProperties properties;
+        private final SqlXConfiguration sqlXConfiguration;
 
         private final CompositeEventListener compositeEventListener;
 
@@ -283,11 +295,11 @@ public class SqlXEnableAutoConfiguration {
 
         private final NodeSqlExecuteNumMetricsRepository nodeSqlExecuteNumMetricsRepository;
 
-        public MetricsConfiguration(CompositeEventListener compositeEventListener, SqlXProperties properties) {
-            this.properties = properties;
+        public MetricsConfiguration(SqlXConfiguration sqlXConfiguration, CompositeEventListener compositeEventListener) {
+            this.sqlXConfiguration = sqlXConfiguration;
             this.compositeEventListener = compositeEventListener;
 
-            com.github.sqlx.config.MetricsConfiguration metrics = properties.getConfig().getMetrics();
+            com.github.sqlx.config.MetricsConfiguration metrics = sqlXConfiguration.getMetrics();
             this.routingMetricsRepository = new NitriteRoutingMetricsRepository(metrics.getFileDirectory());
             this.sqlMetricsRepository = new NitriteSqlMetricsRepository(metrics.getFileDirectory());
             this.transactionMetricsRepository = new NitriteTransactionMetricsRepository(metrics.getFileDirectory());
@@ -296,8 +308,8 @@ public class SqlXEnableAutoConfiguration {
         }
 
         @Override
-        public void afterPropertiesSet() throws Exception {
-            com.github.sqlx.config.MetricsConfiguration metrics = properties.getConfig().getMetrics();
+        public void afterPropertiesSet() {
+            com.github.sqlx.config.MetricsConfiguration metrics = sqlXConfiguration.getMetrics();
 
             GenericMetricsRepository metricsRepository = new GenericMetricsRepository();
             metricsRepository.registerRepository(RoutingMetrics.class, routingMetricsRepository);
@@ -328,7 +340,7 @@ public class SqlXEnableAutoConfiguration {
         public ServletRegistrationBean<ManagementServlet> servletRegistrationBean(StatManager statManager) {
 
             List<Object> handlers = new ArrayList<>();
-            handlers.add(new V1HttpHandler(HTTP_RESOURCES_PATH, properties, statManager, routingMetricsRepository, sqlMetricsRepository, transactionMetricsRepository, tableAccessMetricsRepository, nodeSqlExecuteNumMetricsRepository));
+            handlers.add(new V1HttpHandler(HTTP_RESOURCES_PATH, sqlXConfiguration, statManager, routingMetricsRepository, sqlMetricsRepository, transactionMetricsRepository, tableAccessMetricsRepository, nodeSqlExecuteNumMetricsRepository));
             DispatcherHttpHandler dispatcherHttpHandler = new DispatcherHttpHandler(handlers);
             return new ServletRegistrationBean<>(new ManagementServlet(dispatcherHttpHandler), PATH_PREFIX + "/*");
         }
@@ -338,7 +350,7 @@ public class SqlXEnableAutoConfiguration {
         @Bean
         public RouterFunction<ServerResponse> route(StatManager statManager) {
             List<Object> handlers = new ArrayList<>();
-            handlers.add(new V1HttpHandler(HTTP_RESOURCES_PATH, properties, statManager, routingMetricsRepository, sqlMetricsRepository, transactionMetricsRepository, tableAccessMetricsRepository, nodeSqlExecuteNumMetricsRepository));
+            handlers.add(new V1HttpHandler(HTTP_RESOURCES_PATH, sqlXConfiguration, statManager, routingMetricsRepository, sqlMetricsRepository, transactionMetricsRepository, tableAccessMetricsRepository, nodeSqlExecuteNumMetricsRepository));
             DispatcherHttpHandler dispatcherHttpHandler = new DispatcherHttpHandler(handlers);
             ManagementWebHandler managementWebHandler = new ManagementWebHandler(PATH_PREFIX, dispatcherHttpHandler);
             return RouterFunctions.route()

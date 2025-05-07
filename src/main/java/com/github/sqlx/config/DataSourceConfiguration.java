@@ -16,16 +16,14 @@
 
 package com.github.sqlx.config;
 
-import com.github.sqlx.NodeState;
 import com.github.sqlx.NodeAttribute;
-import com.github.sqlx.jdbc.datasource.DataSourceAttribute;
+import com.github.sqlx.NodeState;
 import com.github.sqlx.exception.ConfigurationException;
+import com.github.sqlx.jdbc.datasource.DataSourceAttribute;
 import com.github.sqlx.util.JdbcUtils;
 import com.github.sqlx.util.MapUtils;
 import com.github.sqlx.util.StringUtils;
-import com.google.gson.annotations.Expose;
 import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.sql.Driver;
 import java.util.HashMap;
@@ -39,42 +37,37 @@ import java.util.Objects;
  * @author He Xing Mo
  * @since 1.0
  */
-@ConfigurationProperties(prefix = "sqlx.config.data-sources")
 @Data
 public class DataSourceConfiguration implements ConfigurationValidator {
 
     /**
      * Represents the unique identifier for the data source.
      */
-    @Expose
     private String name;
 
-    @Expose
+    /**
+     * Indicates whether the data source is the default data source.
+     */
     private Boolean defaulted = false;
-
 
     /**
      * The fully qualified class name of the data source
      */
-    @Expose
     private String dataSourceClass;
 
     /**
      * load balancing weight
      */
-    @Expose
     private Double weight;
 
     /**
      * Heartbeat detection sql
      */
-    @Expose
     private String heartbeatSql = "SELECT 1";
 
     /**
      * Heartbeat interval cycle in milliseconds
      */
-    @Expose
     private long heartbeatInterval = 10000;
 
     /**
@@ -86,7 +79,6 @@ public class DataSourceConfiguration implements ConfigurationValidator {
      * The name of the method that can be invoked to initialize
      * the data source when it is first created or configured.
      */
-    @Expose
     private String initMethod;
 
 
@@ -94,20 +86,17 @@ public class DataSourceConfiguration implements ConfigurationValidator {
      * A method name that can be invoked to clean up
      * resources when the data source is no longer needed.
      */
-    @Expose
     private String destroyMethod;
 
 
     /**
      * Path to the SQL script that will be executed to initialize the database schema.
      */
-    @Expose
     private String initSqlScript;
 
     /**
      * Native data source property configuration
      */
-    @Expose
     private Map<String , String> props = new HashMap<>();
 
     /**

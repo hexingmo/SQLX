@@ -21,10 +21,8 @@ import com.github.sqlx.exception.ConfigurationException;
 import com.github.sqlx.exception.ManagementException;
 import com.github.sqlx.util.CollectionUtils;
 import com.github.sqlx.util.StringUtils;
-import com.google.gson.annotations.Expose;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -40,13 +38,11 @@ import java.util.stream.Collectors;
  * @author He Xing Mo
  * @since 1.0
  */
-@ConfigurationProperties(prefix = "sqlx.config.clusters")
 public class ClusterConfiguration implements ConfigurationValidator {
 
     /**
      * The name of the cluster, used to identify the cluster.
      */
-    @Expose
     @Getter
     @Setter
     private String name;
@@ -64,25 +60,21 @@ public class ClusterConfiguration implements ConfigurationValidator {
     @Setter
     private Set<NodeAttribute> nodeAttributes;
 
-    @Expose
     @Getter
     @Setter
     private Boolean defaulted = false;
 
-    @Expose
+
     @Getter
     private Set<String> writableNodes = new HashSet<>();
 
-    @Expose
     @Getter
     private Set<String> readableNodes = new HashSet<>();
 
-    @Expose
     @Getter
     @Setter
     private String writeLoadBalanceClass;
 
-    @Expose
     @Getter
     @Setter
     private String readLoadBalanceClass;

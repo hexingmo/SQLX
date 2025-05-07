@@ -39,103 +39,102 @@ spring:
 ############################# SQLX configuration #############################
 
 sqlx:
-  config:
-    enabled: true
-    sql-parsing-fail-behavior: warning
+  enabled: true
+  sql-parsing-fail-behavior: warning
 #    sql-parser-class: com.github.sqlx.sql.parser.SimpleSqlParser
-    metrics:
-      enabled: true
-      username: admin
-      password: adminpw
-      collect-scope: all
-      enable-routing-metrics: true
-      enable-sql-metrics: true
-      enable-transaction-metrics: true
-      slow-sql-millis: 300
-      slow-transaction-millis: 3000
+  metrics:
+    enabled: true
+    username: admin
+    password: adminpw
+    collect-scope: all
+    enable-routing-metrics: true
+    enable-sql-metrics: true
+    enable-transaction-metrics: true
+    slow-sql-millis: 300
+    slow-transaction-millis: 3000
 #      collect-mode: ASYNC
 #      collect-core-pool-size: 10
 #      collect-max-pool-size: 30
 #      collect-keep-alive-millis: 10000
 #      collect-queue-capacity: 3000
-      file-directory: D:\test
-      data-retention-duration: 2h
-    data-sources:
-      - name: write_0
-        weight: 99
-        defaulted: true
-        data-source-class: com.zaxxer.hikari.HikariDataSource
-        init-method:
-        destroy-method: close
-        init-sql-script: classpath:init.sql
-        heartbeat-sql: select 1
-        heartbeat-interval: 3000
-        props:
-          driverClassName: org.h2.Driver
-          jdbcUrl: jdbc:h2:mem:~/test1;FILE_LOCK=SOCKET;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;AUTO_RECONNECT=TRUE;IGNORECASE=TRUE;
-          username: sa
-          password: pwd
-          minIdle: 5
-          maxPoolSize: 30
-          connectionTimeout: 30000
-          isAutoCommit: false
-          isReadOnly: false
+    file-directory: D:\test
+    data-retention-duration: 2h
+  data-sources:
+    - name: write_0
+      weight: 99
+      defaulted: true
+      data-source-class: com.zaxxer.hikari.HikariDataSource
+      init-method:
+      destroy-method: close
+      init-sql-script: classpath:init.sql
+      heartbeat-sql: select 1
+      heartbeat-interval: 3000
+      props:
+        driverClassName: org.h2.Driver
+        jdbcUrl: jdbc:h2:mem:~/test1;FILE_LOCK=SOCKET;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;AUTO_RECONNECT=TRUE;IGNORECASE=TRUE;
+        username: sa
+        password: pwd
+        minIdle: 5
+        maxPoolSize: 30
+        connectionTimeout: 30000
+        isAutoCommit: false
+        isReadOnly: false
 
-      - name: read_0
-        weight: 6
-        data-source-class: com.zaxxer.hikari.HikariDataSource
-        init-method:
-        destroy-method: close
-        init-sql-script: classpath:init.sql
-        props:
-          driverClassName: org.h2.Driver
-          jdbcUrl: jdbc:h2:mem:~/test2;FILE_LOCK=SOCKET;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;AUTO_RECONNECT=TRUE;IGNORECASE=TRUE;
-          username: sa
-          password: pwd
-          minIdle: 10
-          maxPoolSize: 30
-          connectionTimeout: 40000
-          isAutoCommit: false
-          isReadOnly: true
+    - name: read_0
+      weight: 6
+      data-source-class: com.zaxxer.hikari.HikariDataSource
+      init-method:
+      destroy-method: close
+      init-sql-script: classpath:init.sql
+      props:
+        driverClassName: org.h2.Driver
+        jdbcUrl: jdbc:h2:mem:~/test2;FILE_LOCK=SOCKET;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;AUTO_RECONNECT=TRUE;IGNORECASE=TRUE;
+        username: sa
+        password: pwd
+        minIdle: 10
+        maxPoolSize: 30
+        connectionTimeout: 40000
+        isAutoCommit: false
+        isReadOnly: true
 
-      - name: read_1
-        weight: 10
-        data-source-class: com.zaxxer.hikari.HikariDataSource
-        init-method:
-        destroy-method: close
-        init-sql-script: classpath:init.sql
-        props:
-          driverClassName: org.h2.Driver
-          jdbcUrl: jdbc:h2:mem:~/test3;FILE_LOCK=SOCKET;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;AUTO_RECONNECT=TRUE;IGNORECASE=TRUE;
-          username: sa
-          password: pwd
-          minIdle: 15
-          maxPoolSize: 30
-          connectionTimeout: 60000
-          isAutoCommit: false
-          isReadOnly: true
-    clusters:
-      - name: cluster_0
-        defaulted: true
-        read-load-balance-class: com.github.sqlx.loadbalance.WeightRandomLoadBalance
-        write-load-balance-class: com.github.sqlx.loadbalance.WeightRoundRobinLoadBalance
-        writable-nodes:
-          - write_0
-        readable-nodes:
-          - read_0
-      - name: cluster_1
-        writable-nodes:
-          - write_0
-        readable-nodes:
-          - read_1
+    - name: read_1
+      weight: 10
+      data-source-class: com.zaxxer.hikari.HikariDataSource
+      init-method:
+      destroy-method: close
+      init-sql-script: classpath:init.sql
+      props:
+        driverClassName: org.h2.Driver
+        jdbcUrl: jdbc:h2:mem:~/test3;FILE_LOCK=SOCKET;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;AUTO_RECONNECT=TRUE;IGNORECASE=TRUE;
+        username: sa
+        password: pwd
+        minIdle: 15
+        maxPoolSize: 30
+        connectionTimeout: 60000
+        isAutoCommit: false
+        isReadOnly: true
+  clusters:
+    - name: cluster_0
+      defaulted: true
+      read-load-balance-class: com.github.sqlx.loadbalance.WeightRandomLoadBalance
+      write-load-balance-class: com.github.sqlx.loadbalance.WeightRoundRobinLoadBalance
+      writable-nodes:
+        - write_0
+      readable-nodes:
+        - read_0
+    - name: cluster_1
+      writable-nodes:
+        - write_0
+      readable-nodes:
+        - read_1
 
-    pointcuts:
-      - expression: "execution(* com.github.sqlx.integration.springboot.SqlRoutingPropagationServiceA.expressionPropagation())"
-        cluster: cluster_0
-        nodes:
-          - write_0
-          - read_0
-        propagation: true
+  pointcuts:
+    - expression: "execution(* com.github.sqlx.integration.springboot.SqlRoutingPropagationServiceA.expressionPropagation())"
+      cluster: cluster_0
+      nodes:
+        - write_0
+        - read_0
+      propagation: true
 #      - expression: "execution(* com.github.sqlx.integration.springboot.SqlRoutingPropagationServiceA.expressionPropagation())"
 #        cluster: cluster_0
 #        nodes:

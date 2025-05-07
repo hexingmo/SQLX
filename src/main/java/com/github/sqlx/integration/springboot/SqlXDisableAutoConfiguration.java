@@ -1,5 +1,6 @@
 package com.github.sqlx.integration.springboot;
 
+import com.github.sqlx.integration.springboot.properties.SqlXProperties;
 import com.github.sqlx.jdbc.AnnotationSqlConnectionWrapper;
 import com.github.sqlx.sql.parser.DefaultAnnotationSqlHintParser;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +15,7 @@ import org.springframework.context.annotation.Bean;
  * @since 1.0
  */
 @EnableConfigurationProperties(SqlXProperties.class)
-@ConditionalOnProperty(prefix = "sqlx.config" , name = "enabled" , havingValue = "false")
+@ConditionalOnProperty(prefix = "sqlx" , name = "enabled" , havingValue = "false")
 @Slf4j
 public class SqlXDisableAutoConfiguration {
 

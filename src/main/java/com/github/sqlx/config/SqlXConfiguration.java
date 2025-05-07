@@ -20,25 +20,13 @@ import com.github.sqlx.NodeAttribute;
 import com.github.sqlx.exception.ConfigurationException;
 import com.github.sqlx.exception.ManagementException;
 import com.github.sqlx.exception.SqlXRuntimeException;
-import com.github.sqlx.sql.parser.*;
+import com.github.sqlx.sql.parser.SqlParser;
 import com.github.sqlx.util.CollectionUtils;
 import com.github.sqlx.util.StringUtils;
-import com.google.gson.annotations.Expose;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.joor.Reflect;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -46,72 +34,54 @@ import java.util.stream.Collectors;
  * @since 1.0
  */
 
-@Getter
-@Setter
+@Data
 @Slf4j
-@ConfigurationProperties(prefix = "sqlx.config")
 public class SqlXConfiguration implements ConfigurationValidator {
 
-    @Expose
-    private boolean enabled = true;
+    private SqlParsingConfiguration sqlParsing;
 
-    @Expose
-    private String sqlParserClass;
-
-    @Expose
-    private SqlParsingFailBehavior sqlParsingFailBehavior = SqlParsingFailBehavior.WARNING;
-
-    private SqlParser sqlParserInstance;
-
-    @Expose
     private List<DataSourceConfiguration> dataSources = new ArrayList<>();
 
-    @Expose
     private List<ClusterConfiguration> clusters = new ArrayList<>();
 
-    @Expose
     private List<PointcutConfiguration> pointcuts = new ArrayList<>();
 
-    @Expose
     private MetricsConfiguration metrics;
 
-    public SqlParser getSqlParserInstance() {
-        if (Objects.isNull(this.sqlParserInstance)) {
-            SqlParser sqlParser;
-            if (StringUtils.isNotBlank(this.sqlParserClass)) {
-                sqlParser = Reflect.onClass(this.sqlParserClass).create().get();
-            } else {
-                log.warn("sqlParserClass is empty , default use {}" , JSqlParser.class.getName());
-                sqlParser = new JSqlParser();
-            }
-            this.sqlParserInstance = new AnnotationSqlParser(new FailBehaviorSqlParser(sqlParser, this.sqlParsingFailBehavior) , new DefaultAnnotationSqlHintParser());
-        }
-        return this.sqlParserInstance;
+    public SqlParser getSqlParser() {
+        return this.sqlParsing.getSqlParser();
     }
 
     public List<String> getDataSourceNames() {
         return dataSources.stream().map(DataSourceConfiguration::getName).collect(Collectors.toList());
     }
 
-    public DataSourceConfiguration getDataSourceConfByName(final String name) {
-        Optional<DataSourceConfiguration> optional = dataSources.stream().filter(dsConf -> Objects.equals(dsConf.getName(), name)).findFirst();
+    public DataSourceConfiguration getDataSourceConfiguration(final String datasourceName) {
+        Optional<DataSourceConfiguration> optional = dataSources.stream().filter(dsConf -> Objects.equals(dsConf.getName(), datasourceName)).findFirst();
         return optional.orElse(null);
     }
 
-    public NodeAttribute getNodeAttribute(final String name) {
-        DataSourceConfiguration dsConf = getDataSourceConfByName(name);
+    public NodeAttribute getNodeAttribute(final String datasourceName) {
+        DataSourceConfiguration dsConf = getDataSourceConfiguration(datasourceName);
         return dsConf != null ? dsConf.getNodeAttribute() : null;
     }
 
-    public Set<NodeAttribute> getNodeAttributes(final Collection<String> names) {
+    public Set<NodeAttribute> getNodeAttributes(final Collection<String> datasourceNames) {
         return dataSources.stream()
                 .map(DataSourceConfiguration::getNodeAttribute)
-                .filter(routingNodeAttribute -> names.contains(routingNodeAttribute.getName()))
+                .filter(routingNodeAttribute -> datasourceNames.contains(routingNodeAttribute.getName()))
                 .collect(Collectors.toSet());
     }
 
     @Override
     public void validate() {
+        validateDataSource();
+        validateCluster();
+        validatePointcuts();
+        metrics.validate();
+    }
+
+    private void validateDataSource() {
         if (CollectionUtils.isEmpty(dataSources)) {
             throw new ConfigurationException("dataSources Configuration must not be empty");
         }
@@ -121,17 +91,16 @@ public class SqlXConfiguration implements ConfigurationValidator {
             dsConf.validate();
         }
 
-        List<String> dataSourceNames = dataSources.stream().map(DataSourceConfiguration::getName).collect(Collectors.toList());
-        Collection<String> dataSourceNameSubtract = CollectionUtils.subtract(dataSourceNames, new HashSet<>(dataSourceNames));
-        if (CollectionUtils.isNotEmpty(dataSourceNameSubtract)) {
-            throw new ConfigurationException(String.format("dataSources name duplicate %s" , dataSourceNameSubtract));
+        // verify whether the data source names are duplicated
+        List<String> duplicateNames = dataSources.stream()
+                .map(DataSourceConfiguration::getName)
+                .collect(Collectors.groupingBy(name -> name, Collectors.counting())).entrySet().stream()
+                .filter(entry -> entry.getValue() > 1)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+        if (!duplicateNames.isEmpty()) {
+            throw new ConfigurationException(String.format("dataSources name duplicate %s", duplicateNames));
         }
-
-        validateCluster();
-        validatePointcuts();
-
-        // validate MetricsConfiguration
-        metrics.validate();
     }
 
     /**
@@ -139,9 +108,9 @@ public class SqlXConfiguration implements ConfigurationValidator {
      * This method checks if the specified cluster and nodes exist and are correctly configured.
      *
      * @param pointExpressions the pointcut expression used for logging and error messages
-     * @param cluster the name of the cluster to validate
-     * @param nodes a list of node names to validate
-     * @param propagation a boolean indicating whether propagation is enabled
+     * @param cluster          the name of the cluster to validate
+     * @param nodes            a list of node names to validate
+     * @param propagation      a boolean indicating whether propagation is enabled
      * @throws ConfigurationException if the cluster or nodes are not correctly configured
      */
     public void validatePointcutRoutingAttr(String pointExpressions, final String cluster, List<String> nodes, boolean propagation) {
@@ -149,25 +118,25 @@ public class SqlXConfiguration implements ConfigurationValidator {
         if (StringUtils.isNotBlank(cluster)) {
             Optional<ClusterConfiguration> optional = clusters.stream().filter(c -> c.getName().equals(cluster)).findFirst();
             if (!optional.isPresent()) {
-                throw new ConfigurationException(String.format("%s pointcut [cluster] attr %s Cluster does not exist" , pointExpressions, cluster));
+                throw new ConfigurationException(String.format("%s pointcut [cluster] attr %s Cluster does not exist", pointExpressions, cluster));
             }
         }
         if (StringUtils.isBlank(cluster) && CollectionUtils.isNotEmpty(nodes)) {
             for (String node : nodes) {
                 if (!dataSourceNames.contains(node)) {
-                    throw new ConfigurationException(String.format("%s pointcut [nodes] attr %s Datasource does not exist" , pointExpressions, node));
+                    throw new ConfigurationException(String.format("%s pointcut [nodes] attr %s Datasource does not exist", pointExpressions, node));
                 }
             }
         } else if (CollectionUtils.isNotEmpty(nodes)) {
             Optional<ClusterConfiguration> optional = clusters.stream().filter(c -> c.getName().equals(cluster)).findFirst();
             if (!optional.isPresent()) {
-                throw new ConfigurationException(String.format("%s pointcut [cluster] attr %s Cluster does not exist" , pointExpressions,cluster));
+                throw new ConfigurationException(String.format("%s pointcut [cluster] attr %s Cluster does not exist", pointExpressions, cluster));
             }
             ClusterConfiguration clusterConf = optional.get();
             Set<String> clusterNodes = clusterConf.getNodes();
             for (String node : nodes) {
                 if (!clusterNodes.contains(node)) {
-                    throw new ConfigurationException(String.format("%s pointcut - [nodes] attr [%s] Datasource Not belonging to [%s] cluster" , pointExpressions ,node , cluster));
+                    throw new ConfigurationException(String.format("%s pointcut - [nodes] attr [%s] Datasource Not belonging to [%s] cluster", pointExpressions, node, cluster));
                 }
             }
         }
@@ -198,7 +167,7 @@ public class SqlXConfiguration implements ConfigurationValidator {
             String cluster = pointcut.getCluster();
             List<String> nodes = pointcut.getNodes();
             boolean propagation = pointcut.getPropagation();
-            validatePointcutRoutingAttr(expression , cluster , nodes , propagation);
+            validatePointcutRoutingAttr(expression, cluster, nodes, propagation);
         }
         List<String> expressions = pointcuts.stream().map(PointcutConfiguration::getExpression).collect(Collectors.toList());
         List<String> duplicates = expressions.stream()
@@ -208,7 +177,7 @@ public class SqlXConfiguration implements ConfigurationValidator {
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
         if (CollectionUtils.isNotEmpty(duplicates)) {
-            throw new ConfigurationException(String.format("pointcut expression duplicate %s" , duplicates));
+            throw new ConfigurationException(String.format("pointcut expression duplicate %s", duplicates));
         }
     }
 
@@ -216,7 +185,7 @@ public class SqlXConfiguration implements ConfigurationValidator {
         List<String> clusterNames = clusters.stream().map(ClusterConfiguration::getName).collect(Collectors.toList());
         Collection<String> clusterNameSubtract = CollectionUtils.subtract(clusterNames, new HashSet<>(clusterNames));
         if (CollectionUtils.isNotEmpty(clusterNameSubtract)) {
-            throw new ConfigurationException(String.format("cluster name duplicate %s" , clusterNameSubtract));
+            throw new ConfigurationException(String.format("cluster name duplicate %s", clusterNameSubtract));
         }
 
 
@@ -283,7 +252,7 @@ public class SqlXConfiguration implements ConfigurationValidator {
      * and removes the specified node from that cluster configuration. It then performs validation.
      *
      * @param clusterName The name of the cluster.
-     * @param nodeName The name of the node to be removed.
+     * @param nodeName    The name of the node to be removed.
      * @return true if the node was successfully removed; otherwise, false
      */
     public synchronized boolean removeNodeInCluster(String clusterName, String nodeName) {
@@ -309,7 +278,7 @@ public class SqlXConfiguration implements ConfigurationValidator {
         if (clusterConf == null) {
             throw new IllegalArgumentException("No such cluster configuration: " + clusterName);
         }
-        DataSourceConfiguration dsConf = getDataSourceConfByName(nodeName);
+        DataSourceConfiguration dsConf = getDataSourceConfiguration(nodeName);
         if (dsConf == null) {
             throw new IllegalArgumentException("No such datasource configuration: " + nodeName);
         }
@@ -356,13 +325,13 @@ public class SqlXConfiguration implements ConfigurationValidator {
 
     /**
      * Adds a new DataSourceConfiguration to the collection of data sources.
-     *
+     * <p>
      * This method is synchronized to ensure thread safety when adding
      * configurations. It first validates the provided DataSourceConfiguration
      * object. If the validation is successful, it adds the configuration to the
      * dataSources list and attempts to add a load balancing option based on
      * the node attribute of the configuration.
-     *
+     * <p>
      * If adding the load balancing option or the subsequent validation fails,
      * the method will remove the added DataSourceConfiguration and the load
      * balancing option to maintain consistency. Any exception thrown during
@@ -370,7 +339,7 @@ public class SqlXConfiguration implements ConfigurationValidator {
      *
      * @param dataSourceConf The DataSourceConfiguration to be added.
      * @throws ManagementException If validation fails or if there's an error adding
-     *                   the load balancing option.
+     *                             the load balancing option.
      */
     public synchronized void addDataSourceConfiguration(DataSourceConfiguration dataSourceConf) {
         log.info("Starting to add DataSourceConfiguration: {}", dataSourceConf);
@@ -400,7 +369,7 @@ public class SqlXConfiguration implements ConfigurationValidator {
             if (!containsDataSource(node)) {
                 throw new IllegalArgumentException("No such datasource configuration: " + node);
             }
-            DataSourceConfiguration dsConf = getDataSourceConfByName(node);
+            DataSourceConfiguration dsConf = getDataSourceConfiguration(node);
             nodeAttributes.add(dsConf.getNodeAttribute());
         }
         configuration.setNodeAttributes(nodeAttributes);
@@ -412,7 +381,7 @@ public class SqlXConfiguration implements ConfigurationValidator {
                 log.debug("ClusterConfiguration validated successfully: {}", configuration);
             }
         } catch (ConfigurationException e) {
-            log.error("Error occurred while adding ClusterConfiguration: {}",configuration,e);
+            log.error("Error occurred while adding ClusterConfiguration: {}", configuration, e);
             clusters.remove(configuration);
             throw e;
         }

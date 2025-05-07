@@ -73,7 +73,7 @@ class ClusterManagerTest {
         when(mockDataSourceConfig.getNodeAttribute()).thenReturn(mockNodeAttribute);
 
         when(mockConfig.addNodeInCluster("testCluster", "node1")).thenReturn(true);
-        when(mockConfig.getDataSourceConfByName("node1")).thenReturn(mockDataSourceConfig);
+        when(mockConfig.getDataSourceConfiguration("node1")).thenReturn(mockDataSourceConfig);
         clusterManager.addCluster("testCluster", mockCluster);
 
         clusterManager.addNodeInCluster("testCluster", "node1");

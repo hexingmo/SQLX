@@ -19,16 +19,12 @@ package com.github.sqlx.config;
 import com.github.sqlx.exception.ConfigurationException;
 import com.github.sqlx.util.CollectionUtils;
 import com.github.sqlx.util.StringUtils;
-import com.google.gson.annotations.Expose;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 
 /**
@@ -39,7 +35,6 @@ import java.util.Set;
  * @author He Xing Mo
  * @since 1.0
  */
-@ConfigurationProperties(prefix = "sqlx.config.pointcuts")
 @Data
 @Slf4j
 public class PointcutConfiguration implements ConfigurationValidator {
@@ -47,26 +42,22 @@ public class PointcutConfiguration implements ConfigurationValidator {
     /**
      * Expression: Specifies the pointcut expression, used to define the matching rules for join points.
      */
-    @Expose
     private String expression;
 
     /**
      * Cluster: Specifies the cluster to which the pointcut belongs, used for routing decisions.
      */
-    @Expose
     private String cluster;
 
     /**
      * Nodes: Specifies a list of nodes, used for detailed routing within the cluster.
      */
-    @Expose
     private List<String> nodes = new ArrayList<>();
 
     /**
      * Propagation: Indicates whether the routing behavior should be propagated, default is true.
      * When true, the routing behavior will affect subsequent calls in the call chain.
      */
-    @Expose
     private Boolean propagation = true;
 
 

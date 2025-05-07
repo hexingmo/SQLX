@@ -54,7 +54,6 @@ public class CompositeDataSourceInitializer implements DataSourceInitializer {
 
     @Override
     public DataSource initialize(DataSourceConfiguration dataSourceConf) {
-
         String dataSourceClassName = dataSourceConf.getDataSourceClass();
         DataSource dataSource = null;
         for (GenericDataSourceInitializer<?> initializer : initializers) {

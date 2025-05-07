@@ -9,15 +9,14 @@ SQL路由是 `SQLX` 框架中的一个核心功能，它允许您根据特定的
 
 ```yaml
 sqlx:
-  config:
-    enabled: true
-    pointcuts:
-      - expression: "execution(* com.example.service.UserService.getUserById(..))"
-        cluster: userCluster
-        nodes:
-          - read_0
-          - read_1
-        propagation: true
+  enabled: true
+  pointcuts:
+    - expression: "execution(* com.example.service.UserService.getUserById(..))"
+      cluster: userCluster
+      nodes:
+        - read_0
+        - read_1
+      propagation: true
 ```
 
 ## SQL路由注解方式

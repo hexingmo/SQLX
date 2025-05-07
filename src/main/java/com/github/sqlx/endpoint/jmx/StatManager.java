@@ -226,7 +226,7 @@ public class StatManager implements StatManagerMBean {
         compositeRoutingGroup.installFirst(routingGroups);
         DefaultRouteGroup defaultRoutingGroup = NoneClusterRouteGroupBuilder.builder()
                 .sqlXConfiguration(sqlXConfiguration)
-                .sqlParser(sqlXConfiguration.getSqlParserInstance())
+                .sqlParser(sqlXConfiguration.getSqlParser())
                 .transaction(transaction)
                 // TODO
                 .datasourceManager(datasourceManager)

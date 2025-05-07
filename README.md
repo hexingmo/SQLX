@@ -43,106 +43,105 @@ Add SQLX configuration in `application.yml` or `application.properties`:
 
 ```yaml
 sqlx:
-  config:
-    enabled: true # Whether to enable SQLX
-    sql-parsing-fail-behavior: warning # Behavior when SQL parsing fails, supports WARNING (warning), FAILING (error), IGNORE (ignore)
-    metrics:
-      enabled: true # Whether to enable monitoring functionality
-      username: admin # Monitoring username
-      password: adminpw # Monitoring password
-      collect-scope: SLOW # Monitoring collection scope, supports SLOW (only collects slow SQL and slow transactions), ALL (collects all)
-      enable-routing-metrics: true
-      enable-sql-metrics: true
-      enable-transaction-metrics: true
-      slow-sql-millis: 300 # Slow SQL threshold, unit in milliseconds
-      slow-transaction-millis: 3000 # Slow transaction threshold, unit in milliseconds
-      #      collect-mode: ASYNC # Collection mode, supports SYNC (synchronous), ASYNC (asynchronous)
-      #      collect-core-pool-size: 10
-      #      collect-max-pool-size: 30
-      #      collect-keep-alive-millis: 10000
-      #      collect-queue-capacity: 3000
-      file-directory: /usr/local/sqlx-metrics # Directory for saving collected data files
-      data-retention-duration: 2h # Data retention duration, supports s, m, h, d, w, M, y
-    data-sources: # Data source configuration
-      - name: write_0 # Data source name must be unique
-        weight: 99 # Data source weight, used for load balancing
-        defaulted: true
-        data-source-class: com.zaxxer.hikari.HikariDataSource
-        init-method: init # Initialization method
-        destroy-method: close # Destruction method
-        init-sql-script: classpath:init.sql # Initialization SQL script
-        props: # Data source parameter configuration, parameter names should match the fields of the data source
-          driverClassName: org.h2.Driver
-          jdbcUrl: jdbc:h2:mem:~/test1;FILE_LOCK=SOCKET;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;AUTO_RECONNECT=TRUE;IGNORECASE=TRUE;
-          username: sa
-          password: pwd
-          minIdle: 5
-          maxPoolSize: 30
-          connectionTimeout: 30000
-          isAutoCommit: false
-          isReadOnly: false
+  enabled: true # Whether to enable SQLX
+  sql-parsing-fail-behavior: warning # Behavior when SQL parsing fails, supports WARNING (warning), FAILING (error), IGNORE (ignore)
+  metrics:
+    enabled: true # Whether to enable monitoring functionality
+    username: admin # Monitoring username
+    password: adminpw # Monitoring password
+    collect-scope: SLOW # Monitoring collection scope, supports SLOW (only collects slow SQL and slow transactions), ALL (collects all)
+    enable-routing-metrics: true
+    enable-sql-metrics: true
+    enable-transaction-metrics: true
+    slow-sql-millis: 300 # Slow SQL threshold, unit in milliseconds
+    slow-transaction-millis: 3000 # Slow transaction threshold, unit in milliseconds
+    #      collect-mode: ASYNC # Collection mode, supports SYNC (synchronous), ASYNC (asynchronous)
+    #      collect-core-pool-size: 10
+    #      collect-max-pool-size: 30
+    #      collect-keep-alive-millis: 10000
+    #      collect-queue-capacity: 3000
+    file-directory: /usr/local/sqlx-metrics # Directory for saving collected data files
+    data-retention-duration: 2h # Data retention duration, supports s, m, h, d, w, M, y
+  data-sources: # Data source configuration
+    - name: write_0 # Data source name must be unique
+      weight: 99 # Data source weight, used for load balancing
+      defaulted: true
+      data-source-class: com.zaxxer.hikari.HikariDataSource
+      init-method: init # Initialization method
+      destroy-method: close # Destruction method
+      init-sql-script: classpath:init.sql # Initialization SQL script
+      props: # Data source parameter configuration, parameter names should match the fields of the data source
+        driverClassName: org.h2.Driver
+        jdbcUrl: jdbc:h2:mem:~/test1;FILE_LOCK=SOCKET;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;AUTO_RECONNECT=TRUE;IGNORECASE=TRUE;
+        username: sa
+        password: pwd
+        minIdle: 5
+        maxPoolSize: 30
+        connectionTimeout: 30000
+        isAutoCommit: false
+        isReadOnly: false
 
-      - name: read_0
-        weight: 6
-        data-source-class: com.zaxxer.hikari.HikariDataSource
-        init-method: init
-        destroy-method: close
-        init-sql-script: classpath:init.sql
-        props:
-          driverClassName: org.h2.Driver
-          jdbcUrl: jdbc:h2:mem:~/test2;FILE_LOCK=SOCKET;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;AUTO_RECONNECT=TRUE;IGNORECASE=TRUE;
-          username: sa
-          password: pwd
-          minIdle: 10
-          maxPoolSize: 30
-          connectionTimeout: 40000
-          isAutoCommit: false
-          isReadOnly: true
+    - name: read_0
+      weight: 6
+      data-source-class: com.zaxxer.hikari.HikariDataSource
+      init-method: init
+      destroy-method: close
+      init-sql-script: classpath:init.sql
+      props:
+        driverClassName: org.h2.Driver
+        jdbcUrl: jdbc:h2:mem:~/test2;FILE_LOCK=SOCKET;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;AUTO_RECONNECT=TRUE;IGNORECASE=TRUE;
+        username: sa
+        password: pwd
+        minIdle: 10
+        maxPoolSize: 30
+        connectionTimeout: 40000
+        isAutoCommit: false
+        isReadOnly: true
 
-      - name: read_1
-        weight: 10
-        data-source-class: com.zaxxer.hikari.HikariDataSource
-        init-method: init
-        destroy-method: close
-        init-sql-script: classpath:init.sql
-        props:
-          driverClassName: org.h2.Driver
-          jdbcUrl: jdbc:h2:mem:~/test3;FILE_LOCK=SOCKET;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;AUTO_RECONNECT=TRUE;IGNORECASE=TRUE;
-          username: sa
-          password: pwd
-          minIdle: 15
-          maxPoolSize: 30
-          connectionTimeout: 60000
-          isAutoCommit: false
-          isReadOnly: true
-    clusters: # Cluster configuration
-      - name: cluster_0 # Cluster name must be unique
-        defaulted: true # Specifies whether it is the default cluster when there are multiple clusters
-        writable-nodes:
-          - write_0
-        readable-nodes:
-          - read_0
-          - read_1
-      - name: cluster_1
-        writable-nodes:
-          - write_0
-        readable-nodes:
-          - read_1
+    - name: read_1
+      weight: 10
+      data-source-class: com.zaxxer.hikari.HikariDataSource
+      init-method: init
+      destroy-method: close
+      init-sql-script: classpath:init.sql
+      props:
+        driverClassName: org.h2.Driver
+        jdbcUrl: jdbc:h2:mem:~/test3;FILE_LOCK=SOCKET;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;AUTO_RECONNECT=TRUE;IGNORECASE=TRUE;
+        username: sa
+        password: pwd
+        minIdle: 15
+        maxPoolSize: 30
+        connectionTimeout: 60000
+        isAutoCommit: false
+        isReadOnly: true
+  clusters: # Cluster configuration
+    - name: cluster_0 # Cluster name must be unique
+      defaulted: true # Specifies whether it is the default cluster when there are multiple clusters
+      writable-nodes:
+        - write_0
+      readable-nodes:
+        - read_0
+        - read_1
+    - name: cluster_1
+      writable-nodes:
+        - write_0
+      readable-nodes:
+        - read_1
 
-    pointcuts: # SQL routing interception configuration, SQL within this method will be routed to the specified cluster and nodes
-      - expression: "execution(* com.foo.ServiceA.fun1())" # Interception expression, supports Spring AOP interception expressions
-        cluster: cluster_0 # Cluster name
-        nodes: # Node names
-          - write_0
-          - read_0
-        propagation: true # Whether to accept propagation from upper-level methods
-      - expression: "execution(* com.foo.ServiceA.fun2())"
-        cluster: cluster_0
-        nodes:
-          - write_0
-          - read_0
-          - read_1
-        propagation: true
+  pointcuts: # SQL routing interception configuration, SQL within this method will be routed to the specified cluster and nodes
+    - expression: "execution(* com.foo.ServiceA.fun1())" # Interception expression, supports Spring AOP interception expressions
+      cluster: cluster_0 # Cluster name
+      nodes: # Node names
+        - write_0
+        - read_0
+      propagation: true # Whether to accept propagation from upper-level methods
+    - expression: "execution(* com.foo.ServiceA.fun2())"
+      cluster: cluster_0
+      nodes:
+        - write_0
+        - read_0
+        - read_1
+      propagation: true
 ```
 
 ## Contribution Guide

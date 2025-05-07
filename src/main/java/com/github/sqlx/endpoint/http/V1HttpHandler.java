@@ -21,7 +21,7 @@ import com.github.sqlx.config.DataSourceConfiguration;
 import com.github.sqlx.config.MetricsConfiguration;
 import com.github.sqlx.config.SqlXConfiguration;
 import com.github.sqlx.endpoint.jmx.StatManagerMBean;
-import com.github.sqlx.integration.springboot.SqlXProperties;
+import com.github.sqlx.integration.springboot.properties.SqlXProperties;
 import com.github.sqlx.metrics.*;
 import com.github.sqlx.metrics.nitrite.NodeSqlExecuteNumMetricsRepository;
 import com.github.sqlx.util.IOUtils;
@@ -48,8 +48,6 @@ public class V1HttpHandler {
 
     private final String resourcePath;
 
-    private final SqlXProperties sqlXProperties;
-
     private final SqlXConfiguration sqlXConfiguration;
 
     private final StatManagerMBean statManagerMBean;
@@ -68,17 +66,16 @@ public class V1HttpHandler {
      * Constructs a new V1HttpHandler.
      *
      * @param resourcePath                 the path to static resources
-     * @param sqlXProperties               the SqlXProperties instance
+     * @param sqlXConfiguration            the SqlXConfiguration instance
      * @param statManagerMBean             the StatManagerMBean instance
      * @param routingMetricsRepository     the RoutingMetricsRepository instance
      * @param sqlMetricsRepository         the SqlMetricsRepository instance
      * @param transactionMetricsRepository the TransactionMetricsRepository instance
      * @param tableAccessMetricsRepository the TableAccessMetricsRepository instance
      */
-    public V1HttpHandler(String resourcePath, SqlXProperties sqlXProperties, StatManagerMBean statManagerMBean, RoutingMetricsRepository routingMetricsRepository, SqlMetricsRepository sqlMetricsRepository, TransactionMetricsRepository transactionMetricsRepository, TableAccessMetricsRepository tableAccessMetricsRepository,NodeSqlExecuteNumMetricsRepository nodeSqlExecuteNumMetricsRepository) {
+    public V1HttpHandler(String resourcePath, SqlXConfiguration sqlXConfiguration, StatManagerMBean statManagerMBean, RoutingMetricsRepository routingMetricsRepository, SqlMetricsRepository sqlMetricsRepository, TransactionMetricsRepository transactionMetricsRepository, TableAccessMetricsRepository tableAccessMetricsRepository, NodeSqlExecuteNumMetricsRepository nodeSqlExecuteNumMetricsRepository) {
         this.resourcePath = resourcePath;
-        this.sqlXProperties = sqlXProperties;
-        this.sqlXConfiguration = sqlXProperties.getConfig();
+        this.sqlXConfiguration = sqlXConfiguration;
         this.statManagerMBean = statManagerMBean;
         this.routingMetricsRepository = routingMetricsRepository;
         this.sqlMetricsRepository = sqlMetricsRepository;
@@ -98,14 +95,14 @@ public class V1HttpHandler {
             if (StringUtils.isBlank(loginPayload.getUsername()) || StringUtils.isBlank(loginPayload.getPassword())) {
                 throw new IllegalArgumentException("username or password is empty");
             }
-            MetricsConfiguration metrics = sqlXProperties.getConfig().getMetrics();
+            MetricsConfiguration metrics = sqlXConfiguration.getMetrics();
             if (!StringUtils.equals(metrics.getUsername(), loginPayload.getUsername())
                     || !StringUtils.equals(metrics.getPassword(), loginPayload.getPassword())) {
                 throw new IllegalArgumentException("username or password is incorrect");
             }
             if (Objects.nonNull(request.getHttpSession())) {
                 log.info("login success setAuthSessionUserKey in HttpSession");
-                SecurityUtils.setAuthSessionUserKey(request.getHttpSession() , metrics.getUsername());
+                SecurityUtils.setAuthSessionUserKey(request.getHttpSession(), metrics.getUsername());
                 httpResponse.setBody(JsonUtils.toJson(Result.ok()));
             } else if (Objects.nonNull(request.getWebSession())) {
                 log.info("login success setAuthSessionUserKey in WebSession");
@@ -474,7 +471,7 @@ public class V1HttpHandler {
             criteria.setDatasourceList(sqlXConfiguration.getDataSourceNames());
             List<DatasourceDashboardMetrics> metricsList = nodeSqlExecuteNumMetricsRepository.selectDatasourceDashboardMetrics(criteria);
             for (DatasourceDashboardMetrics metrics : metricsList) {
-                DataSourceConfiguration dataSourceConfiguration = sqlXConfiguration.getDataSourceConfByName(metrics.getDataSource());
+                DataSourceConfiguration dataSourceConfiguration = sqlXConfiguration.getDataSourceConfiguration(metrics.getDataSource());
                 if (Objects.nonNull(dataSourceConfiguration)) {
                     NodeAttribute nodeAttribute = dataSourceConfiguration.getNodeAttribute();
                     metrics.setNodeState(nodeAttribute.getNodeState());
@@ -495,7 +492,7 @@ public class V1HttpHandler {
     public HttpResponse getConfiguration(HttpRequest request) {
         HttpResponse httpResponse = new HttpResponse("application/json;charset=UTF-8").setStatus(200);
         try {
-            Result<SqlXProperties> result = Result.ok(sqlXProperties);
+            Result<SqlXConfiguration> result = Result.ok(sqlXConfiguration);
             httpResponse.setBody(JsonUtils.maskPasswordToJsonExcludeWithoutExpose(result));
         } catch (Exception e) {
             log.error("get Configuration error", e);
