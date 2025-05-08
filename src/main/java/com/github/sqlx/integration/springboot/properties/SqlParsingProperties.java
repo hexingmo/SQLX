@@ -10,7 +10,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author jing yun
  * @since 1.0
  */
-@ConfigurationProperties(prefix = "sqlx.sql.parsing")
+@ConfigurationProperties(prefix = "sqlx.sql-parsing")
 @Data
 public class SqlParsingProperties {
 

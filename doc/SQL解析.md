@@ -9,7 +9,8 @@
 ```yaml
 sqlx:
   enabled: true
-  sql-parser-class: com.github.sqlx.sql.parser.JSqlParser
+  sql-parsing:
+    sql-parser-class: com.github.sqlx.sql.parser.JSqlParser
 ```
 
 没有指定时默认使用 `com.github.sqlx.sql.parser.JSqlParser`.
@@ -46,5 +47,6 @@ public class CustomSqlParser implements SqlParser {
 
 ```yaml
 sqlx:
-  sql-parsing-fail-behavior: warning
+  sql-parsing:
+    sql-parsing-fail-behavior: warning
 ```

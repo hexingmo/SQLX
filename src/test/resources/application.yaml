@@ -40,7 +40,8 @@ spring:
 
 sqlx:
   enabled: true
-  sql-parsing-fail-behavior: warning
+  sql-parsing:
+    sql-parsing-fail-behavior: warning
 #    sql-parser-class: com.github.sqlx.sql.parser.SimpleSqlParser
   metrics:
     enabled: true
