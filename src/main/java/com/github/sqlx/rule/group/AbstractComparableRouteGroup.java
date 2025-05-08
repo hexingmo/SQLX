@@ -42,9 +42,7 @@ public abstract class AbstractComparableRouteGroup<T extends RouteRule> implemen
 
     @Override
     public void install(T rule) {
-        if (rule != null && isEnableRule(rule)) {
-            routingRules.add(rule);
-        }
+        routingRules.add(rule);
     }
 
     @Override
@@ -65,10 +63,5 @@ public abstract class AbstractComparableRouteGroup<T extends RouteRule> implemen
     @Override
     public Set<T> getRules() {
         return Collections.unmodifiableSet(routingRules);
-    }
-
-    private boolean isEnableRule(T rule) {
-
-        return true;
     }
 }

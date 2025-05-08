@@ -78,28 +78,21 @@ public class CompositeRouteGroup implements RouteGroup<RouteGroup<?>> {
     }
 
 
-
-
-
     public synchronized void installFirst(RouteGroup<?> rule) {
-        if (rule != null && isEnableGroup(rule)) {
-            routingGroups.addFirst(rule);
-        }
+        routingGroups.addFirst(rule);
     }
 
     public synchronized void installFirst(List<RouteGroup<?>> rules) {
         if (rules != null && !rules.isEmpty()) {
             routingGroups.addAll(0 , rules);
-            for (RouteGroup group : rules) {
+            for (RouteGroup<?> group : rules) {
                 installFirst(group);
             }
         }
     }
 
     public synchronized void installLast(RouteGroup<?> rule) {
-        if (rule != null && isEnableGroup(rule)) {
-            routingGroups.addLast(rule);
-        }
+        routingGroups.addLast(rule);
     }
 
     public synchronized void installLast(List<RouteGroup<?>> rules) {
@@ -131,9 +124,7 @@ public class CompositeRouteGroup implements RouteGroup<RouteGroup<?>> {
     }
 
     private void internalRouting(RoutingKey key , RouteInfo routeInfo) {
-        RouteGroup<?> rg = null;
         for (RouteGroup<?> routingGroup : routingGroups) {
-            rg = routingGroup;
             RouteInfo ri = routingGroup.route(key);
             if (Objects.nonNull(ri)) {
                 routeInfo.setHitRoutingGroup(routingGroup);
@@ -155,11 +146,6 @@ public class CompositeRouteGroup implements RouteGroup<RouteGroup<?>> {
         target.setSqlAttribute(source.getSqlAttribute());
         target.setHitNodeAttr(source.getHitNodeAttr());
         target.setHitRule(source.getHitRule());
-    }
-
-    private boolean isEnableGroup(RouteGroup<?> group) {
-        // TODO Configuration of routing rules is temporarily not supported
-        return true;
     }
 
 }

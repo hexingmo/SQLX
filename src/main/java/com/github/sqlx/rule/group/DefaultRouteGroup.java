@@ -47,27 +47,26 @@ public class DefaultRouteGroup extends AbstractComparableRouteGroup<SqlAttribute
 
     @Override
     public final RouteInfo route(RoutingKey key) {
-
         RouteInfo routeInfo = new RouteInfo();
-        NodeAttribute target = null;
         SqlAttribute sqlAttribute = null;
         if (Objects.nonNull(key) && Objects.nonNull(key.getSql())) {
             sqlAttribute = sqlParser.parse(key.getSql());
         }
 
+        NodeAttribute target = null;
         SqlAttributeRouteRule rule = null;
+
         for (SqlAttributeRouteRule routingRule : routingRules) {
-            target = routingRule.routing(sqlAttribute);
-            if (Objects.isNull(target)) {
-                continue;
+            NodeAttribute currentTarget = routingRule.routing(sqlAttribute);
+            if (Objects.nonNull(currentTarget)) {
+                if (Objects.isNull(currentTarget.getNodeState()) || currentTarget.getNodeState().isAvailable()) {
+                    target = currentTarget;
+                    rule = routingRule;
+                    break;
+                } else {
+                    log.warn("Node with state '{}' is unavailable, ignoring routing rule '{}'.", currentTarget.getNodeState(), routingRule.getClass().getSimpleName());
+                }
             }
-            if (Objects.nonNull(target.getNodeState()) && !target.getNodeState().isAvailable()) {
-                log.warn("Node with state '{}' is unavailable, ignoring routing rule '{}'.", target.getNodeState(), routingRule.getClass().getSimpleName());
-                target = null;
-                continue;
-            }
-            rule = routingRule;
-            break;
         }
 
         routeInfo.setHitRule(rule);
