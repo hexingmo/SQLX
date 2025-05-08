@@ -38,6 +38,11 @@ import com.github.sqlx.factory.SpringObjectFactory;
 import com.github.sqlx.integration.datasource.CompositeDataSourceInitializer;
 import com.github.sqlx.integration.datasource.DataSourceInitializer;
 import com.github.sqlx.integration.datasource.GenericDataSourceInitializer;
+import com.github.sqlx.integration.springboot.properties.ClusterProperties;
+import com.github.sqlx.integration.springboot.properties.DataSourceProperties;
+import com.github.sqlx.integration.springboot.properties.MetricsProperties;
+import com.github.sqlx.integration.springboot.properties.PointcutProperties;
+import com.github.sqlx.integration.springboot.properties.SqlParsingProperties;
 import com.github.sqlx.integration.springboot.properties.SqlXProperties;
 import com.github.sqlx.jdbc.datasource.DataSourceWrapper;
 import com.github.sqlx.jdbc.datasource.DatasourceManager;
@@ -46,13 +51,34 @@ import com.github.sqlx.jdbc.datasource.SqlXDataSource;
 import com.github.sqlx.jdbc.transaction.Transaction;
 import com.github.sqlx.jdbc.transaction.TransactionIdGenerator;
 import com.github.sqlx.jdbc.transaction.UUIDTransactionIdGenerator;
-import com.github.sqlx.listener.*;
+import com.github.sqlx.listener.CompositeEventListener;
+import com.github.sqlx.listener.DefaultEventListener;
 import com.github.sqlx.listener.EventListener;
+import com.github.sqlx.listener.LoggingEventListener;
+import com.github.sqlx.listener.MetricsCollectEventListener;
 import com.github.sqlx.loadbalance.LoadBalance;
 import com.github.sqlx.loadbalance.WeightRandomLoadBalance;
-import com.github.sqlx.metrics.*;
-import com.github.sqlx.metrics.nitrite.*;
-import com.github.sqlx.rule.group.*;
+import com.github.sqlx.metrics.AsyncMetricsCollector;
+import com.github.sqlx.metrics.DeleteByCreateTimeStorageReleaser;
+import com.github.sqlx.metrics.GenericMetricsRepository;
+import com.github.sqlx.metrics.MetricsCollectMode;
+import com.github.sqlx.metrics.MetricsCollector;
+import com.github.sqlx.metrics.NodeSqlExecuteNumMetrics;
+import com.github.sqlx.metrics.RoutingMetrics;
+import com.github.sqlx.metrics.SqlMetrics;
+import com.github.sqlx.metrics.SyncMetricsCollector;
+import com.github.sqlx.metrics.TableAccessMetrics;
+import com.github.sqlx.metrics.TransactionMetrics;
+import com.github.sqlx.metrics.nitrite.NitriteRoutingMetricsRepository;
+import com.github.sqlx.metrics.nitrite.NitriteSqlMetricsRepository;
+import com.github.sqlx.metrics.nitrite.NitriteTableAccessMetricsRepository;
+import com.github.sqlx.metrics.nitrite.NitriteTransactionMetricsRepository;
+import com.github.sqlx.metrics.nitrite.NodeSqlExecuteNumMetricsRepository;
+import com.github.sqlx.rule.group.ClusterRouteGroupBuilder;
+import com.github.sqlx.rule.group.CompositeRouteGroup;
+import com.github.sqlx.rule.group.DefaultRouteGroup;
+import com.github.sqlx.rule.group.NoneClusterRouteGroupBuilder;
+import com.github.sqlx.rule.group.RouteGroup;
 import com.github.sqlx.sql.parser.SqlParser;
 import com.github.sqlx.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -76,7 +102,13 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import javax.sql.DataSource;
 import java.lang.management.ManagementFactory;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * Auto-configuration class for SQLX, enabling various components and configurations
@@ -85,7 +117,9 @@ import java.util.*;
  * @author He Xing Mo
  * @since 1.0
  */
-@EnableConfigurationProperties(SqlXProperties.class)
+@EnableConfigurationProperties({
+        SqlXProperties.class , SqlParsingProperties.class , PointcutProperties.class ,
+        MetricsProperties.class , DataSourceProperties.class , ClusterProperties.class})
 @ConditionalOnProperty(prefix = "sqlx", name = "enabled", havingValue = "true", matchIfMissing = true)
 @Import({SqlXEnableAutoConfiguration.BaseConfiguration.class,
         SqlXEnableAutoConfiguration.MetricsConfiguration.class})
@@ -94,16 +128,6 @@ public class SqlXEnableAutoConfiguration {
 
     private static final String HTTP_RESOURCES_PATH = "META-INF/http/resources";
 
-    private static void registerMBean(StatManager statManager) {
-        try {
-            MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
-            ObjectName objectName = new ObjectName("com.github.sqlx:type=SQLXStat");
-            mBeanServer.registerMBean(statManager, objectName);
-        } catch (Exception e) {
-            throw new SqlXRuntimeException("register JMX MBean StatManager Error", e);
-        }
-    }
-
     @Configuration
     static class BaseConfiguration {
 
@@ -111,6 +135,16 @@ public class SqlXEnableAutoConfiguration {
 
         BaseConfiguration(SqlXProperties properties) {
             this.properties = properties;
+        }
+
+        private static void registerMBean(StatManager statManager) {
+            try {
+                MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+                ObjectName objectName = new ObjectName("com.github.sqlx:type=SQLXStat");
+                mBeanServer.registerMBean(statManager, objectName);
+            } catch (Exception e) {
+                throw new SqlXRuntimeException("register JMX MBean StatManager Error", e);
+            }
         }
 
         @Bean
