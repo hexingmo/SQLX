@@ -1,7 +1,6 @@
 package com.github.sqlx.integration.springboot.properties;
 
 import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.List;
 
@@ -11,7 +10,6 @@ import java.util.List;
  * @author jing yun
  * @since 1.0
  */
-@ConfigurationProperties(prefix = "sqlx.pointcuts")
 @Data
 public class PointcutProperties {
 

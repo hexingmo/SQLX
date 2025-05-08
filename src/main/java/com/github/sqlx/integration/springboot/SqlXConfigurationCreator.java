@@ -19,6 +19,7 @@ import org.joor.Reflect;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -129,7 +130,7 @@ public class SqlXConfigurationCreator {
             configuration.setWeight(t.getWeight());
             configuration.setHeartbeatInterval(t.getHeartbeatInterval());
             configuration.setHeartbeatSql(t.getHeartbeatSql());
-            configuration.setProps(t.getProps());
+            Optional.ofNullable(t.getProps()).ifPresent(configuration::setProps);
             return configuration;
         }).collect(Collectors.toList());
     }

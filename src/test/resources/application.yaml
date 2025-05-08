@@ -1,6 +1,6 @@
 logging:
   level:
-    root: trace
+    root: info
 
 ############################# mybatis configuration #############################
 
@@ -42,7 +42,7 @@ sqlx:
   enabled: true
   sql-parsing:
     sql-parsing-fail-behavior: warning
-#    sql-parser-class: com.github.sqlx.sql.parser.SimpleSqlParser
+  #    sql-parser-class: com.github.sqlx.sql.parser.SimpleSqlParser
   metrics:
     enabled: true
     username: admin
@@ -53,12 +53,12 @@ sqlx:
     enable-transaction-metrics: true
     slow-sql-millis: 300
     slow-transaction-millis: 3000
-#      collect-mode: ASYNC
-#      collect-core-pool-size: 10
-#      collect-max-pool-size: 30
-#      collect-keep-alive-millis: 10000
-#      collect-queue-capacity: 3000
-    file-directory: D:\test
+    #      collect-mode: ASYNC
+    #      collect-core-pool-size: 10
+    #      collect-max-pool-size: 30
+    #      collect-keep-alive-millis: 10000
+    #      collect-queue-capacity: 3000
+    file-directory: .temp/metrics
     data-retention-duration: 2h
   data-sources:
     - name: write_0

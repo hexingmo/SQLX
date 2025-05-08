@@ -19,7 +19,6 @@ package com.github.sqlx.integration.springboot.properties;
 import com.github.sqlx.config.MetricsCollectScope;
 import com.github.sqlx.metrics.MetricsCollectMode;
 import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.time.Duration;
 
@@ -29,7 +28,6 @@ import java.time.Duration;
  * @author jing yun
  * @since 1.0
  */
-@ConfigurationProperties(prefix = "sqlx.metrics")
 @Data
 public class MetricsProperties {
 

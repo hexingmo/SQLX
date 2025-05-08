@@ -21,7 +21,6 @@ import com.github.sqlx.metrics.MetricsCollectMode;
 import com.github.sqlx.util.StringUtils;
 import com.google.gson.annotations.Expose;
 import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.time.Duration;
 import java.util.Objects;
@@ -30,7 +29,6 @@ import java.util.Objects;
  * @author He Xing Mo
  * @since 1.0
  */
-@ConfigurationProperties(prefix = "sqlx.config.metrics")
 @Data
 public class MetricsConfiguration implements ConfigurationValidator {
 

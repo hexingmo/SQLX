@@ -2,7 +2,6 @@ package com.github.sqlx.integration.springboot.properties;
 
 import com.github.sqlx.config.SqlParsingFailBehavior;
 import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * Sql parsing configuration properties.
@@ -10,7 +9,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author jing yun
  * @since 1.0
  */
-@ConfigurationProperties(prefix = "sqlx.sql-parsing")
 @Data
 public class SqlParsingProperties {
 

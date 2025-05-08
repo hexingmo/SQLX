@@ -17,7 +17,6 @@
 package com.github.sqlx.integration.springboot.properties;
 
 import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.Set;
 
@@ -27,7 +26,6 @@ import java.util.Set;
  * @author jing yun
  * @since 1.0
  */
-@ConfigurationProperties(prefix = "sqlx.clusters")
 @Data
 public class ClusterProperties {
 
