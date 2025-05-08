@@ -278,7 +278,7 @@ public class ProxyConnection extends AbstractConnectionAdapter {
     @Override
     public synchronized void close() throws SQLException {
         if (physicalConnection == null) {
-            throw new SQLException("Physical connection is not initialized. Unable to close.");
+            return;
         }
         SQLException e = null;
         try {
