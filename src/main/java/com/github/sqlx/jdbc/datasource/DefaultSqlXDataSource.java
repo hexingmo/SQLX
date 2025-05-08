@@ -24,6 +24,7 @@ import com.github.sqlx.listener.EventListener;
 import com.github.sqlx.listener.RouteInfo;
 import com.github.sqlx.rule.RouteRule;
 import com.github.sqlx.rule.RoutingKey;
+import com.github.sqlx.util.CollectionUtils;
 import com.github.sqlx.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -137,6 +138,8 @@ public class DefaultSqlXDataSource extends AbstractSqlXDataSource {
         
         if (ra != null && StringUtils.isNotBlank(ra.getCluster())) {
             cluster = clusterManager.getCluster(ra.getCluster());
+        } else if (ra != null && StringUtils.isBlank(ra.getCluster()) && CollectionUtils.isNotEmpty(ra.getNodes())) {
+            cluster = null;
         } else {
             cluster = clusterManager.getDefaultCluster();
         }
