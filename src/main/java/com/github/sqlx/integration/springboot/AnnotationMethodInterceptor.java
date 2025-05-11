@@ -24,11 +24,7 @@ import org.springframework.aop.support.AopUtils;
 import org.springframework.core.annotation.AnnotationUtils;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author He Xing Mo
@@ -53,28 +49,26 @@ public class AnnotationMethodInterceptor extends AbstractMethodInterceptor {
         }
         if (sqlRouting != null) {
             String clusterName = sqlRouting.cluster();
+            List<String> specificNodes = Arrays.asList(sqlRouting.nodes());
             List<String> nodes = new ArrayList<>();
-            Optional<ClusterConfiguration> optional = configuration.getClusters().stream()
+            Optional<ClusterConfiguration> clusterConfOptional = configuration.getClusters().stream()
                     .filter(cluster -> cluster.getName().equals(clusterName))
                     .findFirst();
-            if (ArrayUtils.isEmpty(sqlRouting.nodes())) {
-                if (optional.isPresent()) {
-                    nodes.addAll(optional.get().getNodes());
+
+            // a cluster is configured
+            if (clusterConfOptional.isPresent()) {
+                Set<String> clusterNodes = clusterConfOptional.get().getNodes();
+                if (ArrayUtils.isEmpty(sqlRouting.nodes())) {
+                    nodes.addAll(clusterNodes);
+                } else if (clusterNodes.containsAll(specificNodes)) {
+                    nodes.addAll(specificNodes);
+                } else {
+                    throw new IllegalArgumentException("Cluster node: " + clusterName + " does not contain nodes: " + Arrays.toString(sqlRouting.nodes()));
                 }
             } else {
-                if (optional.isPresent()) {
-                    Set<String> clusterNodes = optional.get().getNodes();
-                    List<String> annotationNodes = Arrays.asList(sqlRouting.nodes());
-                    if (clusterNodes.containsAll(annotationNodes)) {
-                        nodes.addAll(annotationNodes);
-                    } else {
-                        nodes.addAll(clusterNodes);
-                    }
-                } else {
-                    nodes = Arrays.asList(sqlRouting.nodes());
-                }
+                nodes.addAll(specificNodes);
             }
-            return new RouteAttribute(sqlRouting.cluster(), nodes, sqlRouting.propagation(), null , null , method);
+            return new RouteAttribute(sqlRouting.cluster(), nodes, sqlRouting.propagation(), null, null, method);
         }
         return null;
     }

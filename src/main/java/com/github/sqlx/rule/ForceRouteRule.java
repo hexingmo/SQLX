@@ -16,16 +16,20 @@
 
 package com.github.sqlx.rule;
 
-import com.github.sqlx.RoutingContext;
 import com.github.sqlx.NodeAttribute;
+import com.github.sqlx.RoutingContext;
 import com.github.sqlx.config.SqlXConfiguration;
+import com.github.sqlx.exception.SqlRouteException;
 import com.github.sqlx.integration.springboot.RouteAttribute;
 import com.github.sqlx.sql.SqlAttribute;
 import com.github.sqlx.util.CollectionUtils;
 import com.github.sqlx.util.RandomUtils;
 import com.github.sqlx.util.SqlUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Route to the specified data source forcefully,
@@ -33,15 +37,14 @@ import java.util.List;
  * if more than one are specified.
  *
  * @author He Xing Mo
- * @since 1.0
- *
  * @see RoutingContext#force(RouteAttribute)
+ * @since 1.0
  */
 public class ForceRouteRule extends AbstractRouteRule {
 
     private final SqlXConfiguration configuration;
 
-    public ForceRouteRule(Integer priority,SqlXConfiguration configuration) {
+    public ForceRouteRule(Integer priority, SqlXConfiguration configuration) {
         super(priority);
         this.configuration = configuration;
     }
@@ -61,6 +64,16 @@ public class ForceRouteRule extends AbstractRouteRule {
         List<String> nodes = ra.getNodes();
         if (CollectionUtils.isEmpty(nodes)) {
             return null;
+        }
+        // Filter write nodes are required.
+        if (StringUtils.isNotEmpty(ra.getCluster()) && sqlAttribute.isWrite()) {
+            Set<String> writableNodes = configuration.getCluster(ra.getCluster()).getWritableNodes();
+            List<String> availableNodes = nodes.stream()
+                    .filter(writableNodes::contains).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(availableNodes)) {
+                throw new SqlRouteException("There are no available write nodes. Cluster: " + ra.getCluster() + " writable nodes: " + writableNodes);
+            }
+            nodes = availableNodes;
         }
 
         if (nodes.size() == 1) {
