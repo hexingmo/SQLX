@@ -52,10 +52,10 @@ public class ClusterProperties {
     /**
      * The write load balance class.
      */
-    private String writeLoadBalanceClass;
+    private Class<?> writeLoadBalanceClass;
 
     /**
      * The read load balance class.
      */
-    private String readLoadBalanceClass;
+    private Class<?> readLoadBalanceClass;
 }

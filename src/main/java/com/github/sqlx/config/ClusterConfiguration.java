@@ -19,8 +19,8 @@ package com.github.sqlx.config;
 import com.github.sqlx.NodeAttribute;
 import com.github.sqlx.exception.ConfigurationException;
 import com.github.sqlx.exception.ManagementException;
+import com.github.sqlx.loadbalance.LoadBalance;
 import com.github.sqlx.util.CollectionUtils;
-import com.github.sqlx.util.StringUtils;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -73,11 +73,11 @@ public class ClusterConfiguration implements ConfigurationValidator {
 
     @Getter
     @Setter
-    private String writeLoadBalanceClass;
+    private Class<?> writeLoadBalanceClass;
 
     @Getter
     @Setter
-    private String readLoadBalanceClass;
+    private Class<?> readLoadBalanceClass;
 
     public void setWritableNodes(Set<String> writableNodes) {
         if (CollectionUtils.isNotEmpty(writableNodes)) {
@@ -122,22 +122,6 @@ public class ClusterConfiguration implements ConfigurationValidator {
         if (databaseTypes.size() > 1) {
             String differentTypes = String.join(", ", databaseTypes);
             throw new ConfigurationException(String.format("All nodes in the cluster must have the same database type. Found different types: %s", differentTypes));
-        }
-
-        if (StringUtils.isNotBlank(this.writeLoadBalanceClass)) {
-            try {
-                Class.forName(this.writeLoadBalanceClass);
-            } catch (ClassNotFoundException e) {
-                throw new ConfigurationException(String.format("writeLoadBalanceClass [%s] Class Not Found" , this.writeLoadBalanceClass));
-            }
-        }
-
-        if (StringUtils.isNotBlank(this.readLoadBalanceClass)) {
-            try {
-                Class.forName(this.readLoadBalanceClass);
-            } catch (ClassNotFoundException e) {
-                throw new ConfigurationException(String.format("readLoadBalanceClass [%s] Class Not Found" , this.readLoadBalanceClass));
-            }
         }
 
         if (CollectionUtils.isEmpty(this.writableNodes)) {

@@ -180,28 +180,19 @@ public class SqlXEnableAutoConfiguration {
             SqlXConfiguration config = sqlXConfiguration();
             ClusterManager cm = new ClusterManager(config);
             for (ClusterConfiguration conf : config.getClusters()) {
-                String writeLoadBalanceClass = conf.getWriteLoadBalanceClass();
-                LoadBalance wlb;
-                if (StringUtils.isBlank(writeLoadBalanceClass)) {
-                    wlb = new WeightRandomLoadBalance(conf.getWritableRoutingNodeAttributes());
-                } else {
-                    wlb = Reflect.onClass(writeLoadBalanceClass).create().get();
-                    for (NodeAttribute node : conf.getWritableRoutingNodeAttributes()) {
-                        wlb.addOption(node);
-                    }
-                }
+                LoadBalance wlb = Optional.ofNullable(conf.getWriteLoadBalanceClass())
+                        .map(t -> {
+                            LoadBalance loadBalance = Reflect.onClass(t).create().get();
+                            conf.getWritableRoutingNodeAttributes().forEach(loadBalance::addOption);
+                            return loadBalance;
+                        }).orElse(new WeightRandomLoadBalance(conf.getWritableRoutingNodeAttributes()));
 
-                String readLoadBalanceClass = conf.getReadLoadBalanceClass();
-
-                LoadBalance rlb;
-                if (StringUtils.isBlank(readLoadBalanceClass)) {
-                    rlb = new WeightRandomLoadBalance(conf.getReadableRoutingNodeAttributes());
-                } else {
-                    rlb = Reflect.onClass(readLoadBalanceClass).create().get();
-                    for (NodeAttribute node : conf.getReadableRoutingNodeAttributes()) {
-                        rlb.addOption(node);
-                    }
-                }
+                LoadBalance rlb = Optional.ofNullable(conf.getReadLoadBalanceClass())
+                        .map(t -> {
+                            LoadBalance loadBalance = Reflect.onClass(t).create().get();
+                            conf.getReadableRoutingNodeAttributes().forEach(loadBalance::addOption);
+                            return loadBalance;
+                        }).orElse(new WeightRandomLoadBalance(conf.getReadableRoutingNodeAttributes()));;
 
                 Cluster cluster = new Cluster();
                 cluster.setName(conf.getName());
