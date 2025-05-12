@@ -64,7 +64,9 @@ import java.lang.annotation.Target;
 public @interface SqlRouting {
 
     /**
-     * cluster name. In cluster mode, if no cluster name is specified, the default cluster will be selected.
+     * The name of the target database cluster. If specified, SQL operations will be routed to this cluster.
+     * If not specified (empty or null), routing will fall back to checking the 'nodes' attribute to determine
+     * the destination for SQL operations.
      */
     String cluster() default "";
 
