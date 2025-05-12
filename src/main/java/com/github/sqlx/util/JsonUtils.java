@@ -23,9 +23,13 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import com.google.gson.reflect.TypeToken;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.reflect.Type;
 import java.util.Map;
 
 /**
@@ -43,12 +47,14 @@ public abstract class JsonUtils {
     private static final Gson GSON = new GsonBuilder()
             .serializeNulls()
             .registerTypeAdapter(SortOrder.class, new CaseInsensitiveEnumTypeAdapter<>(SortOrder.class))
+            .registerTypeAdapter(Class.class, new ClassTypeJsonSerializer())
             .create();
 
     private static final Gson GSON_EXCLUDE_WITHOUT_EXPOSE = new GsonBuilder()
             .serializeNulls()
             .excludeFieldsWithoutExposeAnnotation()
             .registerTypeAdapter(SortOrder.class, new CaseInsensitiveEnumTypeAdapter<>(SortOrder.class))
+            .registerTypeAdapter(Class.class, new ClassTypeJsonSerializer())
             .create();
 
     /**
