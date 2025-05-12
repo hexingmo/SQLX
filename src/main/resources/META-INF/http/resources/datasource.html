@@ -510,12 +510,12 @@ $('#saveEditBtn').click(async function() {
         const data = {
             name: name,
             weight: weight,
-            state: state
+            nodeState: state
         };
 
         // 使用 fetch API 替代 $.ajax
-        const response = await fetch('/sqlx/v1/datasource', {
-            method: 'PUT',
+        const response = await fetch('/sqlx/v1/datasource/modify-weight-state', {
+            method: 'post',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -597,7 +597,7 @@ $(document).ready(function() {
             const data = collectFormData();
 
             // 使用 fetch API 替代 $.ajax
-            const response = await fetch('/sqlx/v1/datasource', {
+            const response = await fetch('/sqlx/v1/datasource/add', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

@@ -20,7 +20,8 @@
             <thead>
                 <tr>
                     <th data-en="Name" data-zh="名称">Name</th>
-                    <th data-en="Nodes" data-zh="节点">Nodes</th>
+                    <th data-en="Write Nodes" data-zh="写节点">Write Nodes</th>
+                    <th data-en="Read Nodes" data-zh="读节点">Read Nodes</th>
                     <th data-en="Default" data-zh="默认集群">Default</th>
                     <th data-en="Actions" data-zh="操作">Actions</th>
                 </tr>
@@ -260,17 +261,16 @@ function updateClusterTable(data) {
     }
     
     data.forEach(item => {
-        const nodesHtml = item.nodeAttributes.map(node => {
-            const statusClass = node.nodeState === 'UP' ? 'success' : 
-                                node.nodeState === 'DOWN' ? 'danger' : 
-                                node.nodeState === 'OUT_OF_SERVICE' ? 'warning' : 
-                                'secondary';  // UNKNOWN 状态使用灰色
+        const writeNodesHtml = item.writableNodes.map(nodeName => {
+            const node = item.nodeAttributes.find(attr => attr.name === nodeName);
+            const statusClass = getNodeStatusClass(node.nodeState);
+            return `<span class="badge ${statusClass}">${nodeName}</span>`;
+        }).join(' ');
 
-            const nodeType = item.writableNodes.includes(node.name) ? 'write' : 
-                             item.readableNodes.includes(node.name) ? 'read' : 
-                             'unknown';
-
-            return `<span class="badge bg-${statusClass} node-type-${nodeType}">${node.name}</span>`;
+        const readNodesHtml = item.readableNodes.map(nodeName => {
+            const node = item.nodeAttributes.find(attr => attr.name === nodeName);
+            const statusClass = getNodeStatusClass(node.nodeState);
+            return `<span class="badge ${statusClass}">${nodeName}</span>`;
         }).join(' ');
 
         const defaultBadge = item.defaulted ? 
@@ -280,11 +280,8 @@ function updateClusterTable(data) {
         tbody.append(`
             <tr>
                 <td><a href="javascript:void(0)" onclick="showClusterDetail('${encodeURIComponent(JSON.stringify(item))}')">${item.name}</a></td>
-                <td>
-                    <div class="d-flex flex-wrap gap-1">
-                        ${nodesHtml}
-                    </div>
-                </td>
+                <td>${writeNodesHtml}</td>
+                <td>${readNodesHtml}</td>
                 <td>${defaultBadge}</td>
                 <td>
                     <button class="btn btn-sm btn-success me-1" onclick="manageDatasources('${item.name}', '${encodeURIComponent(JSON.stringify(item.nodeAttributes))}')"
@@ -298,6 +295,21 @@ function updateClusterTable(data) {
     });
     
     window.updateLanguage();
+}
+
+// 获取节点状态的 CSS 类
+function getNodeStatusClass(nodeState) {
+    switch (nodeState) {
+        case 'UP':
+            return 'bg-success'; // 绿色
+        case 'DOWN':
+            return 'bg-danger'; // 红色
+        case 'OUT_OF_SERVICE':
+            return 'bg-warning'; // 黄色
+        case 'UNKNOWN':
+        default:
+            return 'bg-secondary'; // 灰色
+    }
 }
 
 // 显示集群详情
