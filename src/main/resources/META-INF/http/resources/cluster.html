@@ -23,7 +23,9 @@
                     <th data-en="Write Nodes" data-zh="写节点">Write Nodes</th>
                     <th data-en="Read Nodes" data-zh="读节点">Read Nodes</th>
                     <th data-en="Default" data-zh="默认集群">Default</th>
-                    <th data-en="Actions" data-zh="操作">Actions</th>
+<!--
+暂时隐藏
+<th data-en="Actions" data-zh="操作">Actions</th>-->
                 </tr>
             </thead>
             <tbody id="clusterList">
@@ -283,13 +285,13 @@ function updateClusterTable(data) {
                 <td>${writeNodesHtml}</td>
                 <td>${readNodesHtml}</td>
                 <td>${defaultBadge}</td>
-                <td>
+                <!--<td>
                     <button class="btn btn-sm btn-success me-1" onclick="manageDatasources('${item.name}', '${encodeURIComponent(JSON.stringify(item.nodeAttributes))}')"
                             data-en="Manage Datasources" data-zh="管理数据源">
                         <i class="fas fa-cog me-1"></i>
                         <span data-en="Manage Datasources" data-zh="管理数据源">Manage Datasources</span>
                     </button>
-                </td>
+                </td>-->
             </tr>
         `);
     });
