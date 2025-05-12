@@ -19,7 +19,7 @@ package com.github.sqlx.jdbc;
 
 import com.github.sqlx.jdbc.datasource.SqlXDataSource;
 import com.github.sqlx.jdbc.datasource.RoutedDataSource;
-import com.github.sqlx.listener.RouteInfo;
+import com.github.sqlx.rule.RouteInfo;
 import com.github.sqlx.listener.EventListener;
 import com.github.sqlx.util.MapUtils;
 import com.github.sqlx.util.RoutingUtils;
@@ -46,13 +46,11 @@ import java.sql.Struct;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.Executor;
 
 /**

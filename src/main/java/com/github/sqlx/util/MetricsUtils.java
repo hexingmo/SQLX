@@ -19,14 +19,13 @@ import com.github.sqlx.NodeAttribute;
 import com.github.sqlx.jdbc.ConnectionInfo;
 import com.github.sqlx.jdbc.StatementInfo;
 import com.github.sqlx.jdbc.transaction.TransactionStatus;
-import com.github.sqlx.listener.RouteInfo;
+import com.github.sqlx.rule.RouteInfo;
 import com.github.sqlx.metrics.*;
 import com.github.sqlx.rule.group.RouteGroup;
 import com.github.sqlx.sql.SqlAttribute;
 import com.github.sqlx.sql.SqlType;
 import com.github.sqlx.sql.Table;
 
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;

@@ -22,6 +22,7 @@ import com.github.sqlx.jdbc.PreparedStatementInfo;
 import com.github.sqlx.jdbc.ResultSetInfo;
 import com.github.sqlx.jdbc.ProxyConnection;
 import com.github.sqlx.jdbc.StatementInfo;
+import com.github.sqlx.rule.RouteInfo;
 import com.github.sqlx.sql.SqlAttribute;
 import com.github.sqlx.util.StringUtils;
 import com.github.sqlx.util.TimeUtils;

@@ -17,7 +17,6 @@
 package com.github.sqlx.rule;
 
 import com.github.sqlx.NodeAttribute;
-import com.github.sqlx.listener.RouteInfo;
 import com.github.sqlx.loadbalance.LoadBalance;
 import com.github.sqlx.sql.SqlAttribute;
 import com.github.sqlx.sql.parser.SqlParser;

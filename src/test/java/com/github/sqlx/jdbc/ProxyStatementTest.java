@@ -3,7 +3,7 @@ package com.github.sqlx.jdbc;
 import com.github.sqlx.jdbc.datasource.RoutedDataSource;
 import com.github.sqlx.jdbc.datasource.SqlXDataSource;
 import com.github.sqlx.listener.EventListener;
-import com.github.sqlx.listener.RouteInfo;
+import com.github.sqlx.rule.RouteInfo;
 import com.github.sqlx.sql.SqlAttribute;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

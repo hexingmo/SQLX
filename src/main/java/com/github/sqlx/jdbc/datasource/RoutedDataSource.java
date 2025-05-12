@@ -16,7 +16,7 @@
 
 package com.github.sqlx.jdbc.datasource;
 
-import com.github.sqlx.listener.RouteInfo;
+import com.github.sqlx.rule.RouteInfo;
 import lombok.Getter;
 
 import javax.sql.DataSource;

@@ -2,7 +2,7 @@ package com.github.sqlx.rule.group;
 
 import com.github.sqlx.NodeAttribute;
 import com.github.sqlx.NodeState;
-import com.github.sqlx.listener.RouteInfo;
+import com.github.sqlx.rule.RouteInfo;
 import com.github.sqlx.rule.SqlAttributeRouteRule;
 import com.github.sqlx.rule.RoutingKey;
 import com.github.sqlx.sql.SqlAttribute;

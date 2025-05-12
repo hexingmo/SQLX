@@ -19,6 +19,7 @@ import com.github.sqlx.jdbc.ConnectionInfo;
 import com.github.sqlx.jdbc.PreparedStatementInfo;
 import com.github.sqlx.jdbc.ResultSetInfo;
 import com.github.sqlx.jdbc.StatementInfo;
+import com.github.sqlx.rule.RouteInfo;
 
 import java.sql.SQLException;
 import java.sql.Savepoint;

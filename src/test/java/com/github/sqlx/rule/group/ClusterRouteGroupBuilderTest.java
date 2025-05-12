@@ -5,7 +5,7 @@ import com.github.sqlx.RoutingContext;
 import com.github.sqlx.config.SqlXConfiguration;
 import com.github.sqlx.integration.springboot.RouteAttribute;
 import com.github.sqlx.jdbc.transaction.Transaction;
-import com.github.sqlx.listener.RouteInfo;
+import com.github.sqlx.rule.RouteInfo;
 import com.github.sqlx.loadbalance.LoadBalance;
 import com.github.sqlx.rule.*;
 import com.github.sqlx.sql.AnnotationSqlAttribute;

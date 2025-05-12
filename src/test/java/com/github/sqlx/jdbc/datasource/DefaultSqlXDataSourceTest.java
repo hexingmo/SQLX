@@ -4,7 +4,7 @@ import com.github.sqlx.NodeAttribute;
 import com.github.sqlx.cluster.Cluster;
 import com.github.sqlx.cluster.ClusterManager;
 import com.github.sqlx.listener.EventListener;
-import com.github.sqlx.listener.RouteInfo;
+import com.github.sqlx.rule.RouteInfo;
 import com.github.sqlx.rule.RouteRule;
 import com.github.sqlx.rule.RoutingKey;
 import org.junit.jupiter.api.BeforeEach;

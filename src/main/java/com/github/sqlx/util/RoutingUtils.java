@@ -16,7 +16,7 @@
 
 package com.github.sqlx.util;
 
-import com.github.sqlx.listener.RouteInfo;
+import com.github.sqlx.rule.RouteInfo;
 
 /**
  * @author He Xing Mo

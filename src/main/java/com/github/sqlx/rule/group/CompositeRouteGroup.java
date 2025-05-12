@@ -19,7 +19,7 @@ package com.github.sqlx.rule.group;
 import com.github.sqlx.exception.SqlRouteException;
 import com.github.sqlx.exception.SqlXRuntimeException;
 import com.github.sqlx.jdbc.transaction.Transaction;
-import com.github.sqlx.listener.RouteInfo;
+import com.github.sqlx.rule.RouteInfo;
 import com.github.sqlx.listener.EventListener;
 import com.github.sqlx.rule.RoutingKey;
 import lombok.extern.slf4j.Slf4j;

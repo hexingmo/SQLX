@@ -13,7 +13,7 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.github.sqlx.listener;
+package com.github.sqlx.rule;
 
 import com.github.sqlx.NodeAttribute;
 import com.github.sqlx.cluster.Cluster;

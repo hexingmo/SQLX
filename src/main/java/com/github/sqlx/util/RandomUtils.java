@@ -1,6 +1,5 @@
 package com.github.sqlx.util;
 
-import org.apache.commons.lang3.Validate;
 
 import java.util.Random;
 

@@ -23,6 +23,7 @@ import com.github.sqlx.jdbc.ResultSetInfo;
 import com.github.sqlx.jdbc.StatementInfo;
 import com.github.sqlx.jdbc.transaction.TransactionStatus;
 import com.github.sqlx.metrics.*;
+import com.github.sqlx.rule.RouteInfo;
 import com.github.sqlx.util.CollectionUtils;
 import com.github.sqlx.util.JsonUtils;
 import com.github.sqlx.util.MetricsUtils;

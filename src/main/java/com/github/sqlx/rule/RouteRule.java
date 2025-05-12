@@ -16,8 +16,6 @@
 
 package com.github.sqlx.rule;
 
-import com.github.sqlx.listener.RouteInfo;
-
 /**
  * Routing rules are responsible for the specific routing selection process.
  *
