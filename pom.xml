@@ -11,7 +11,7 @@
 
     <name>sqlx-spring-boot-starter</name>
     <description>sqlx-spring-boot-starter is a lightweight, non-intrusive, pluggable, monitorable, dynamically manageable, ORM technology-independent multi-data source integration framework. It is mainly used for intelligently routing SQL to the appropriate data source, supporting read-write separation, cluster mode, and non-cluster mode, thereby improving application performance.</description>
-    <url></url>
+    <url>https://github.com/GitHeP/SQLX</url>
     <inceptionYear>2025</inceptionYear>
 
     <developers>
@@ -38,8 +38,8 @@
     </licenses>
 
     <scm>
-        <url></url>
-        <connection></connection>
+        <url>https://github.com/GitHeP/SQLX.git</url>
+        <connection>scm:git:https://github.com/GitHeP/SQLX.git</connection>
     </scm>
 
     <properties>
