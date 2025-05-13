@@ -10,15 +10,21 @@
     <packaging>jar</packaging>
 
     <name>sqlx-spring-boot-starter</name>
-    <description></description>
+    <description>sqlx-spring-boot-starter is a lightweight, non-intrusive, pluggable, monitorable, dynamically manageable, ORM technology-independent multi-data source integration framework. It is mainly used for intelligently routing SQL to the appropriate data source, supporting read-write separation, cluster mode, and non-cluster mode, thereby improving application performance.</description>
     <url></url>
-    <inceptionYear>2023</inceptionYear>
+    <inceptionYear>2025</inceptionYear>
 
     <developers>
         <developer>
             <id>hexingmo</id>
             <name>hexingmo</name>
             <email>dawn.hexingmo@gmail.com</email>
+        </developer>
+
+        <developer>
+            <id>jingyun</id>
+            <name>jingyun</name>
+            <email></email>
         </developer>
     </developers>
 
