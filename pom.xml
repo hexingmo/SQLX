@@ -4,14 +4,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.sqlx</groupId>
+    <groupId>com.github.hexingmo</groupId>
     <artifactId>sqlx-spring-boot-starter</artifactId>
     <version>1.0.0-beta.1</version>
     <packaging>jar</packaging>
 
     <name>sqlx-spring-boot-starter</name>
     <description>sqlx-spring-boot-starter is a lightweight, non-intrusive, pluggable, monitorable, dynamically manageable, ORM technology-independent multi-data source integration framework. It is mainly used for intelligently routing SQL to the appropriate data source, supporting read-write separation, cluster mode, and non-cluster mode, thereby improving application performance.</description>
-    <url>https://github.com/GitHeP/SQLX</url>
+    <url>https://github.com/hexingmo/SQLX</url>
     <inceptionYear>2025</inceptionYear>
 
     <developers>
@@ -38,8 +38,8 @@
     </licenses>
 
     <scm>
-        <url>https://github.com/GitHeP/SQLX.git</url>
-        <connection>scm:git:https://github.com/GitHeP/SQLX.git</connection>
+        <url>https://github.com/hexingmo/SQLX</url>
+        <connection>scm:git:https://github.com/hexingmo/SQLX.git</connection>
     </scm>
 
     <properties>
