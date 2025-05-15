@@ -32,7 +32,7 @@ Add SQLX to your Maven project:
 
 ```xml
 <dependency>
-    <groupId>com.github.sqlx</groupId>
+    <groupId>com.github.hexingmo</groupId>
     <artifactId>sqlx-spring-boot-starter</artifactId>
     <version>${version}</version>
 </dependency>
