@@ -10,21 +10,21 @@
 sqlx:
   enabled: true
   sql-parsing:
-    sql-parser-class: com.github.sqlx.sql.parser.JSqlParser
+    sql-parser-class: io.github.sqlx.sql.parser.JSqlParser
 ```
 
-没有指定时默认使用 `com.github.sqlx.sql.parser.JSqlParser`.
+没有指定时默认使用 `JSqlParser`.
 
 ## 自定义 SQL 解析器
 
-您也可以实现自定义的 SQL 解析器。自定义解析器需要实现 `com.github.sqlx.sql.parser.SqlParser` 接口。
+您也可以实现自定义的 SQL 解析器。自定义解析器需要实现 `io.github.sqlx.sql.parser.SqlParser` 接口。
 
 ### 自定义SQL解析器示例
 
 ```java
 package com.example.sqlparser;
 
-import com.github.sqlx.sql.parser.SqlParser;
+import io.github.sqlx.sql.parser.SqlParser;
 
 public class CustomSqlParser implements SqlParser {
     @Override
@@ -43,7 +43,7 @@ public class CustomSqlParser implements SqlParser {
 
 - **IGNORE**: 忽略异常，并将 SQL 类型设置为 `OTHER` 类型，把 SQL 视作一条写语句。
 - **WARNING**: 输出警告日志，并将 SQL 类型设置为 `OTHER` 类型，把 SQL 视作一条写语句。
-- **FAILING**: 抛出 `com.github.sqlx.exception.SqlParseException` 异常，并终止程序运行。
+- **FAILING**: 抛出 `SqlParseException` 异常，并终止程序运行。
 
 ```yaml
 sqlx:

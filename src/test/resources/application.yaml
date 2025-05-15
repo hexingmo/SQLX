@@ -43,7 +43,7 @@ sqlx:
   enabled: true
   sql-parsing:
     sql-parsing-fail-behavior: warning
-  #    sql-parser-class: com.github.sqlx.sql.parser.SimpleSqlParser
+  #    sql-parser-class: io.github.sqlx.sql.parser.SimpleSqlParser
   metrics:
     enabled: true
     username: admin
@@ -59,7 +59,7 @@ sqlx:
     #      collect-max-pool-size: 30
     #      collect-keep-alive-millis: 10000
     #      collect-queue-capacity: 3000
-    file-directory: .temp/metrics
+    file-directory: C:\Users\Administrator\Desktop\test
     data-retention-duration: 2h
   data-sources:
     - name: write_0
@@ -118,8 +118,8 @@ sqlx:
   clusters:
     - name: cluster_0
       defaulted: true
-      read-load-balance-class: com.github.sqlx.loadbalance.WeightRandomLoadBalance
-      write-load-balance-class: com.github.sqlx.loadbalance.WeightRoundRobinLoadBalance
+      read-load-balance-class: io.github.sqlx.loadbalance.WeightRandomLoadBalance
+      write-load-balance-class: io.github.sqlx.loadbalance.WeightRoundRobinLoadBalance
       writable-nodes:
         - write_0
       readable-nodes:
@@ -131,13 +131,13 @@ sqlx:
         - read_1
 
   pointcuts:
-    - expression: "execution(* com.github.sqlx.integration.springboot.SqlRoutingPropagationServiceA.expressionPropagation())"
+    - expression: "execution(* io.github.sqlx.integration.springboot.SqlRoutingPropagationServiceA.expressionPropagation())"
       cluster: cluster_0
       nodes:
         - write_0
         - read_0
       propagation: true
-#      - expression: "execution(* com.github.sqlx.integration.springboot.SqlRoutingPropagationServiceA.expressionPropagation())"
+#      - expression: "execution(* io.github.sqlx.integration.springboot.SqlRoutingPropagationServiceA.expressionPropagation())"
 #        cluster: cluster_0
 #        nodes:
 #          - write_0

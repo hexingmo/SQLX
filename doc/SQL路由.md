@@ -28,7 +28,7 @@ sqlx:
 package com.example.service;
 
 import lombok.extern.slf4j.Slf4j;
-import com.github.sqlx.annotation.SqlRouting;
+import io.github.sqlx.annotation.SqlRouting;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +49,7 @@ public class UserService {
     public Map<String, Object> getUserById(Long userId) {
         String sql = "SELECT * FROM users WHERE id = ?";
         Map<String, Object> user = jdbcTemplate.queryForMap(sql, userId);
-        log.info("User: {}" ,user);
+        log.info("User: {}", user);
         return user;
     }
 
@@ -75,7 +75,7 @@ public class UserService {
 ```java
 package com.example.service;
 
-import com.github.sqlx.annotation.SqlRouting;
+import io.github.sqlx.annotation.SqlRouting;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -124,7 +124,7 @@ public class UserService {
 ```java
 package com.example.service;
 
-import com.github.sqlx.annotation.SqlRouting;
+import io.github.sqlx.annotation.SqlRouting;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -175,7 +175,7 @@ class LogService {
      * meaning it will run in a new transaction.
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    @SqlRouting(cluster = "cluster_0", nodes = {"write_1"} , propagation = false)
+    @SqlRouting(cluster = "cluster_0", nodes = {"write_1"}, propagation = false)
     public void logUserUpdate(Long userId, String action) {
         String insertSql = "INSERT INTO user_logs (user_id, action) VALUES (?, ?)";
         jdbcTemplate.update(insertSql, userId, "Updated user name to " + action);
@@ -201,7 +201,7 @@ class LogService {
 ```java
 package com.example.service;
 
-import com.github.sqlx.annotation.SqlRouting;
+import io.github.sqlx.annotation.SqlRouting;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -320,7 +320,7 @@ Employee result = SqlExecutor.execute(() -> employeeRepository.findById(1L), "wr
 - DefaultDataSourceRouteRule ： 默认数据源路由规则
 - RouteWritableRule : 路由到可读节点路由规则
 
-具体您可以参考 `com.github.sqlx.rule.group.ClusterRouteGroupBuilder` 和 `com.github.sqlx.rule.group.NoneClusterRouteGroupBuilder`.
+具体您可以参考 `ClusterRouteGroupBuilder` 和 `NoneClusterRouteGroupBuilder`.
 
 **注意** 自定义路由规则时需要注意规则的执行顺序，如果规则执行顺序有冲突，可能会导致路由结果错误。
 

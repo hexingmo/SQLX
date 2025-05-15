@@ -1,18 +1,15 @@
 package org.dizitart;
 
-import com.github.sqlx.metrics.SqlMetrics;
+import io.github.sqlx.metrics.SqlMetrics;
 //import com.github.devx.sql.routing.metrics.nitrite.SqlMetricsDecorator;
-import com.github.sqlx.util.JsonUtils;
-import com.github.sqlx.util.UUIDUtils;
+import io.github.sqlx.util.JsonUtils;
+import io.github.sqlx.util.UUIDUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.dizitart.no2.FindOptions;
 import org.dizitart.no2.Nitrite;
 //import org.dizitart.no2.collection.Document;
 //import org.dizitart.no2.common.WriteResult;
 //import org.dizitart.no2.mvstore.MVStoreModule;
 //import org.dizitart.no2.mvstore.MVStoreModule;
-import org.dizitart.no2.NullOrder;
-import org.dizitart.no2.SortOrder;
 import org.dizitart.no2.objects.Cursor;
 import org.dizitart.no2.objects.ObjectFilter;
 import org.dizitart.no2.objects.ObjectRepository;
@@ -23,7 +20,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 /**

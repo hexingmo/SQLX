@@ -33,7 +33,7 @@
 
 ```xml
 <dependency>
-    <groupId>com.github.hexingmo</groupId>
+    <groupId>io.github.hexingmo</groupId>
     <artifactId>sqlx-spring-boot-starter</artifactId>
     <version>${version}</version>
 </dependency>
