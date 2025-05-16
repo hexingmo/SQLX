@@ -252,7 +252,7 @@
                         </manifestEntries>
                     </archive>
                     <includes>
-                        <include>**/*.class</include>
+                        <include>**/*</include>
                     </includes>
                 </configuration>
             </plugin>
@@ -286,6 +286,13 @@
                     <source>${maven.compiler.source}</source>
                     <encoding>${project.build.sourceEncoding}</encoding>
                     <failOnError>false</failOnError>
+                    <show>public</show>
+                    <charset>UTF-8</charset>
+                    <encoding>UTF-8</encoding>
+                    <docencoding>UTF-8</docencoding>
+                    <links>
+                        <link>http://docs.oracle.com/javase/8/docs/api</link>
+                    </links>
                 </configuration>
             </plugin>
 
