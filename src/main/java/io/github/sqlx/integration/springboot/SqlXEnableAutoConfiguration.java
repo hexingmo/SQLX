@@ -125,7 +125,7 @@ public class SqlXEnableAutoConfiguration {
         private static void registerMBean(StatManager statManager) {
             try {
                 MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
-                ObjectName objectName = new ObjectName("com.github.sqlx:type=SQLXStat");
+                ObjectName objectName = new ObjectName("io.github.hexingmo.sqlx:type=SQLXStat");
                 mBeanServer.registerMBean(statManager, objectName);
             } catch (Exception e) {
                 throw new SqlXRuntimeException("register JMX MBean StatManager Error", e);

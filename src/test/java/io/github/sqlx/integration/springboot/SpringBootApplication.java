@@ -8,7 +8,7 @@ import org.springframework.boot.SpringApplication;
  */
 
 @org.springframework.boot.autoconfigure.SpringBootApplication(
-        scanBasePackages = {"com.github.sqlx.integration.springboot" , "com.github.sqlx.integration.mybatis"}
+        scanBasePackages = {"io.github.sqlx.integration.springboot" , "io.github.sqlx.integration.mybatis"}
 )
 public class SpringBootApplication {
 
